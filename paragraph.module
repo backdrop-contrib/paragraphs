@@ -1574,12 +1574,17 @@ function paragraph_field_multiple_value_form($field, $instance, $langcode, $item
       $field_elements['add_more_type'] = array(
         '#type' => 'select',
         '#name' => strtr($id_prefix, '-', '_') . '_add_more_type',
-        '#title' => t('Paragraph Type'),
+        '#title' => t('Paragraph type'),
         '#options' => $select_bundles,
         '#attributes' => array('class' => array('field-add-more-type')),
         '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
         '#tree' => TRUE,
       );
+
+      if(isset($form_state['input'][$field['field_name'] . '_add_more_type'])) {
+        $field_elements['add_more_type']['#default_value'] = $form_state['input'][$field['field_name'] . '_add_more_type'];
+      }
+
       $field_elements['add_more'] = array(
         '#type' => 'submit',
         '#name' => strtr($id_prefix, '-', '_') . '_add_more',
@@ -1713,6 +1718,9 @@ function theme_paragraph_field_multiple_value_form($variables) {
     $output = '<div class="form-item">';
     if(count($items)) {
       $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+    } else {
+      $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>";
+      $output .= '<p><em>' . t('No paragraphs added yet. Select a paragraph type and press the button below to add one.') . '</em></p>';
     }
     $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
     $output .= '<div class="clearfix">' . drupal_render($add_more_button_type) . drupal_render($add_more_button) . '</div>';
