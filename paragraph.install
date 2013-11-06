@@ -1,0 +1,121 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the paragraph module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function paragraph_schema() {
+  $schema = array();
+  $schema['paragraph_bundle'] = array(
+    'description' => 'Stores information about paragraph bundles.',
+    'fields' => array(
+      'bundle' => array(
+        'description' => 'The machine-readable name of this bundle.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'The human-readable name of this bundle.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
+      ),
+      'locked' => array(
+        'description' => 'A boolean indicating whether the administrator can change the machine name of this bundle.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+      ),
+    ),
+    'primary key' => array('bundle'),
+  );
+
+  $schema['paragraph_item'] = array(
+    'description' => 'Stores information about paragraph items.',
+    'fields' => array(
+      'item_id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique paragraph item ID.',
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Default revision ID.',
+      ),
+      'bundle' => array(
+        'description' => 'The bundle of this paragraph item.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'archived' => array(
+        'description' => 'Boolean indicating whether the paragraph item is archived.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('item_id'),
+  );
+
+  $schema['paragraph_item_revision'] = array(
+    'description' => 'Stores revision information about paragraph items.',
+    'fields' => array(
+      'revision_id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique revision ID.',
+      ),
+      'item_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'Paragraph item ID.',
+      ),
+    ),
+    'primary key' => array('revision_id'),
+    'indexes' => array(
+      'item_id' => array('item_id'),
+    ),
+    'foreign keys' => array(
+      'versioned_paragraph_item' => array(
+        'table' => 'paragraph_item',
+        'columns' => array('item_id' => 'item_id'),
+      ),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_field_schema().
+ */
+function paragraph_field_schema($field) {
+  $columns = array();
+  if ($field['type'] == 'paragraph') {
+
+    $columns = array(
+      'value' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'The paragraph item id.',
+      ),
+      'revision_id' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'description' => 'The paragraph item revision id.',
+      ),
+    );
+  }
+  return array(
+    'columns' => $columns,
+  );
+}

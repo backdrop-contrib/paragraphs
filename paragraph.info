@@ -1,0 +1,5 @@
+name = Paragraph
+description = Paragraph Field Collection extension
+core = 7.x
+
+dependencies[] = entity
