@@ -1166,7 +1166,7 @@ function paragraphs_bundle_delete($bundle_machine_name) {
     db_delete('paragraphs_bundle')
       ->condition('bundle', $bundle->bundle)
       ->execute();
-    field_attach_delete_bundle('paragraphs', $bundle->bundle);
+    field_attach_delete_bundle('paragraphs_item', $bundle->bundle);
     paragraphs_bundle_load(NULL, TRUE);
     entity_info_cache_clear();
     variable_set('menu_rebuild_needed', TRUE);
