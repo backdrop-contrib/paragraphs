@@ -991,29 +991,31 @@ function paragraphs_field_update($entity_type, $entity, $field, $instance, $lang
  * Implements hook_field_delete().
  */
 function paragraphs_field_delete($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  // Also delete all embedded entities.
-  if ($ids = paragraphs_field_item_to_ids($items)) {
-    // We filter out entities that are still being referenced by other
-    // host-entities. This should never be the case, but it might happened e.g.
-    // when modules cloned a node without knowing about field-collection.
-    $entity_info = entity_get_info($entity_type);
-    $entity_id_name = $entity_info['entity keys']['id'];
-    $field_column = key($field['columns']);
+  if ($field['type'] == 'paragraphs') {
+    // Also delete all embedded entities.
+    if ($ids = paragraphs_field_item_to_ids($items)) {
+      // We filter out entities that are still being referenced by other
+      // host-entities. This should never be the case, but it might happened e.g.
+      // when modules cloned a node without knowing about field-collection.
+      $entity_info = entity_get_info($entity_type);
+      $entity_id_name = $entity_info['entity keys']['id'];
+      $field_column = key($field['columns']);
 
-    foreach ($ids as $id_key => $id) {
-      $query = new EntityFieldQuery();
-      $entities = $query
-        ->fieldCondition($field['field_name'], $field_column, $id)
-        ->execute();
-      unset($entities[$entity_type][$entity->$entity_id_name]);
+      foreach ($ids as $id_key => $id) {
+        $query = new EntityFieldQuery();
+        $entities = $query
+          ->fieldCondition($field['field_name'], $field_column, $id)
+          ->execute();
+        unset($entities[$entity_type][$entity->$entity_id_name]);
 
-      if (!empty($entities[$entity_type])) {
-        // Filter this $id out.
-        unset($ids[$id_key]);
+        if (!empty($entities[$entity_type])) {
+          // Filter this $id out.
+          unset($ids[$id_key]);
+        }
       }
-    }
 
-    entity_delete_multiple('paragraphs_items', $ids);
+      entity_delete_multiple('paragraphs_items', $ids);
+    }
   }
 }
 
@@ -1021,10 +1023,12 @@ function paragraphs_field_delete($entity_type, $entity, $field, $instance, $lang
  * Implements hook_field_delete_revision().
  */
 function paragraphs_field_delete_revision($entity_type, $entity, $field, $instance, $langcode, &$items) {
-  foreach ($items as $item) {
-    if (!empty($item['revision_id'])) {
-      if ($entity = paragraphs_item_revision_load($item['revision_id'])) {
-        $entity->deleteRevision(TRUE);
+  if ($field['type'] == 'paragraphs') {
+    foreach ($items as $item) {
+      if (!empty($item['revision_id'])) {
+        if ($entity = paragraphs_item_revision_load($item['revision_id'])) {
+          $entity->deleteRevision(TRUE);
+        }
       }
     }
   }
@@ -1873,10 +1877,15 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $field_elements['add_more_type']['#default_value'] = $form_state['input'][$field['field_name'] . '_add_more_type'];
         }
 
+        $text = 'Add a paragraph';
+        if($max >= 0) {
+          $text = 'Add another paragraph';
+        }
+
         $field_elements['add_more'] = array(
           '#type' => 'submit',
           '#name' => strtr($id_prefix, '-', '_') . '_add_more',
-          '#value' => t('Add another paragraph'),
+          '#value' => t($text),
           '#attributes' => array('class' => array('field-add-more-submit')),
           '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
           '#submit' => array('paragraphs_add_more_submit'),
@@ -2063,7 +2072,6 @@ function paragraphs_theme() {
  */
 function paragraphs_field_create_field($field) {
   if ($field['type'] == 'paragraphs') {
-    field_attach_create_bundle('paragraphs_item', $field['field_name']);
 
     // Clear caches.
     entity_info_cache_clear();
@@ -2079,8 +2087,6 @@ function paragraphs_field_create_field($field) {
  */
 function paragraphs_field_delete_field($field) {
   if ($field['type'] == 'paragraphs') {
-    // Notify field.module that field collection was deleted.
-    field_attach_delete_bundle('paragraphs_item', $field['field_name']);
 
     // Clear caches.
     entity_info_cache_clear();
@@ -2088,5 +2094,12 @@ function paragraphs_field_delete_field($field) {
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
     variable_set('menu_rebuild_needed', TRUE);
+  }
+}
+
+function paragraphs_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+  if ($form['#field']['type'] == 'paragraphs') {
+    // Hide the cardinality setting on the field settings for properties fields.
+    $form['field']['cardinality']['#default_value'] = FIELD_CARDINALITY_UNLIMITED;
   }
 }
