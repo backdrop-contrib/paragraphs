@@ -119,6 +119,13 @@ class ParagraphItemEntity extends Entity {
    */
   public function __construct(array $values = array(), $entityType = NULL) {
     parent::__construct($values, 'paragraph_item');
+    if (isset($this->field_name)) {
+      // Ok, we have the field name property, we can proceed and check the field's type
+      $field_info = $this->fieldInfo();
+      if (!$field_info || $field_info['type'] != 'paragraph') {
+        throw new Exception("Invalid field name given: {$this->field_name} is not a paragraph field.");
+      }
+    }
   }
 
   /**
@@ -163,11 +170,8 @@ class ParagraphItemEntity extends Entity {
       if ($field['cardinality'] == 1) {
         return $label;
       }
-      elseif ($this->item_id) {
-        return t('!instance_label @count', array('!instance_label' => $label, '@count' => $this->delta() + 1));
-      }
       else {
-        return t('New !instance_label', array('!instance_label' => $label));
+        return '';
       }
     }
     return t('Unconnected paragraph item');
@@ -448,11 +452,11 @@ class ParagraphItemEntity extends Entity {
       $this->deleteHostEntityReference();
     }
     elseif (!$this->isDefaultRevision()) {
-      entity_revision_delete('fparagraph_item', $this->revision_id);
+      entity_revision_delete('paragraph_item', $this->revision_id);
     }
     // If deleting the default revision, take care!
     else {
-      $row = db_select('fparagraph_item_revision', 'r')
+      $row = db_select('paragraph_item_revision', 'r')
         ->fields('r')
         ->condition('item_id', $this->item_id)
         ->condition('revision_id', $this->revision_id, '<>')
@@ -523,6 +527,11 @@ class ParagraphItemMetadataController extends EntityDefaultMetadataController {
   public function entityPropertyInfo() {
     $info = parent::entityPropertyInfo();
     $properties = &$info['paragraph']['properties'];
+
+
+    $properties['field_name']['label'] = t('Field name');
+    $properties['field_name']['description'] = t('The machine-readable name of the paragraph field containing this item.');
+    $properties['field_name']['required'] = TRUE;
 
     $properties['host_entity'] = array(
       'label' => t('Host entity'),
@@ -610,6 +619,7 @@ function paragraph_permission() {
   return $perms;
 }
 
+
 /**
  * Implements hook_menu
  */
@@ -679,6 +689,95 @@ function paragraph_field_info() {
     'property_callbacks' => array('paragraph_entity_metadata_property_callback'),
   );
   return $info;
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function paragraph_field_formatter_info() {
+  return array(
+    'paragraph_view' => array(
+      'label' => t('Paragraph items'),
+      'field types' => array('paragraph'),
+      'settings' =>  array(
+        'view_mode' => 'full',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function paragraph_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $elements = array();
+
+  if ($display['type'] == 'paragraph_view') {
+
+    $entity_type = entity_get_info('paragraph_item');
+    $options = array();
+    foreach ($entity_type['view modes'] as $mode => $info) {
+      $options[$mode] = $info['label'];
+    }
+
+    $elements['view_mode'] = array(
+      '#type' => 'select',
+      '#title' => t('View mode'),
+      '#options' => $options,
+      '#default_value' => $settings['view_mode'],
+      '#description' => t('Select the view mode'),
+    );
+  }
+
+  return $elements;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function paragraph_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $output = array();
+
+
+  if ($display['type'] == 'paragraph_view') {
+    $entity_type = entity_get_info('paragraph_item');
+    if (!empty($entity_type['view modes'][$settings['view_mode']]['label'])) {
+      $output[] =  t('View mode: @mode', array('@mode' => $entity_type['view modes'][$settings['view_mode']]['label']));
+    }
+  }
+
+  return implode('<br>', $output);
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function paragraph_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+  $settings = $display['settings'];
+
+  switch ($display['type']) {
+    case 'paragraph_view':
+
+      $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'full';
+      foreach ($items as $delta => $item) {
+        if ($paragraph = paragraph_field_get_entity($item)) {
+          $element[$delta]['entity'] = $paragraph->view($view_mode);
+          $element[$delta]['#theme_wrappers'] = array('paragraph_view');
+          $element[$delta]['#attributes']['class'][] = 'paragraph-view';
+          $element[$delta]['#attributes']['class'][] = 'clearfix';
+          $element[$delta]['#attributes']['class'][] = drupal_clean_css_identifier('paragraph-' . $paragraph->bundle);
+          $element[$delta]['#attributes']['class'][] = drupal_clean_css_identifier('paragraph-' . $paragraph->bundle . '-' . $view_mode);
+        }
+      }
+      break;
+  }
+
+  return $element;
 }
 
 /**
@@ -1019,7 +1118,8 @@ function paragraph_bundle_save($bundle) {
   }
 
   paragraph_bundle_load(NULL, TRUE);
-
+  entity_info_cache_clear();
+  variable_set('menu_rebuild_needed', TRUE);
   return $status;
 }
 
@@ -1030,6 +1130,8 @@ function paragraph_bundle_delete($bundle_machine_name) {
       ->condition('bundle', $bundle->bundle)
       ->execute();
     paragraph_bundle_load(NULL, TRUE);
+    entity_info_cache_clear();
+    variable_set('menu_rebuild_needed', TRUE);
   }
 }
 
@@ -1078,18 +1180,18 @@ function paragraph_field_widget_form_build(&$form, &$form_state, $field, $instan
     $field_state['items_count'] = 1;
   }
 
-  if (isset($field_state['entity'][$delta])) {
+  if (isset($field_state['entity'][$delta]) && $field_state['entity'][$delta]) {
     $paragraph_item = $field_state['entity'][$delta];
   }
   else {
-    if (isset($items[$delta])) {
+    if (isset($items[$delta]) && (!isset($field_state['entity'][$delta]) || $field_state['entity'][$delta] != FALSE)) {
       $paragraph_item = paragraph_field_get_entity($items[$delta]);
     }
 
     // Show an empty collection if we have no existing one or it does not
     // load.
     if (empty($paragraph_item) && $bundle) {
-      $paragraph_item = entity_create('paragraph_item', array('bundle' => $bundle));
+      $paragraph_item = entity_create('paragraph_item', array('bundle' => $bundle, 'field_name' => $field_name));
     }
 
     if (!empty($paragraph_item)) {
@@ -1270,8 +1372,8 @@ function paragraph_item_get_host_entity($item) {
  */
 function paragraph_entity_metadata_property_callback(&$info, $entity_type, $field, $instance, $field_type) {
   $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
-  // Set the bundle as we know it is the name of the field.
-  $property['bundle'] = $field['field_name'];
+
+  $property['field_name'] = $field['field_name'];
   $property['getter callback'] = 'paragraph_field_property_get';
 }
 
@@ -1358,7 +1460,7 @@ function paragraph_remove_submit($form, &$form_state) {
   // trying to add a new entity won't ressurect a deleted entity from the
   // trash bin.
   $count = count($field_state['entity']);
-  $field_state['entity'][$count] = entity_create('paragraph_item', array('bundle' => 'afbeelding_links_tekst_rechts'));
+  $field_state['entity'][$count] = FALSE;
 
   // Then remove the last item. But we must not go negative.
   if ($field_state['items_count'] > 0) {
@@ -1444,7 +1546,7 @@ function paragraph_remove_js() {
  * @return
  *   The entity object or FALSE.
  */
-function paragraph_field_get_entity(&$item, $bundle = NULL) {
+function paragraph_field_get_entity(&$item, $bundle = NULL, $field_name = NULL) {
   if (isset($item['entity'])) {
     return $item['entity'];
   }
@@ -1457,12 +1559,115 @@ function paragraph_field_get_entity(&$item, $bundle = NULL) {
     }
     return $entity;
   }
-  elseif (!isset($item['entity']) && isset($bundle)) {
-    $item['entity'] = entity_create('paragraph_item', array('bundle' => $bundle));
+  elseif (!isset($item['entity']) && isset($bundle) && isset($field_name)) {
+    $item['entity'] = entity_create('paragraph_item', array('bundle' => $bundle, 'field_name' => $field_name));
     return $item['entity'];
   }
   return FALSE;
 }
+
+
+
+/**
+ * Implements hook_features_api().
+ */
+function paragraph_features_api() {
+  return array(
+    'paragraph' => array(
+      'name' => t('Paragraph Bundles'),
+      'feature_source' => TRUE,
+      'default_hook' => 'paragraph_info',
+    ),
+  );
+}
+
+/**
+ * Implements hook_features_export_options().
+ */
+function paragraph_features_export_options() {
+  $bundles = paragraph_bundle_load();
+  $names = array();
+  foreach($bundles as $key => $value) {
+    $names[$key] = $value->name;
+  }
+  return $names;
+}
+
+/**
+ * Implements hook_features_export.
+ */
+function paragraph_features_export($data, &$export, $module_name = '') {
+  $pipe = array();
+  $map = features_get_default_map('paragraph');
+
+  foreach ($data as $type) {
+    if ($info = paragraph_bundle_load($type)) {
+      $export['features']['paragraph'][$type] = $type;
+      $export['dependencies']['paragraph'] = 'paragraph';
+      $export['dependencies']['features'] = 'features';
+    }
+  }
+
+  return $pipe;
+
+}
+
+/**
+ * Implements hook_features_export_render().
+ */
+function paragraph_features_export_render($module, $data, $export = NULL) {
+  $elements = array(
+    'name' => FALSE,
+    'bundle' => FALSE,
+    'locked' => FALSE,
+  );
+  $output = array();
+  $output[] = '  $items = array(';
+  foreach ($data as $type) {
+    if ($info = paragraph_bundle_load($type)) {
+      $output[] = "    '{$type}' => array(";
+      foreach ($elements as $key => $t) {
+        if ($t) {
+          $text = str_replace("'", "\'", $info->$key);
+          $text = !empty($text) ? "t('{$text}')" : "''";
+          $output[] = "      '{$key}' => {$text},";
+        }
+        else {
+          $output[] = "      '{$key}' => '{$info->$key}',";
+        }
+      }
+      $output[] = "    ),";
+    }
+  }
+  $output[] = '  );';
+  $output[] = '  return $items;';
+  $output = implode("\n", $output);
+  return array('paragraph_info' => $output);
+}
+
+/**
+ * Implements hook_features_revert().
+ *
+ * @param $module
+ * name of module to revert content for
+ */
+function paragraph_features_revert($module = NULL) {
+  if ($default_types = features_get_default('paragraph', $module)) {
+    foreach ($default_types as $type_name => $type_info) {
+      db_delete('paragraph_bundle')
+        ->condition('bundle', $type_name)
+        ->execute();
+      $bundle = new stdClass();
+      $bundle->bundle = $type_info['bundle'];
+      $bundle->locked = $type_info['locked'];
+      $bundle->name = $type_info['name'];
+      paragraph_bundle_save($bundle);
+    }
+    paragraph_bundle_load(NULL, TRUE);
+    menu_rebuild();
+  }
+}
+
 
 
 
@@ -1737,6 +1942,14 @@ function theme_paragraph_field_multiple_value_form($variables) {
   return $output;
 }
 
+/**
+ * Themes paragraph items printed using the paragraph_view formatter.
+ */
+function theme_paragraph_view($variables) {
+  $element = $variables['element'];
+  return '<div' . drupal_attributes($element['#attributes']) . '>' . $element['#children'] . '</div>';
+}
+
 
 /**
  * Implements hook_theme().
@@ -1745,6 +1958,13 @@ function paragraph_theme() {
   return array(
     'paragraph_field_multiple_value_form' => array(
       'render element' => 'element',
+    ),
+    'paragraph_view' => array(
+      'render element' => 'element',
+    ),
+    'paragraph_item' => array(
+      'render element' => 'elements',
+      'template' => 'paragraph-item',
     ),
   );
 }

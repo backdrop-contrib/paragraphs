@@ -57,6 +57,12 @@ function paragraph_schema() {
         'length' => 32,
         'not null' => TRUE,
       ),
+      'field_name' => array(
+        'description' => 'Field name of the host entity.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
       'archived' => array(
         'description' => 'Boolean indicating whether the paragraph item is archived.',
         'type' => 'int',
