@@ -1,26 +1,30 @@
 <?php
+/**
+ * @file
+ * Admin functions for the paragraphs module.
+ */
 
-function paragraph_admin_bundle_overview() {
-  $bundles = paragraph_bundle_load();
+function paragraphs_admin_bundle_overview() {
+  $bundles = paragraphs_bundle_load();
 
   $header = array(t('Bundle name'), array('data' => t('Operations'), 'colspan' => '4'));
   $rows = array();
-  foreach ($bundles as $bundle_machine_name => $bundle) {
+  foreach ($bundles as $bundle) {
     $rows[] = array(
       array(
         'data' => $bundle->name . ' (' . $bundle->bundle . ')',
       ),
       array(
-        'data' => l(t('manage fields'), 'admin/structure/paragraph/' . strtr($bundle->bundle, array('_' => '-')) . '/fields')
+        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/fields')
       ),
       array(
-        'data' => l(t('manage display'), 'admin/structure/paragraph/' . strtr($bundle->bundle, array('_' => '-')) . '/display')
+        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/display')
       ),
       array(
-        'data' => l(t('edit bundle'), 'admin/structure/paragraph/' . strtr($bundle->bundle, array('_' => '-')) . '/edit')
+        'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/edit')
       ),
       array(
-        'data' => l(t('delete bundle'), 'admin/structure/paragraph/' . strtr($bundle->bundle, array('_' => '-')) . '/delete')
+        'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/delete')
       ),
     );
   }
@@ -35,10 +39,13 @@ function paragraph_admin_bundle_overview() {
   return $output;
 }
 
-function paragraph_admin_bundle_form($form, &$form_state, $bundle = NULL) {
+/**
+ * Form to create or edit an paragraph bundle.
+ */
+function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
 
   if (!isset($bundle) && !$bundle) {
-    // This is a new type. Node module managed types are custom and unlocked.
+    // This is a new bundle
     $bundle = new stdClass();
     $bundle->name = '';
     $bundle->bundle = '';
@@ -46,11 +53,11 @@ function paragraph_admin_bundle_form($form, &$form_state, $bundle = NULL) {
   } else {
     if(!$bundle) {
       drupal_set_message(t('Could not load bundle'), 'error');
-      drupal_goto('admin/structure/paragraph');
+      drupal_goto('admin/structure/paragraphs');
     }
   }
 
-  $form['#field_collection_bundle'] = $bundle;
+  $form['#paragraphs_bundle'] = $bundle;
 
   $form['name'] = array(
     '#title' => t('Name'),
@@ -69,7 +76,7 @@ function paragraph_admin_bundle_form($form, &$form_state, $bundle = NULL) {
       '#maxlength' => 32,
       '#disabled' => $bundle->locked,
       '#machine_name' => array(
-        'exists' => 'paragraph_bundle_load',
+        'exists' => 'paragraphs_bundle_load',
       ),
       '#description' => t('A unique machine-readable name for this content type. It must only contain lowercase letters, numbers, and underscores.'),
     );
@@ -91,11 +98,11 @@ function paragraph_admin_bundle_form($form, &$form_state, $bundle = NULL) {
 }
 
 /**
- * Form validation handler for node_type_form().
+ * Form validation handler for paragraphs_admin_bundle_form().
  *
- * @see node_type_form_submit()
+ * @see paragraphs_admin_bundle_form_submit()
  */
-function paragraph_admin_bundle_form_validate($form, &$form_state) {
+function paragraphs_admin_bundle_form_validate($form, &$form_state) {
   $bundle = new stdClass();
   $bundle->name = trim($form_state['values']['name']);
 
@@ -110,16 +117,19 @@ function paragraph_admin_bundle_form_validate($form, &$form_state) {
 
 }
 
-function paragraph_admin_bundle_form_submit($form, &$form_state) {
-
-  $op = isset($form_state['values']['op']) ? $form_state['values']['op'] : '';
+/**
+ * Submit handler for paragraphs_admin_bundle_form().
+ *
+ * @see paragraphs_admin_bundle_form()
+ */
+function paragraphs_admin_bundle_form_submit($form, &$form_state) {
 
   $bundle = new stdClass();
 
   if(!$form_state['values']['locked']) {
     $bundle->bundle = trim($form_state['values']['bundle']);
   } else {
-    $bundle->bundle = $form['#field_collection_bundle']->bundle;
+    $bundle->bundle = $form['#paragraphs_bundle']->bundle;
   }
 
   $bundle->locked = 1;
@@ -139,7 +149,7 @@ function paragraph_admin_bundle_form_submit($form, &$form_state) {
   unset($variables['form_token'], $variables['op'], $variables['submit'], $variables['delete'], $variables['reset'], $variables['form_id'], $variables['form_build_id']);
 
 
-  $status = paragraph_bundle_save($bundle);
+  $status = paragraphs_bundle_save($bundle);
 
   $t_args = array('%name' => $bundle->name);
 
@@ -148,10 +158,10 @@ function paragraph_admin_bundle_form_submit($form, &$form_state) {
   }
   elseif ($status == SAVED_NEW) {
     drupal_set_message(t('The content type %name has been added.', $t_args));
-    watchdog('node', 'Added paragraph bundle %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraph'));
+    watchdog('node', 'Added paragraph bundle %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
   }
 
-  $form_state['redirect'] = 'admin/structure/paragraph';
+  $form_state['redirect'] = 'admin/structure/paragraphs';
   return;
 }
 
@@ -160,10 +170,10 @@ function paragraph_admin_bundle_form_submit($form, &$form_state) {
  *
  * @ingroup forms
  */
-function paragraph_admin_bundle_delete_form($form, &$form_state, $bundle) {
+function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
   if(!$bundle) {
     drupal_set_message(t('Could not load bundle'), 'error');
-    drupal_goto('admin/structure/paragraph');
+    drupal_goto('admin/structure/paragraphs');
   }
 
   $form['type'] = array('#type' => 'value', '#value' => $bundle->bundle);
@@ -173,22 +183,22 @@ function paragraph_admin_bundle_delete_form($form, &$form_state, $bundle) {
   $caption = '';
   $caption .= '<p>' . t('This action cannot be undone. Content using the bundle will be broken.') . '</p>';
 
-  return confirm_form($form, $message, 'admin/structure/paragraph', $caption, t('Delete'));
+  return confirm_form($form, $message, 'admin/structure/paragraphs', $caption, t('Delete'));
 }
 
 /**
  * Process paragraph bundle delete confirm submissions.
  *
- * @see paragraph_admin_bundle_delete_form()
+ * @see paragraphs_admin_bundle_delete_form()
  */
-function paragraph_admin_bundle_delete_form_submit($form, &$form_state) {
-  paragraph_bundle_delete($form_state['values']['type']);
+function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
+  paragraphs_bundle_delete($form_state['values']['type']);
 
   $t_args = array('%name' => $form_state['values']['name']);
-  drupal_set_message(t('The pargraph bundle %name has been deleted.', $t_args));
+  drupal_set_message(t('The paragraph bundle %name has been deleted.', $t_args));
   watchdog('node', 'Deleted paragraph bundle %name.', $t_args, WATCHDOG_NOTICE);
 
 
-  $form_state['redirect'] = 'admin/structure/paragraph';
+  $form_state['redirect'] = 'admin/structure/paragraphs';
   return;
 }
