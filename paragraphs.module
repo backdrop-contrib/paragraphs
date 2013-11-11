@@ -2240,3 +2240,13 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
     $form['field']['cardinality']['#default_value'] = FIELD_CARDINALITY_UNLIMITED;
   }
 }
+
+/**
+ * Implements hook_views_api().
+ */
+function paragraphs_views_api() {
+  return array(
+    'api' => '3.0-alpha1',
+    'path' => drupal_get_path('module', 'paragraphs') . '/views',
+  );
+}

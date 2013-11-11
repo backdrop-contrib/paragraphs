@@ -3,3 +3,5 @@ description = Paragraphs module to control your content flow.
 core = 7.x
 
 dependencies[] = entity
+
+files[] = views/paragraphs_handler_relationship.inc
