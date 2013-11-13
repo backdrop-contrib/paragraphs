@@ -1502,6 +1502,29 @@ function paragraphs_remove_submit($form, &$form_state) {
     $field_state['entity'][$delta]->removed = 1;
   }
 
+
+  // Fix the weights. Field UI lets the weights be in a range of
+  // (-1 * item_count) to (item_count). This means that when we remove one,
+  // the range shrinks; weights outside of that range then get set to
+  // the first item in the select by the browser, floating them to the top.
+  // We use a brute force method because we lost weights on both ends
+  // and if the user has moved things around, we have to cascade because
+  // if I have items weight weights 3 and 4, and I change 4 to 3 but leave
+  // the 3, the order of the two 3s now is undefined and may not match what
+  // the user had selected.
+  $input = drupal_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight
+  uasort($input, '_field_sort_items_helper');
+
+  // Reweight everything in the correct order.
+  $weight = -1 * $field_state['items_count'] + 1;
+  foreach ($input as $key => $item) {
+    if ($item) {
+      $input[$key]['_weight'] = $weight++;
+    }
+  }
+
+  drupal_array_set_nested_value($form_state['input'], $address, $input);
   field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
   $form_state['rebuild'] = TRUE;
@@ -1583,7 +1606,7 @@ function paragraphs_deleteconfirm_submit($form, &$form_state) {
   uasort($input, '_field_sort_items_helper');
 
   // Reweight everything in the correct order.
-  $weight = -1 * $field_state['items_count'];
+  $weight = -1 * $field_state['items_count'] + 1;
   foreach ($input as $key => $item) {
     if ($item) {
       $input[$key]['_weight'] = $weight++;
@@ -1617,6 +1640,29 @@ function paragraphs_restore_submit($form, &$form_state) {
     $field_state['entity'][$delta]->removed = 0;
   }
 
+
+  // Fix the weights. Field UI lets the weights be in a range of
+  // (-1 * item_count) to (item_count). This means that when we remove one,
+  // the range shrinks; weights outside of that range then get set to
+  // the first item in the select by the browser, floating them to the top.
+  // We use a brute force method because we lost weights on both ends
+  // and if the user has moved things around, we have to cascade because
+  // if I have items weight weights 3 and 4, and I change 4 to 3 but leave
+  // the 3, the order of the two 3s now is undefined and may not match what
+  // the user had selected.
+  $input = drupal_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight
+  uasort($input, '_field_sort_items_helper');
+
+  // Reweight everything in the correct order.
+  $weight = -1 * $field_state['items_count'] + 1;
+  foreach ($input as $key => $item) {
+    if ($item) {
+      $input[$key]['_weight'] = $weight++;
+    }
+  }
+
+  drupal_array_set_nested_value($form_state['input'], $address, $input);
   field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
   $form_state['rebuild'] = TRUE;
