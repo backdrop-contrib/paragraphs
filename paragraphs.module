@@ -864,6 +864,13 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#element_validate' => array('paragraphs_field_instance_settings_form_empty_bundle_check'),
   );
 
+  if(!count($bundles)) {
+    $element['allowed_bundles_explain'] = array(
+      '#type' => 'markup',
+      '#markup' => t('You did not add any paragraph bundles yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => drupal_get_destination()))))
+    );
+  }
+
 
   $element['fieldset'] = array(
     '#type' => 'fieldset',
@@ -2039,7 +2046,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $select_bundles = array();
 
       foreach($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
-        if($allowed_bundle_key == $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
+        if($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
           $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
         }
       }

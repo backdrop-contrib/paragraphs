@@ -78,7 +78,7 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
       '#machine_name' => array(
         'exists' => 'paragraphs_bundle_load',
       ),
-      '#description' => t('A unique machine-readable name for this content type. It must only contain lowercase letters, numbers, and underscores.'),
+      '#description' => t('A unique machine-readable name for this paragraph bundle. It must only contain lowercase letters, numbers, and underscores.'),
     );
   }
 
@@ -157,7 +157,7 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
     drupal_set_message(t('The paragraph bundle %name has been updated.', $t_args));
   }
   elseif ($status == SAVED_NEW) {
-    drupal_set_message(t('The content type %name has been added.', $t_args));
+    drupal_set_message(t('The paragraph bundle %name has been added.', $t_args));
     watchdog('node', 'Added paragraph bundle %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
   }
 
