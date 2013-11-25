@@ -1244,6 +1244,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
       $element['title'] = array(
         '#markup' => t('Paragraph type: %bundle', array('%bundle' => $bundle_info->name)),
+        '#weight' => -100,
       );
     }
 
