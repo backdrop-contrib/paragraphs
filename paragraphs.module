@@ -1,5 +1,7 @@
 <?php
 
+define('PARAGRAPHS_DEFAULT_BUTTON_TITLE', 'paragraph');
+
 /**
  * Loads a paragraphs item.
  *
@@ -720,7 +722,10 @@ function paragraphs_field_info() {
   $info['paragraphs'] = array(
     'label' => t('Paragraphs'),
     'description' => t('Paragraphs field using the paragraph bundles.'),
-    'instance_settings' => array(),
+    'instance_settings' => array(
+      'button_title' => PARAGRAPHS_DEFAULT_BUTTON_TITLE,
+      'allowed_bundles' => array(),
+    ),
     'default_widget' => 'paragraphs_hidden',
     'default_formatter' => 'paragraphs_view',
     'settings' => array(),
@@ -864,6 +869,14 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#element_validate' => array('paragraphs_field_instance_settings_form_empty_bundle_check'),
   );
 
+  $element['button_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('New item title'),
+    '#description' => t('Title to appear as item on the button as "Add new [title]", this label is translatable'),
+    '#default_value' => isset($settings['label_title']) ? $settings['label_title'] : PARAGRAPHS_DEFAULT_BUTTON_TITLE,
+    '#required' => TRUE,
+  );
+
   if(!count($bundles)) {
     $element['allowed_bundles_explain'] = array(
       '#type' => 'markup',
@@ -928,7 +941,7 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
       if ($entity = paragraphs_field_get_entity($item)) {
 
         if (!empty($entity->is_new)) {
-          $entity->setHostEntity($host_entity_type, $host_entity, LANGUAGE_NONE, FALSE);
+          $entity->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
         }
 
         // If the host entity is saved as new revision, do the same for the item.
@@ -1373,52 +1386,54 @@ function paragraphs_field_widget_embed_validate($element, &$form_state, $complet
   $language = $element['#language'];
 
   $field_state = field_form_get_state($field_parents, $field_name, $language, $form_state);
-  $paragraph_item = $field_state['entity'][$element['#delta']];
+  if(isset($field_state['entity'][$element['#delta']])) {
+    $paragraph_item = $field_state['entity'][$element['#delta']];
 
-  // Attach field API validation of the embedded form.
-  field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
+    // Attach field API validation of the embedded form.
+    field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
 
-  // Now validate required elements if the entity is not empty.
-  if ((!isset($paragraph_item->removed) || !$paragraph_item->removed) && !empty($element['#paragraphs_required_elements'])) {
-    foreach ($element['#paragraphs_required_elements'] as &$elements) {
+    // Now validate required elements if the entity is not empty.
+    if ((!isset($paragraph_item->removed) || !$paragraph_item->removed) && !empty($element['#paragraphs_required_elements'])) {
+      foreach ($element['#paragraphs_required_elements'] as &$elements) {
 
-      // Copied from _form_validate().
-      if (isset($elements['#needs_validation'])) {
-        $is_empty_multiple = (!count($elements['#value']));
-        $is_empty_string = (is_string($elements['#value']) && drupal_strlen(trim($elements['#value'])) == 0);
-        $is_empty_value = ($elements['#value'] === 0);
-        if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
-          if (isset($elements['#title'])) {
-            form_error($elements, t('!name field is required.', array('!name' => $elements['#title'])));
-          }
-          else {
-            form_error($elements);
+        // Copied from _form_validate().
+        if (isset($elements['#needs_validation'])) {
+          $is_empty_multiple = (!count($elements['#value']));
+          $is_empty_string = (is_string($elements['#value']) && drupal_strlen(trim($elements['#value'])) == 0);
+          $is_empty_value = ($elements['#value'] === 0);
+          if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
+            if (isset($elements['#title'])) {
+              form_error($elements, t('!name field is required.', array('!name' => $elements['#title'])));
+            }
+            else {
+              form_error($elements);
+            }
           }
         }
       }
     }
-  }
 
-  // Only if the form is being submitted, finish the collection entity and
-  // prepare it for saving.
-  if ($form_state['submitted'] && !form_get_errors()) {
+    // Only if the form is being submitted, finish the collection entity and
+    // prepare it for saving.
+    if ($form_state['submitted'] && !form_get_errors()) {
 
-    field_attach_submit('paragraphs_item', $paragraph_item, $element, $form_state);
+      field_attach_submit('paragraphs_item', $paragraph_item, $element, $form_state);
 
-    // Load initial form values into $item, so any other form values below the
-    // same parents are kept.
-    $item = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+      // Load initial form values into $item, so any other form values below the
+      // same parents are kept.
+      $item = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
 
-    // Set the _weight if it is a multiple field.
-    if (isset($element['_weight']) && ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
-      $item['_weight'] = $element['_weight']['#value'];
+      // Set the _weight if it is a multiple field.
+      if (isset($element['_weight']) && ($field['cardinality'] > 1 || $field['cardinality'] == FIELD_CARDINALITY_UNLIMITED)) {
+        $item['_weight'] = $element['_weight']['#value'];
+      }
+
+      // Put the paragraph item in $item['entity'], so it is saved with
+      // the host entity via hook_field_presave() / field API if it is not empty.
+      // @see paragraph_field_presave()
+      $item['entity'] = $paragraph_item;
+      form_set_value($element, $item, $form_state);
     }
-
-    // Put the paragraph item in $item['entity'], so it is saved with
-    // the host entity via hook_field_presave() / field API if it is not empty.
-    // @see paragraph_field_presave()
-    $item['entity'] = $paragraph_item;
-    form_set_value($element, $item, $form_state);
   }
 }
 
@@ -1823,7 +1838,7 @@ function paragraphs_field_get_entity(&$item, $bundle = NULL, $field_name = NULL)
   elseif (isset($item['value'])) {
     // By default always load the default revision, so caches get used.
     $entity = paragraphs_item_load($item['value']);
-    if ($entity->revision_id != $item['revision_id']) {
+    if ($entity && $entity->revision_id != $item['revision_id']) {
       // A non-default revision is a referenced, so load this one.
       $entity = paragraphs_item_revision_load($item['revision_id']);
     }
@@ -2070,15 +2085,19 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $field_elements['add_more']['type']['#default_value'] = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
         }
 
-        $text = 'Add a paragraph';
+        $text = 'Add a !buttonlabel';
         if($max >= 0) {
-          $text = 'Add another paragraph';
+          $text = 'Add another !buttonlabel';
+        }
+
+        if(!isset($instance['settings']['button_title'])) {
+          $instance['settings']['button_title'] = PARAGRAPHS_DEFAULT_BUTTON_TITLE;
         }
 
         $field_elements['add_more']['add_more'] = array(
           '#type' => 'submit',
           '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more',
-          '#value' => t($text),
+          '#value' => t($text, array('!buttonlabel' => t($instance['settings']['button_title']))),
           '#attributes' => array('class' => array('field-add-more-submit')),
           '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
           '#submit' => array('paragraphs_add_more_submit'),
