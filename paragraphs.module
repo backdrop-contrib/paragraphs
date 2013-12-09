@@ -1,6 +1,8 @@
 <?php
 
-define('PARAGRAPHS_DEFAULT_BUTTON_TITLE', 'paragraph');
+define('PARAGRAPHS_DEFAULT_TITLE', 'Paragraph');
+define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
+
 
 /**
  * Loads a paragraphs item.
@@ -723,7 +725,8 @@ function paragraphs_field_info() {
     'label' => t('Paragraphs'),
     'description' => t('Paragraphs field using the paragraph bundles.'),
     'instance_settings' => array(
-      'button_title' => PARAGRAPHS_DEFAULT_BUTTON_TITLE,
+      'title' => PARAGRAPHS_DEFAULT_TITLE,
+      'title_multiple' => PARAGRAPHS_DEFAULT_TITLE_MULTIPLE,
       'allowed_bundles' => array(),
     ),
     'default_widget' => 'paragraphs_hidden',
@@ -869,11 +872,19 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#element_validate' => array('paragraphs_field_instance_settings_form_empty_bundle_check'),
   );
 
-  $element['button_title'] = array(
+  $element['title'] = array(
     '#type' => 'textfield',
-    '#title' => t('New item title'),
-    '#description' => t('Title to appear as item on the button as "Add new [title]", this label is translatable'),
-    '#default_value' => isset($settings['label_title']) ? $settings['label_title'] : PARAGRAPHS_DEFAULT_BUTTON_TITLE,
+    '#title' => t('Item Title'),
+    '#description' => t('Label to appear as title on the button as "Add new [title]", this label is translatable'),
+    '#default_value' => isset($settings['title']) ? $settings['title'] : PARAGRAPHS_DEFAULT_TITLE,
+    '#required' => TRUE,
+  );
+
+  $element['title_multiple'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Item Title multiple'),
+    '#description' => t('Title in its multiple form.'),
+    '#default_value' => isset($settings['title_multiple']) ? $settings['title_multiple'] : PARAGRAPHS_DEFAULT_TITLE_MULTIPLE,
     '#required' => TRUE,
   );
 
@@ -2055,6 +2066,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       '#prefix' => '<div id="' . $wrapper_id . '">',
       '#suffix' => '</div>',
       '#max_delta' => $max,
+      '#instance' => $instance,
     );
     // Add 'add more' button, if not working with a programmed form.
     if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED && empty($form_state['programmed'])) {
@@ -2068,6 +2080,11 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       }
       if(count($select_bundles)) {
 
+
+        if(!isset($instance['settings']['title'])) {
+          $instance['settings']['title'] = PARAGRAPHS_DEFAULT_TITLE;
+        }
+
         $field_elements['add_more'] = array(
           '#type' => 'container',
           '#tree' => TRUE,
@@ -2075,7 +2092,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $field_elements['add_more']['type'] = array(
           '#type' => 'select',
           '#name' => strtr($id_prefix, '-', '_') . '_add_more_type',
-          '#title' => t('Paragraph type'),
+          '#title' => t('!title type', array('!title' => t($instance['settings']['title']))),
           '#options' => $select_bundles,
           '#attributes' => array('class' => array('field-add-more-type')),
           '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
@@ -2085,19 +2102,16 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $field_elements['add_more']['type']['#default_value'] = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
         }
 
-        $text = 'Add a !buttonlabel';
+        $text = 'Add a !title';
         if($max >= 0) {
-          $text = 'Add another !buttonlabel';
+          $text = 'Add another !title';
         }
 
-        if(!isset($instance['settings']['button_title'])) {
-          $instance['settings']['button_title'] = PARAGRAPHS_DEFAULT_BUTTON_TITLE;
-        }
 
         $field_elements['add_more']['add_more'] = array(
           '#type' => 'submit',
           '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more',
-          '#value' => t($text, array('!buttonlabel' => t($instance['settings']['button_title']))),
+          '#value' => t($text, array('!title' => t($instance['settings']['title']))),
           '#attributes' => array('class' => array('field-add-more-submit')),
           '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
           '#submit' => array('paragraphs_add_more_submit'),
@@ -2183,6 +2197,14 @@ function paragraphs_add_more_js($form, $form_state) {
 function theme_paragraphs_field_multiple_value_form($variables) {
   $element = $variables['element'];
   $output = '';
+  $instance = $element['#instance'];
+
+  if(!isset($instance['settings']['title'])) {
+    $instance['settings']['title'] = PARAGRAPHS_DEFAULT_TITLE;
+  }
+  if(!isset($instance['settings']['title_multiple'])) {
+    $instance['settings']['title_multiple'] = PARAGRAPHS_DEFAULT_TITLE_MULTIPLE;
+  }
 
   if ($element['#cardinality'] > 1 || $element['#cardinality'] == FIELD_CARDINALITY_UNLIMITED) {
     $table_id = drupal_html_id($element['#field_name'] . '_values');
@@ -2235,7 +2257,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
       $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
     } else {
       $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>";
-      $output .= '<p><em>' . t('No paragraphs added yet. Select a paragraph type and press the button below to add one.') . '</em></p>';
+      $output .= '<p><em>' . t('No !title_multiple added yet. Select a !title type and press the button below to add one.', array('!title_multiple' => t($instance['settings']['title_multiple']), '!title' => t($instance['settings']['title']))) . '</em></p>';
     }
     $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
     $output .= '<div class="clearfix">' . drupal_render($add_more_button_type) . drupal_render($add_more_button) . '</div>';
