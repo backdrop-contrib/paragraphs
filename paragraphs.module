@@ -1557,7 +1557,9 @@ function paragraphs_remove_submit($form, &$form_state) {
   // the 3, the order of the two 3s now is undefined and may not match what
   // the user had selected.
   $input = drupal_array_get_nested_value($form_state['input'], $address);
-  // Sort by weight
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting
+  unset($input['add_more']);
   uasort($input, '_field_sort_items_helper');
 
   // Reweight everything in the correct order.
@@ -1646,7 +1648,9 @@ function paragraphs_deleteconfirm_submit($form, &$form_state) {
   // the 3, the order of the two 3s now is undefined and may not match what
   // the user had selected.
   $input = drupal_array_get_nested_value($form_state['input'], $address);
-  // Sort by weight
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting
+  unset($input['add_more']);
   uasort($input, '_field_sort_items_helper');
 
   // Reweight everything in the correct order.
@@ -1695,7 +1699,9 @@ function paragraphs_restore_submit($form, &$form_state) {
   // the 3, the order of the two 3s now is undefined and may not match what
   // the user had selected.
   $input = drupal_array_get_nested_value($form_state['input'], $address);
-  // Sort by weight
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting
+  unset($input['add_more']);
   uasort($input, '_field_sort_items_helper');
 
   // Reweight everything in the correct order.
