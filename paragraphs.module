@@ -1388,7 +1388,6 @@ function _paragraphs_collect_required_elements(&$element, &$required_elements) {
     }
   }
   if (!empty($element['#required'])) {
-    $element['#required'] = FALSE;
     $required_elements[] = &$element;
     $element += array('#pre_render' => array());
     array_unshift($element['#pre_render'], 'paragraphs_field_widget_render_required');
