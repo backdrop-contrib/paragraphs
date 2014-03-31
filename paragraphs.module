@@ -1293,7 +1293,11 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       }
 
       if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED && isset($paragraph_item)) {
-        $element['remove_button'] = array(
+        $element['actions'] = array(
+          '#type' => 'actions',
+          '#weight' => 9999,
+        );
+        $element['actions']['remove_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_remove_button',
           '#type' => 'submit',
@@ -1309,10 +1313,14 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         );
       }
     } else {
-      $element['remove_button'] = array(
+      $element['actions'] = array(
+        '#type' => 'actions',
+        '#weight' => 9999,
+      );
+      $element['actions']['remove_button'] = array(
         '#markup' => '<p>' . t('This !title has been removed, press the button below to restore.', array('!title' => t($instance['settings']['title']))) . ' </p><p><em>' . t('Warning: this !title will actually be deleted when you press "!confirm" or "!save"!', array('!title' => $instance['settings']['title'], '!confirm' => t('Confirm Deletion'), '!save' => t('Save'))) . '</em></p>',
       );
-      $element['restore_button'] = array(
+      $element['actions']['restore_button'] = array(
         '#delta' => $delta,
         '#name' => implode('_', $parents) . '_restore_button',
         '#type' => 'submit',
@@ -1326,7 +1334,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         ),
         '#weight' => 1000,
       );
-      $element['confirm_delete_button'] = array(
+      $element['actions']['confirm_delete_button'] = array(
         '#delta' => $delta,
         '#name' => implode('_', $parents) . '_deleteconfirm_button',
         '#type' => 'submit',
@@ -1537,7 +1545,7 @@ function paragraphs_remove_submit($form, &$form_state) {
   $delta = $button['#delta'];
 
   // Where in the form we'll find the parent element.
-  $address = array_slice($button['#array_parents'], 0, -2);
+  $address = array_slice($button['#array_parents'], 0, -3);
 
   // Go one level up in the form, to the widgets container.
   $parent_element = drupal_array_get_nested_value($form, $address);
@@ -1596,7 +1604,7 @@ function paragraphs_deleteconfirm_submit($form, &$form_state) {
   $delta = $button['#delta'];
 
   // Where in the form we'll find the parent element.
-  $address = array_slice($button['#array_parents'], 0, -2);
+  $address = array_slice($button['#array_parents'], 0, -3);
 
   // Go one level up in the form, to the widgets container.
   $parent_element = drupal_array_get_nested_value($form, $address);
@@ -1678,7 +1686,7 @@ function paragraphs_restore_submit($form, &$form_state) {
   $delta = $button['#delta'];
 
   // Where in the form we'll find the parent element.
-  $address = array_slice($button['#array_parents'], 0, -2);
+  $address = array_slice($button['#array_parents'], 0, -3);
 
   // Go one level up in the form, to the widgets container.
   $parent_element = drupal_array_get_nested_value($form, $address);
@@ -1747,7 +1755,7 @@ function paragraphs_remove_js() {
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
@@ -1790,7 +1798,7 @@ function paragraphs_deleteconfirm_js() {
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
@@ -1832,7 +1840,7 @@ function paragraphs_restore_js() {
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
