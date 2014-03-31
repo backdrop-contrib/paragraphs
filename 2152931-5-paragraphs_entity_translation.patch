@@ -1,0 +1,62 @@
+diff --git a/paragraphs.module b/paragraphs.module
+index 01e72bf..aede174 100644
+--- a/paragraphs.module
++++ b/paragraphs.module
+@@ -2358,3 +2358,57 @@ function paragraphs_views_api() {
+     'path' => drupal_get_path('module', 'paragraphs') . '/views',
+   );
+ }
++
++/**
++ * Implements hook_module_implements_alter().
++ */
++function paragraphs_module_implements_alter(&$implementations, $hook) {
++  switch ($hook) {
++    case 'field_attach_form':
++      // We put the implementation of field_attach_form implementation of
++      // paragraphs at the end, so it has a chance to disable the implementation
++      // of entity_translation that provides the form changes that will break
++      // paragraphs.
++      $group = $implementations['paragraphs'];
++      unset($implementations['paragraphs']);
++      $implementations['paragraphs'] = $group;
++      break;
++  }
++}
++
++/**
++ * Implements hook_field_attach_form().
++ */
++function paragraphs_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
++
++  // We make sure paragraphs don't use the entity translation defaults, as those
++  // are not implemented properly yet in paragraphs. So we better show an empty
++  // initial field for a translation of an existing entity, than making
++  // paragraphs break completely.
++  // A proper implementation of entity_translation has still to be discussed.
++  // @see https://drupal.org/node/2152931
++  list( , , $bundle) = entity_extract_ids($entity_type, $entity);
++
++  foreach (field_info_instances($entity_type, $bundle) as $instance) {
++
++    $field_name = $instance['field_name'];
++    $field_info = field_info_field($field_name);
++
++    if ($field_info['type'] == 'paragraphs') {
++      if (isset($form[$field_name])) {
++        $element = &$form[$field_name];
++
++        // Remove the entity_translation preparion for the element. This way we
++        // avoid that there will be form elements that do not have a
++        // corresponding form state for the field.
++        if (!empty($element['#process'])) {
++          $key = array_search('entity_translation_prepare_element', $element['#process']);
++
++          if ($key !== FALSE)  {
++            unset($element['#process'][$key]);
++          }
++        }
++      }
++    }
++  }
++}
