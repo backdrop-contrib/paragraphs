@@ -250,6 +250,10 @@ class ParagraphsItemEntity extends Entity {
     }
   }
 
+  public function forceHostEntity($entity) {
+    $this->hostEntity = $entity;
+  }
+
   /**
    * Returns the host entity, which embeds this paragraph item.
    */
@@ -1010,6 +1014,7 @@ function paragraphs_field_update($entity_type, $entity, $field, $instance, $lang
     else {
       // Delete unused paragraph items now.
       foreach (paragraphs_item_load_multiple($ids) as $item) {
+        $item->forceHostEntity($entity);
         $item->deleteRevision(TRUE);
       }
     }
