@@ -1016,6 +1016,12 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
  * Care about removed paragraph items.
  */
 function paragraphs_field_update($entity_type, $entity, $field, $instance, $langcode, &$items) {
+  // Prevent workbench moderation from deleting paragraphs on node_save() during
+  // workbench_moderation_store(), when $host_entity->revision == 0.
+  if (!empty($entity->workbench_moderation['updating_live_revision'])) {
+    return;
+  }
+
   $items_original = !empty($entity->original->{$field['field_name']}[$langcode]) ? $entity->original->{$field['field_name']}[$langcode] : array();
   $original_by_id = array_flip(paragraphs_field_item_to_ids($items_original));
 
