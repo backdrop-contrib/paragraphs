@@ -1078,7 +1078,7 @@ function paragraphs_field_delete($entity_type, $entity, $field, $instance, $lang
         }
       }
 
-      entity_delete_multiple('paragraphs_items', $ids);
+      entity_delete_multiple('paragraphs_item', $ids);
     }
   }
 }
