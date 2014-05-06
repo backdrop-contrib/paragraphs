@@ -1237,7 +1237,7 @@ function paragraphs_bundle_delete($bundle_machine_name) {
   }
 }
 
-function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element, $load_entities = TRUE) {
   static $recursion = 0;
 
   if(!isset($instance['settings']['title'])) {
@@ -1296,7 +1296,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     $paragraph_item = $field_state['entity'][$delta];
   }
   else {
-    if (isset($items[$delta])) {
+    if (isset($items[$delta]) && $load_entities) {
       $paragraph_item = paragraphs_field_get_entity($items[$delta]);
     }
 
@@ -1766,6 +1766,8 @@ function paragraphs_deleteconfirm_submit($form, &$form_state) {
   $count = count($field_state['entity']);
   unset($field_state['entity'][$count]);
 
+  $field_state['removed_one'] = TRUE;
+
   // Then remove the last item. But we must not go negative.
   if ($field_state['items_count'] > 0) {
     $field_state['items_count']--;
@@ -2177,6 +2179,11 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
   $max = $field_state['items_count'] - 1;
 
+  $load_entities = TRUE;
+  if(isset($field_state['removed_one']) && $field_state['removed_one']) {
+    $load_entities = FALSE;
+  }
+
   $title = check_plain($instance['label']);
   $description = field_filter_xss($instance['description']);
 
@@ -2205,7 +2212,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         '#delta' => $delta,
         '#weight' => $delta,
       );
-      if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element)) {
+      if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element, $load_entities)) {
         // Input field for the delta (drag-n-drop reordering).
         if ($multiple) {
           // We name the element '_weight' to avoid clashing with elements
