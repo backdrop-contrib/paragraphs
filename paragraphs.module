@@ -521,6 +521,36 @@ class ParagraphsItemEntity extends Entity {
   }
 
   /**
+  * Ensure file fields on the entity have their URIs loaded for previews.
+  * Copied from #1447338-7, thanks!
+  */
+  public function view($view_mode = 'full', $langcode = NULL, $page = NULL) {
+    if ($langcode == NULL) {
+      $langcode = LANGUAGE_NONE;
+    }
+
+    // Iterate over fields in the collection to add URIs for image fields.
+    $field_instances = field_info_instances($this->entityType, $this->bundle);
+    foreach ($field_instances as $field_name => $field) {
+      $info = field_info_field($field_name);
+      if ($info['type'] == 'image' && $image_field = &$this->{$field_name}) {
+        // Add the URI to the field on the entity for display.
+        if (isset($image_field[$langcode])) {
+          foreach ($image_field[$langcode] as &$field_to_be_updated) {
+            if (!isset($field_to_be_updated['uri'])) {
+              $image = file_load($field_to_be_updated['fid']);
+              if($image) {
+                $field_to_be_updated['uri'] = $image->uri;
+              }
+            }
+          }
+        }
+      }
+    }
+    return entity_get_controller($this->entityType)->view(array($this), $view_mode, $langcode, $page);
+  }
+
+  /**
    * Magic method to only serialize what's necessary.
    */
   public function __sleep() {
