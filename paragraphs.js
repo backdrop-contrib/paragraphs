@@ -9,7 +9,7 @@
    * Allows submit buttons in entity forms to trigger uploads by undoing
    * work done by Drupal.behaviors.fileButtons.
    */
-  Drupal.behaviors.inlineEntityForm = {
+  Drupal.behaviors.paragraphs = {
     attach: function (context) {
       if (Drupal.file) {
         $('input.paragraphs-add-more-submit', context).unbind('mousedown', Drupal.file.disableFields);
