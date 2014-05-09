@@ -4,4 +4,6 @@ core = 7.x
 
 dependencies[] = entity
 
+files[] = ParagraphsItemEntity.inc
+files[] = ParagraphsItemMetadataController.inc
 files[] = views/paragraphs_handler_relationship.inc
