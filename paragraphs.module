@@ -259,8 +259,8 @@ function paragraphs_field_instance_settings_form($field, $instance) {
 
   $element['title_multiple'] = array(
     '#type' => 'textfield',
-    '#title' => t('Item Title multiple'),
-    '#description' => t('Title in its multiple form.'),
+    '#title' => t('Plural Item Title'),
+    '#description' => t('Title in its plural form.'),
     '#default_value' => isset($settings['title_multiple']) ? $settings['title_multiple'] : PARAGRAPHS_DEFAULT_TITLE_MULTIPLE,
     '#required' => TRUE,
   );
