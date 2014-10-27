@@ -246,7 +246,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#title' => t('Allowed Paragraph bundles'),
     '#options' => $bundles,
     '#default_value' => isset($settings['allowed_bundles']) ? $settings['allowed_bundles'] : array(),
-    '#element_validate' => array('paragraphs_field_instance_settings_form_empty_bundle_check'),
+    '#description' => t('If no bundle is selected, all the bundles will be available.'),
   );
 
   $element['title'] = array(
@@ -307,13 +307,6 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   );
   return $element;
 }
-
-function paragraphs_field_instance_settings_form_empty_bundle_check($element, &$form_state, $form) {
-  if (!count($element['#value'])) {
-    form_error($element, t('Select at least one bundle.'));
-  }
-}
-
 
 /**
  * Implements hook_field_settings_form().

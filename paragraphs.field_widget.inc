@@ -150,13 +150,23 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $available_bundles = paragraphs_bundle_load();
       $select_bundles = array();
 
+      // By default, consider that no bundle has been explicitly picked.
+      $explicitly_enabled = FALSE;
       foreach($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
         if($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
           $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+
+          // If an item has been explicitly selected, raise our flag.
+          $explicitly_enabled = TRUE;
         }
       }
-      if(count($select_bundles)) {
-
+      // If no bundle has been explicitly selected, give access to all of them.
+      if (!$explicitly_enabled) {
+        foreach ($available_bundles as $bundle) {
+          $select_bundles[$bundle->bundle] = $bundle->name;
+        }
+      }
+      if(count($instance['settings']['allowed_bundles'])) {
         $field = $field_state['field'];
 
         if($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['items_count'] < $field['cardinality']) {
