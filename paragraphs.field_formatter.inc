@@ -77,7 +77,10 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
   switch ($display['type']) {
     case 'paragraphs_view':
 
-      $view_mode = !empty($display['settings']['view_mode']) ? $display['settings']['view_mode'] : 'full';
+      // Get view mode from entity.
+      $display_view_mode = empty($display['settings']['view_mode']) ? 'full' : $display['settings']['view_mode'];
+      // Get view mode from field instance (if configured).
+      $view_mode = empty($instance['display'][$display_view_mode]['settings']['view_mode']) ? $display_view_mode : $instance['display'][$display_view_mode]['settings']['view_mode'];
       $element['#theme_wrappers'] = array('paragraphs_items');
       $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items');
       $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
