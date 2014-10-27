@@ -1,0 +1,137 @@
+<?php
+/**
+ * @file
+ * Add view / create / update / delete permissions for all paragraph bundles.
+ */
+
+/**
+ * Check whether a user may perform the operation on the paragraph item.
+ *
+ * @param $op
+ *   The operation to be performed on the paragraph item. Possible values are:
+ *   - "view"
+ *   - "update"
+ *   - "delete"
+ *   - "create"
+ * @param $bundle
+ *   The machine name of the paragraph bundle.
+ * @param $account
+ *   Optional, a user object representing the user for whom the operation is to
+ *   be performed. Determines access for a user other than the current user.
+ *
+ * @return
+ *   TRUE if the operation may be performed, FALSE otherwise.
+ */
+function paragraphs_permissions_bundle_content_access($op, $bundle, $account = NULL) {
+  $rights = &drupal_static(__FUNCTION__, array());
+
+  if (!$bundle || !in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    // If there was no bundle to check against, or the $op was not one of the
+    // supported ones, we return access denied.
+    return FALSE;
+  }
+  // If no user object is supplied, the access check is for the current user.
+  if (empty($account)) {
+    $account = $GLOBALS['user'];
+  }
+
+  // Set static cache id to use the bundle machine name.
+  $cid = $bundle;
+
+  // If we've already checked access for this bundle, user and op, return from
+  // cache.
+  if (isset($rights[$account->uid][$cid][$op])) {
+    return $rights[$account->uid][$cid][$op];
+  }
+
+  if (user_access('bypass paragraphs content access', $account)) {
+    $rights[$account->uid][$cid][$op] = TRUE;
+    return TRUE;
+  }
+  if (user_access($op . ' paragraph content ' . $bundle, $account)) {
+    $rights[$account->uid][$cid][$op] = TRUE;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function paragraphs_permissions_permission() {
+  $perms = array(
+    'bypass paragraphs content access' => array(
+      'title' => t('Bypass content access control'),
+      'description' => t('Is able to administer content for all paragraph bundles'),
+    ),
+  );
+
+  // Add permissions for each bundle.
+  $bundles = paragraphs_bundle_load();
+  foreach ($bundles as $machine_name => $bundle) {
+    $perms += array(
+      "view paragraph content $machine_name" => array(
+        'title' => t('%type_name: View content', array('%type_name' => $bundle->name)),
+      ),
+      "create paragraph content $machine_name" => array(
+        'title' => t('%type_name: Create content', array('%type_name' => $bundle->name)),
+      ),
+      "update paragraph content $machine_name" => array(
+        'title' => t('%type_name: Edit content', array('%type_name' => $bundle->name)),
+      ),
+      "delete paragraph content $machine_name" => array(
+        'title' => t('%type_name: Delete content', array('%type_name' => $bundle->name)),
+      ),
+    );
+  }
+  return $perms;
+}
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function paragraphs_permissions_field_widget_form_alter(&$element, &$form_state, $context) {
+  if (isset($element['#instance']['widget']['module']) && $element['#instance']['widget']['module'] == 'paragraphs' && $element['#instance']['widget']['type'] == 'paragraphs_embed') {
+    // Add access checks for edit / delete buttons.
+    for ($i = 0; $i <= $element['#max_delta']; $i++) {
+      $element[$i]['actions']['edit_button']['#access'] = paragraphs_permissions_bundle_content_access('update', $element[$i]['#bundle']);
+      $element[$i]['actions']['remove_button']['#access'] = paragraphs_permissions_bundle_content_access('delete', $element[$i]['#bundle']);
+    }
+
+    // Add access checks for create list.
+    foreach ($element['add_more']['type']['#options'] as $bundle => $label) {
+      if (!paragraphs_permissions_bundle_content_access('create', $bundle)) {
+        unset($element['add_more']['type']['#options'][$bundle]);
+      }
+    }
+    // Change form if there are no permissions for bundles.
+    if (!count($element['add_more']['type']['#options'])) {
+      unset($element['add_more']['type']);
+      $element['add_more']['add_more'] = array(
+        '#type' => 'markup',
+        '#markup' => '<em>' . t('No bundles available. Please check your permissions or edit the field settings to add more bundles.') . '</em>',
+      );
+    }
+
+    // Change user feedback if no bundles were found.
+    if ($element['add_more']['add_more']['#type'] == 'markup') {
+      $element['add_more']['add_more']['#markup'] = '<em>' . t('No bundles available. Please check your permissions or edit the field settings to add more bundles.') . '</em>';
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_field().
+ */
+function paragraphs_permissions_preprocess_field(&$variables) {
+  if ($variables['element']['#field_type'] == 'paragraphs') {
+    // Check if the user has view permissions for each paragraph entity bundle.
+    foreach ($variables['element']['#items'] as $index => $item) {
+      if (!paragraphs_permissions_bundle_content_access('view', $variables['items'][$index]['entity']['paragraphs_item'][$item['value']]['#bundle'])) {
+        unset($variables['element'][$index]);
+      }
+    }
+  }
+}
+
