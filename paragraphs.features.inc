@@ -110,3 +110,10 @@ function paragraphs_features_revert($module = NULL) {
     menu_rebuild();
   }
 }
+
+/**
+ * Implements hook_features_rebuild().
+ */
+function paragraphs_features_rebuild($module_name) {
+  paragraphs_features_revert($module_name);
+}
