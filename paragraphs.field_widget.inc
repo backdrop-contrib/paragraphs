@@ -177,6 +177,12 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
           );
 
+          // Hide the bundle selection if only one bundle is allowed.
+          if (count($select_bundles) == 1) {
+            $field_elements['add_more']['type']['#type'] = 'hidden';
+            $field_elements['add_more']['type']['#value'] = current($select_bundles);
+          }
+
           if(isset($form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'])) {
             $field_elements['add_more']['type']['#default_value'] = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
           }
