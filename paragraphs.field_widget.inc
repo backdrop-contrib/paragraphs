@@ -353,7 +353,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_remove_button',
           '#type' => 'submit',
-          '#value' => t('Remove'),
+          '#value' => t('Remove !type paragraph', array('!type' => $bundle_info->name)),
           '#validate' => array(),
           '#submit' => array('paragraphs_remove_submit'),
           '#limit_validation_errors' => array(),
