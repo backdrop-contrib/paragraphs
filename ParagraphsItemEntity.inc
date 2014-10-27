@@ -93,8 +93,13 @@ class ParagraphsItemEntity extends Entity {
       // Ok, we have the field name property, we can proceed and check the field's type
       $field_info = $this->fieldInfo();
 
+      // Check if we have field info, if not, our field is deleted.
+      if (!$field_info) {
+        return FALSE;
+      }
+
       // We only allow paragraphs type field for this entity.
-      if (!$field_info || $field_info['type'] != 'paragraphs') {
+      if ($field_info['type'] != 'paragraphs') {
         throw new Exception("Invalid field name given: {$this->field_name} is not a paragraphs field.");
       }
     }
