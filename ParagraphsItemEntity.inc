@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Entity implementation for the paragraphs entity.
+ */
 
 /**
  * Class for paragraphs_item entities.
@@ -208,6 +212,12 @@ class ParagraphsItemEntity extends Entity {
     }
   }
 
+  /**
+   * Function to force change the host entity of this paragraph item.
+   *
+   * @param $entity
+   *   The entity to force the host to.
+   */
   public function forceHostEntity($entity) {
     $this->hostEntity = $entity;
   }
@@ -260,6 +270,12 @@ class ParagraphsItemEntity extends Entity {
     }
   }
 
+  /**
+   * Fetches details of the host and saves it in the entity.
+   *
+   * @return bool
+   *   Whether the fetching was successful.
+   */
   protected function fetchHostDetails() {
     if (!isset($this->hostEntityId)) {
       if ($this->item_id) {
@@ -362,7 +378,7 @@ class ParagraphsItemEntity extends Entity {
 
     // Only save directly if we are told to skip saving the host entity. Else,
     // we always save via the host as saving the host might trigger saving
-    // paragraphs items anyway (e.g. if a new revision is created).
+    // paragraphs items anyway (for example, if a new revision is created).
     if ($skip_host_save) {
       return entity_get_controller($this->entityType)->save($this);
     }
@@ -464,7 +480,7 @@ class ParagraphsItemEntity extends Entity {
   /**
    * Export the paragraphs item.
    *
-   * Since paragraphs entities are not directly exportable (i.e., do not
+   * Since paragraphs entities are not directly exportable (that is, do not
    * have 'exportable' set to TRUE in hook_entity_info()) and since Features
    * calls this method when exporting the paragraphs as a field attached
    * to another entity, we return the export in the format expected by
@@ -491,13 +507,13 @@ class ParagraphsItemEntity extends Entity {
     $field_instances = field_info_instances($this->entityType, $this->bundle);
     foreach ($field_instances as $field_name => $field) {
       $info = field_info_field($field_name);
-      if ($info['type'] == 'image' && $image_field = &$this->{$field_name}) {
+      if (is_array($info) && $info['type'] == 'image' && $image_field = &$this->{$field_name}) {
         // Add the URI to the field on the entity for display.
         if (isset($image_field[$langcode])) {
           foreach ($image_field[$langcode] as &$field_to_be_updated) {
             if (!isset($field_to_be_updated['uri'])) {
               $image = file_load($field_to_be_updated['fid']);
-              if($image) {
+              if ($image) {
                 $field_to_be_updated['uri'] = $image->uri;
               }
             }

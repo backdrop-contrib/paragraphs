@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Default theme functions for paragraphs.
+ */
 
 /**
  * Process variables for paragraphs-items.tpl.php

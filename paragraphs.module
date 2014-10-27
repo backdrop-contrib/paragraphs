@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * Paragraphs hooks and common functions.
+ * Paragraphs allows you to embed multiple entity bundles in field.
+ */
 
 define('PARAGRAPHS_DEFAULT_TITLE', 'Paragraph');
 define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
@@ -107,13 +112,21 @@ function paragraphs_entity_info() {
   return $return;
 }
 
+/**
+ * Access check for paragraphs.
+ *
+ * Currently always returns TRUE.
+ * TODO: might want to do some checking here? Might not be needed as the host should do this.
+ *
+ * @return bool
+ *   Whether the user has access to a paragraphs item.
+ */
 function paragraphs_item_access() {
-  // TODO: might want to do some checking here? Might not be needed as the host should do this.
   return TRUE;
 }
 
 /**
- * Implements hook_permission
+ * Implements hook_permission().
  */
 function paragraphs_permission() {
   $perms = array(
@@ -127,7 +140,7 @@ function paragraphs_permission() {
 
 
 /**
- * Implements hook_menu
+ * Implements hook_menu().
  */
 function paragraphs_menu() {
   $items = array();
@@ -234,10 +247,9 @@ function paragraphs_field_info() {
 function paragraphs_field_instance_settings_form($field, $instance) {
 
   $settings = $instance['settings'];
-
   $bundles = array();
   $_bundles = paragraphs_bundle_load();
-  foreach($_bundles as $machine_name => $bundle) {
+  foreach ($_bundles as $machine_name => $bundle) {
     $bundles[$machine_name] = $bundle->name;
   }
 
@@ -278,7 +290,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   );
 
 
-  if(!count($bundles)) {
+  if (!count($bundles)) {
     $element['allowed_bundles_explain'] = array(
       '#type' => 'markup',
       '#markup' => t('You did not add any paragraph bundles yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => drupal_get_destination()))))
@@ -294,7 +306,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     // the value below is writing to $instance in the right location.
     '#parents' => array('instance'),
   );
-  // Be sure to set the default value to NULL, e.g. to repair old fields
+  // Be sure to set the default value to NULL, for example to repair old fields
   // that still have one.
   $element['fieldset']['default_value'] = array(
     '#type' => 'value',
@@ -349,9 +361,10 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
             $entity->archived = FALSE;
           }
         }
-        if(isset($entity->removed) && $entity->removed) {
+        if (isset($entity->removed) && $entity->removed) {
           unset($items[$key]);
-        } else {
+        }
+        else {
           $entity->save(TRUE);
 
           $item = array(
@@ -517,8 +530,17 @@ function paragraphs_item_is_empty(ParagraphsItemEntity $item) {
   return $is_empty;
 }
 
-/*
+/**
  * Load a specific bundle or a list of bundles
+ *
+ * @param string|null $name
+ *   The machine name or list of bundles to load when null.
+ *
+ * @param bool $rebuild
+ *   Whether to use cache or not.
+ *
+ * @return array|stdClass|bool
+ *   The bundle, a list of bundles, or FALSE when not found.
  */
 function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
   $cid = 'paragraphs_bundles';
@@ -528,11 +550,13 @@ function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
   $_bundles = &drupal_static($cid);
   if (isset($_bundles) && !$rebuild) {
     $bundles = $_bundles;
-  } else {
+  }
+  else {
     $_bundles = cache_get($cid);
     if ($_bundles && !$rebuild) {
       $bundles = $_bundles->data;
-    } else {
+    }
+    else {
       $query = db_select('paragraphs_bundle', 'pb')
         ->fields('pb')
         ->orderBy('pb.bundle', 'ASC');
@@ -544,17 +568,29 @@ function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
     $_bundles = $bundles;
   }
 
-  if($name) {
+  if ($name) {
     $name = strtr($name, array('-' => '_'));
-    if(isset($bundles[$name])) {
+    if (isset($bundles[$name])) {
       return $bundles[$name];
     }
     return FALSE;
-  } else {
+  }
+  else {
     return $bundles;
   }
 }
 
+/**
+ * Function to create or update an paragraphs bundle.
+ *
+ * @param stdClass $bundle
+ *   The object of the bundle to create/update.
+ *
+ * @return int
+ *   SAVED_UPDATED when updated, SAVED_NEW when created.
+ *
+ * @throws Exception
+ */
 function paragraphs_bundle_save($bundle) {
   $is_existing = (bool) db_query_range('SELECT 1 FROM {paragraphs_bundle} WHERE bundle = :bundle', 0, 1, array(':bundle' => $bundle->bundle))->fetchField();
 
@@ -585,9 +621,15 @@ function paragraphs_bundle_save($bundle) {
   return $status;
 }
 
+/**
+ * Function to delete a bundle.
+ *
+ * @param $bundle_machine_name
+ *   Machine name of the bundle to delete.
+ */
 function paragraphs_bundle_delete($bundle_machine_name) {
   $bundle = paragraphs_bundle_load($bundle_machine_name);
-  if($bundle) {
+  if ($bundle) {
     db_delete('paragraphs_bundle')
       ->condition('bundle', $bundle->bundle)
       ->execute();
@@ -705,10 +747,10 @@ function theme_paragraphs_field_multiple_value_form($variables) {
   $output = '';
   $instance = $element['#instance'];
 
-  if(!isset($instance['settings']['title'])) {
+  if (!isset($instance['settings']['title'])) {
     $instance['settings']['title'] = PARAGRAPHS_DEFAULT_TITLE;
   }
-  if(!isset($instance['settings']['title_multiple'])) {
+  if (!isset($instance['settings']['title_multiple'])) {
     $instance['settings']['title_multiple'] = PARAGRAPHS_DEFAULT_TITLE_MULTIPLE;
   }
 
@@ -733,7 +775,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     if ($key === 'add_more') {
       $add_more_button = &$element[$key];
     }
-    else if ($key === 'add_more_type') {
+    elseif ($key === 'add_more_type') {
       $add_more_button_type = &$element[$key];
     }
     else {
@@ -758,9 +800,10 @@ function theme_paragraphs_field_multiple_value_form($variables) {
   }
 
   $output = '<div class="form-item">';
-  if(count($items)) {
+  if (count($items)) {
     $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
-  } else {
+  }
+  else {
     $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>";
     $output .= '<p><em>' . t('No !title_multiple added yet. Select a !title type and press the button below to add one.', array('!title_multiple' => t($instance['settings']['title_multiple']), '!title' => t($instance['settings']['title']))) . '</em></p>';
   }

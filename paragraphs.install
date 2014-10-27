@@ -107,7 +107,6 @@ function paragraphs_schema() {
 function paragraphs_field_schema($field) {
   $columns = array();
   if ($field['type'] == 'paragraphs') {
-
     $columns = array(
       'value' => array(
         'type' => 'int',

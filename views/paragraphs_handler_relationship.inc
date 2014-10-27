@@ -4,8 +4,16 @@
  * @file
  * Provide relationship handler for paragraphs fields.
  */
+
+/**
+ * Class paragraphs_handler_relationship
+ */
 class paragraphs_handler_relationship extends views_handler_relationship {
 
+  /**
+   * Returns extra option definitions for the form.
+   * @return array
+   */
   function option_definition() {
     $options = parent::option_definition();
     $options['delta'] = array('default' => -1);
@@ -39,6 +47,10 @@ class paragraphs_handler_relationship extends views_handler_relationship {
     }
   }
 
+  /**
+   * Makes sure our table is added to the join.
+   * @return mixed
+   */
   function ensure_my_table() {
     $field = field_info_field($this->definition['field_name']);
 

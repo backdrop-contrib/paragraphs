@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Views implementations for paragraphs.
+ */
 
 /**
  * Implements hook_field_views_data().

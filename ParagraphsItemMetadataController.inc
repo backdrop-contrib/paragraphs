@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Entity metadata implementation for the paragraphs entity.
+ */
 
 /**
  * Class ParagraphsItemMetadataController

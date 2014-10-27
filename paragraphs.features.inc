@@ -25,14 +25,14 @@ function paragraphs_features_api() {
 function paragraphs_features_export_options() {
   $bundles = paragraphs_bundle_load();
   $names = array();
-  foreach($bundles as $key => $value) {
+  foreach ($bundles as $key => $value) {
     $names[$key] = $value->name;
   }
   return $names;
 }
 
 /**
- * Implements hook_features_export.
+ * Implements hook_features_export().
  */
 function paragraphs_features_export($data, &$export, $module_name = '') {
   $pipe = array();

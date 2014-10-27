@@ -4,6 +4,14 @@
  * Admin functions for the paragraphs module.
  */
 
+/**
+ * Page callback to show the bundle overview page.
+ *
+ * @return null|string
+ *   Rendered table of bundles.
+ *
+ * @throws Exception
+ */
 function paragraphs_admin_bundle_overview() {
   $bundles = paragraphs_bundle_load();
 
@@ -50,8 +58,9 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     $bundle->name = '';
     $bundle->bundle = '';
     $bundle->locked = 0;
-  } else {
-    if(!$bundle) {
+  }
+  else {
+    if (!$bundle) {
       drupal_set_message(t('Could not load bundle'), 'error');
       drupal_goto('admin/structure/paragraphs');
     }
@@ -68,7 +77,7 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     '#size' => 30,
   );
 
-  if(!$bundle->locked) {
+  if (!$bundle->locked) {
 
     $form['bundle'] = array(
       '#type' => 'machine_name',
@@ -126,9 +135,10 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
 
   $bundle = new stdClass();
 
-  if(!$form_state['values']['locked']) {
+  if (!$form_state['values']['locked']) {
     $bundle->bundle = trim($form_state['values']['bundle']);
-  } else {
+  }
+  else {
     $bundle->bundle = $form['#paragraphs_bundle']->bundle;
   }
 
@@ -171,7 +181,7 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
  * @ingroup forms
  */
 function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
-  if(!$bundle) {
+  if (!$bundle) {
     drupal_set_message(t('Could not load bundle'), 'error');
     drupal_goto('admin/structure/paragraphs');
   }
@@ -180,10 +190,9 @@ function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
   $form['name'] = array('#type' => 'value', '#value' => $bundle->name);
 
   $message = t('Are you sure you want to delete the paragraph bundle %bundle?', array('%bundle' => $bundle->name));
-  $caption = '';
-  $caption .= '<p>' . t('This action cannot be undone. Content using the bundle will be broken.') . '</p>';
+  $caption = '<p>' . t('This action cannot be undone. Content using the bundle will be broken.') . '</p>';
 
-  return confirm_form($form, $message, 'admin/structure/paragraphs', $caption, t('Delete'));
+  return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs', filter_xss_admin($caption), t('Delete'));
 }
 
 /**
@@ -197,7 +206,6 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
   $t_args = array('%name' => $form_state['values']['name']);
   drupal_set_message(t('The paragraph bundle %name has been deleted.', $t_args));
   watchdog('node', 'Deleted paragraph bundle %name.', $t_args, WATCHDOG_NOTICE);
-
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
   return;
