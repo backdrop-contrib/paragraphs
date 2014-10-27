@@ -243,7 +243,6 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   }
 
   if (module_exists('file')) {
-    form_load_include($form_state, 'module', 'file', 'file');
     // file.js triggers uploads when the main Submit button is clicked.
     $field_elements['#attached']['js'] = array(
       drupal_get_path('module', 'file') . '/file.js',
