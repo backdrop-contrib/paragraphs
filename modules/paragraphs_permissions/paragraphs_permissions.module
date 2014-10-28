@@ -143,7 +143,7 @@ function paragraphs_permissions_field_widget_form_alter(&$element, &$form_state,
       }
 
       // Change form if there are no permissions for bundles.
-      if (!count($element['add_more']['type']['#options'])) {
+      if (isset($element['add_more']) && !count($element['add_more']['type']['#options'])) {
         unset($element['add_more']['type']);
         $element['add_more']['add_more'] = array(
           '#type' => 'markup',
