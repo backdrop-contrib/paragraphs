@@ -110,6 +110,11 @@ function paragraphs_entity_info() {
     );
   }
 
+  if (module_exists('entitycache')) {
+    $return['paragraphs_item']['field cache'] = FALSE;
+    $return['paragraphs_item']['entity cache'] = TRUE;
+  }
+
   return $return;
 }
 
