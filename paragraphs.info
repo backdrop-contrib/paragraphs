@@ -1,6 +1,7 @@
 name = Paragraphs
 description = Paragraphs module to control your content flow.
 core = 7.x
+package = Paragraphs
 
 dependencies[] = entity
 
