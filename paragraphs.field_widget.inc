@@ -370,13 +370,17 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         '#type' => 'actions',
         '#weight' => 9999,
       );
+
+      field_attach_form('paragraphs_item', $paragraph_item, $element, $form_state, $language);
       if ($being_edited_paragraph) {
-        field_attach_form('paragraphs_item', $paragraph_item, $element, $form_state, $language);
         if (empty($element['#required'])) {
           $element['#after_build'][] = 'paragraphs_field_widget_embed_delay_required_validation';
         }
       }
       else {
+        foreach (element_children($element) as $key) {
+          $element[$key]['#access'] = FALSE;
+        }
         $element['actions'] = array(
           '#type' => 'actions',
           '#weight' => 9999,
