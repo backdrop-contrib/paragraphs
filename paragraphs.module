@@ -248,6 +248,29 @@ function paragraphs_field_info() {
 }
 
 /**
+ * Implements hook_form_field_ui_field_edit_form_alter().
+ */
+function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
+  if ($form['#field']['type'] == 'paragraphs') {
+    $form['#theme'] = array('paragraphs_bundle_settings_form');
+    array_unshift($form['#submit'], 'paragraphs_bundle_settings_form_submit');
+  }
+}
+
+function paragraphs_bundle_settings_form_submit($form, &$form_state) {
+  $bundle_settings = array();
+  if (isset($form_state['values']['instance']['settings']['allowed_bundles_table'])) {
+    $bundle_settings_table = $form_state['values']['instance']['settings']['allowed_bundles_table'];
+    uasort($bundle_settings_table, 'drupal_sort_weight');
+    foreach ($bundle_settings_table as $machine_name => $value) {
+      $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : 0);
+    }
+  }
+  $form_state['values']['instance']['settings']['allowed_bundles'] = $bundle_settings;
+  unset($form_state['values']['instance']['settings']['allowed_bundles_table']);
+}
+
+/**
  * Implements hook_field_instance_settings_form().
  */
 function paragraphs_field_instance_settings_form($field, $instance) {
@@ -259,13 +282,48 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     $bundles[$machine_name] = $bundle->name;
   }
 
-  $element['allowed_bundles'] = array(
-    '#type' => 'checkboxes',
-    '#title' => t('Allowed Paragraph bundles'),
-    '#options' => $bundles,
-    '#default_value' => isset($settings['allowed_bundles']) ? $settings['allowed_bundles'] : array(),
-    '#description' => t('If no bundle is selected, all the bundles will be available.'),
+  $weights = array();
+  $weight = 0;
+  if (isset($settings['allowed_bundles'])) {
+    foreach ($settings['allowed_bundles'] as $machine_name => $bundle) {
+      $weights[$machine_name] = $weight;
+      $weight++;
+    }
+  }
+  $max_weight = $weight;
+
+  $element['allowed_bundles_table'] = array(
+    '#tree' => TRUE,
+    '#prefix' => '<label>' . t('Allowed Paragraph bundles') . '</label>',
+    '#suffix' => '<div class="description">' . t('If no bundle is selected, all the bundles will be available.') . '</div>',
   );
+
+  $weight = 1;
+  foreach ($_bundles as $machine_name => $bundle) {
+
+    $enabled = FALSE;
+    if (isset($settings['allowed_bundles'][$machine_name]) && $settings['allowed_bundles'][$machine_name] === $machine_name) {
+      $enabled = TRUE;
+    }
+
+    $element['allowed_bundles_table'][$machine_name] = array(
+      'enabled' => array(
+        '#type' => 'checkbox',
+        '#title' => check_plain($bundle->name),
+        '#title_display' => 'after',
+        '#default_value' => $enabled,
+      ),
+      'weight' => array(
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#default_value' => (isset($weights[$machine_name]) ? $weights[$machine_name] : $weight + $max_weight),
+        '#delta' => 10,
+        '#title_display' => 'invisible',
+      ),
+    );
+    $element['allowed_bundles_table'][$machine_name]['#weight'] = $element['allowed_bundles_table'][$machine_name]['weight']['#default_value'];
+    $weight++;
+  }
 
   $element['title'] = array(
     '#type' => 'textfield',
@@ -314,7 +372,6 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     );
   }
 
-
   $element['fieldset'] = array(
     '#type' => 'fieldset',
     '#title' => t('Default value'),
@@ -335,6 +392,83 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#suffix' => '</p>',
   );
   return $element;
+}
+
+function theme_paragraphs_bundle_settings_form($variables) {
+  $form = $variables['form'];
+
+  // Initialize the variable which will store our table rows.
+  $rows = array();
+
+  uasort($form['instance']['settings']['allowed_bundles_table'], 'element_sort');
+
+  // Iterate over each element in our $form['example_items'] array.
+  foreach (element_children($form['instance']['settings']['allowed_bundles_table']) as $id) {
+
+    // Before we add our 'weight' column to the row, we need to give the
+    // element a custom class so that it can be identified in the
+    // drupal_add_tabledrag call.
+    //
+    // This could also have been done during the form declaration by adding
+    // '#attributes' => array('class' => 'example-item-weight'),
+    // directy to the 'weight' element in tabledrag_example_simple_form().
+    $form['instance']['settings']['allowed_bundles_table'][$id]['weight']['#attributes']['class'] = array('paragraphs-bundle-item-weight');
+
+    // We are now ready to add each element of our $form data to the $rows
+    // array, so that they end up as individual table cells when rendered
+    // in the final table.  We run each element through the drupal_render()
+    // function to generate the final html markup for that element.
+    $rows[] = array(
+      'data' => array(
+
+        // Add our 'enabled' column.
+        drupal_render($form['instance']['settings']['allowed_bundles_table'][$id]['enabled']),
+
+        // Add our 'weight' column.
+        drupal_render($form['instance']['settings']['allowed_bundles_table'][$id]['weight']),
+      ),
+
+      // To support the tabledrag behaviour, we need to assign each row of the
+      // table a class attribute of 'draggable'. This will add the 'draggable'
+      // class to the <tr> element for that row when the final table is
+      // rendered.
+      'class' => array('draggable'),
+    );
+  }
+
+  // We now define the table header values.  Ensure that the 'header' count
+  // matches the final column count for your table.
+  $header = array(t('Bundle'), t('Weight'));
+
+  // We also need to pass the drupal_add_tabledrag() function an id which will
+  // be used to identify the <table> element containing our tabledrag form.
+  // Because an element's 'id' should be unique on a page, make sure the value
+  // you select is NOT the same as the form ID used in your form declaration.
+  $table_id = drupal_html_id('paragraphs-bundle-table');
+
+  // We can render our tabledrag table for output.
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array('id' => $table_id),
+  ));
+
+  $form['instance']['settings']['allowed_bundles_table']['#markup'] = $output;
+
+  // And then render any remaining form elements (such as our submit button).
+  $output = drupal_render_children($form);
+
+  // We now call the drupal_add_tabledrag() function in order to add the
+  // tabledrag.js goodness onto our page.
+  //
+  // For a basic sortable table, we need to pass it:
+  // - the $table_id of our <table> element,
+  // - the $action to be performed on our form items ('order'),
+  // - a string describing where $action should be applied ('siblings'),
+  // - and the class of the element containing our 'weight' element.
+  drupal_add_tabledrag($table_id, 'order', 'sibling', 'paragraphs-bundle-item-weight');
+
+  return $output;
 }
 
 /**
@@ -846,6 +980,9 @@ function paragraphs_theme() {
   return array(
     'paragraphs_field_multiple_value_form' => array(
       'render element' => 'element',
+    ),
+    'paragraphs_bundle_settings_form' => array(
+      'render element' => 'form',
     ),
     'paragraphs_items' => array(
       'render element' => 'element',

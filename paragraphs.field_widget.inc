@@ -141,6 +141,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
     if (empty($form_state['programmed'])) {
       $available_bundles = paragraphs_bundle_load();
       $select_bundles = array();
+      $select_bundles_weighted = array();
 
       // By default, consider that no bundle has been explicitly picked.
       $explicitly_enabled = FALSE;
@@ -151,12 +152,16 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           // If an item has been explicitly selected, raise our flag.
           $explicitly_enabled = TRUE;
         }
+        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
       }
 
       // If no bundle has been explicitly selected, give access to all of them.
       if (!$explicitly_enabled) {
+        $select_bundles = $select_bundles_weighted;
         foreach ($available_bundles as $bundle) {
-          $select_bundles[$bundle->bundle] = $bundle->name;
+          if (!isset($select_bundles[$bundle->bundle])) {
+            $select_bundles[$bundle->bundle] = $bundle->name;
+          }
         }
       }
 
