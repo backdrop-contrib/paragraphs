@@ -404,14 +404,14 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
           foreach (element_children($element) as $key) {
-            if ($key != 'paragraph_bundle_title') {
+            if ($key != 'paragraph_bundle_title' && $key != 'actions') {
               $element[$key]['#access'] = FALSE;
             }
           }
 
           $element['info'] = array(
             '#type' => 'markup',
-            '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
+            '#markup' => '<br/><em>' . t('You are not allowed to edit this item.') . '</em>',
           );
         }
         else {
@@ -422,7 +422,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       }
       else {
         foreach (element_children($element) as $key) {
-          if ($key != 'paragraph_bundle_title') {
+          if ($key != 'paragraph_bundle_title' && $key != 'actions') {
             $element[$key]['#access'] = FALSE;
           }
         }
