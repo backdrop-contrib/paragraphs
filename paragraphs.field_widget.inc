@@ -165,7 +165,26 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         }
       }
 
-      if (count($instance['settings']['allowed_bundles'])) {
+      $removed_a_bundle = FALSE;
+
+      foreach ($select_bundles as $machine_name => $bundle) {
+        if (!entity_access('create', 'paragraphs_item', $machine_name)) {
+          unset($select_bundles[$machine_name]);
+          $removed_a_bundle = TRUE;
+        }
+      }
+
+      if($removed_a_bundle && count($select_bundles) === 0) {
+        $field_elements['add_more'] = array(
+          '#type' => 'container',
+          '#tree' => TRUE,
+        );
+        $field_elements['add_more']['add_more'] = array(
+          '#type' => 'markup',
+          '#markup' => '<em>' . t('You are not allowed to add any of the bundles.') . '</em>',
+        );
+      }
+      elseif (count($select_bundles)) {
         $field = $field_state['field'];
 
         if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['items_count'] < $field['cardinality']) {
@@ -186,6 +205,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
                 '#value' => t('Add a !title paragraph', array('!title' => $bundle_name)),
+                '#access' => entity_access('create', 'paragraphs_item', $machine_name),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
                 '#submit' => array('paragraphs_add_more_submit'),
@@ -210,7 +230,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             // Hide the bundle selection if only one bundle is allowed.
             if (count($select_bundles) == 1) {
               $field_elements['add_more']['type']['#type'] = 'hidden';
-              $field_elements['add_more']['type']['#value'] = current($select_bundles);
+              $keys = array_keys($select_bundles);
+              $field_elements['add_more']['type']['#value'] = $keys[0];
             }
 
             if (isset($form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'])) {
@@ -321,6 +342,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $field_state = field_form_get_state($field_parents, $field_name, $language, $form_state);
 
   $deleted_paragraph = FALSE;
+  $is_new_paragraph = FALSE;
 
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
 
@@ -352,6 +374,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       $paragraph_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
       $paragraph_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
+      $is_new_paragraph = TRUE;
     }
 
     if (!empty($paragraph_item)) {
@@ -361,10 +384,11 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   }
   field_form_set_state($field_parents, $field_name, $language, $form_state, $field_state);
   if (!empty($paragraph_item)) {
+
     $bundle_info = paragraphs_bundle_load($paragraph_item->bundle);
 
     if ($bundle_info) {
-      $element['title'] = array(
+      $element['paragraph_bundle_title'] = array(
         '#markup' => t('!title type: %bundle', array('!title' => t($instance['settings']['title']), '%bundle' => $bundle_info->name)),
         '#weight' => -100,
       );
@@ -378,13 +402,29 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
       field_attach_form('paragraphs_item', $paragraph_item, $element, $form_state, $language);
       if ($being_edited_paragraph) {
-        if (empty($element['#required'])) {
-          $element['#after_build'][] = 'paragraphs_field_widget_embed_delay_required_validation';
+        if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
+          foreach (element_children($element) as $key) {
+            if ($key != 'paragraph_bundle_title') {
+              $element[$key]['#access'] = FALSE;
+            }
+          }
+
+          $element['info'] = array(
+            '#type' => 'markup',
+            '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
+          );
+        }
+        else {
+          if (empty($element['#required'])) {
+            $element['#after_build'][] = 'paragraphs_field_widget_embed_delay_required_validation';
+          }
         }
       }
       else {
         foreach (element_children($element) as $key) {
-          $element[$key]['#access'] = FALSE;
+          if ($key != 'paragraph_bundle_title') {
+            $element[$key]['#access'] = FALSE;
+          }
         }
         $element['actions'] = array(
           '#type' => 'actions',
@@ -402,6 +442,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             'path' => 'paragraphs/edit/ajax',
             'effect' => 'fade',
           ),
+          '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
           '#weight' => 999,
         );
       }
@@ -420,7 +461,16 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             'path' => 'paragraphs/remove/ajax',
             'effect' => 'fade',
           ),
+          '#access' => entity_access('delete', 'paragraphs_item', $paragraph_item),
           '#weight' => 1000,
+        );
+      }
+
+      if (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']
+          && isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
+        $element['actions']['info'] = array(
+          '#type' => 'markup',
+          '#markup' => '<em>' . t('You are not allowed to edit or remove this item.') . '</em>',
         );
       }
     }

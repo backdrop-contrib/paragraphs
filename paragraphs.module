@@ -10,6 +10,22 @@ define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE', 'open');
 define('PARAGRAPHS_DEFAULT_ADD_MODE', 'select');
 
+/**
+ * Modules should return this value from hook_paragraphs_item_access() to allow access to a paragraphs item.
+ */
+define('PARAGRAPHS_ITEM_ACCESS_ALLOW', 'allow');
+
+/**
+ * Modules should return this value from hook_paragraphs_item_access() to deny access to a paragraphs item.
+ */
+define('PARAGRAPHS_ITEM_ACCESS_DENY', 'deny');
+
+/**
+ * Modules should return this value from hook_paragraphs_item_access() to not affect paragraphs item access.
+ */
+define('PARAGRAPHS_ITEM_ACCESS_IGNORE', NULL);
+
+
 // Separate some Field API parts in different files.
 require_once dirname(__FILE__) . '/paragraphs.field_formatter.inc';
 require_once dirname(__FILE__) . '/paragraphs.field_widget.inc';
@@ -121,14 +137,62 @@ function paragraphs_entity_info() {
 /**
  * Access check for paragraphs.
  *
- * Currently always returns TRUE.
- * TODO: might want to do some checking here? Might not be needed as the host should do this.
+ * Most of the time the access callback is on the host entity.
+ * In some cases you want specific access checks on paragraphs.
+ * You can do this by implementing hook_paragraphs_item_access().
  *
  * @return bool
  *   Whether the user has access to a paragraphs item.
  */
-function paragraphs_item_access() {
-  return TRUE;
+function paragraphs_item_access($op, $entity, $account, $entity_type) {
+  // If no user object is supplied, the access check is for the current user.
+  if (empty($account)) {
+    $account = $GLOBALS['user'];
+  }
+  $permissions = &drupal_static(__FUNCTION__, array());
+
+  // If the $op was not one of the supported ones, we return access denied.
+  if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    return FALSE;
+  }
+
+  // Entity variable should be the bundle when op is create.
+  if ($op == 'create' && !is_string($entity)) {
+    return FALSE;
+  }
+
+  // Cid is the bundle name when op is create.
+  if ($op == 'create') {
+    $cid = $entity;
+  }
+  else {
+    $cid = $entity->item_id . '_' . $entity->revision_id;
+  }
+
+  // If we've already checked access for this bundle, user and op, return from
+  // cache.
+  if (isset($permissions[$account->uid][$cid][$op])) {
+    return $permissions[$account->uid][$cid][$op];
+  }
+
+  // We grant access to the paragraph item if both of the following conditions are met:
+  // - No modules say to deny access.
+  // - At least one module says to grant access.
+  // If no module specified either allow or deny, we always allow.
+  $access = module_invoke_all('paragraphs_item_access', $entity, $op, $account);
+  if (in_array(PARAGRAPHS_ITEM_ACCESS_DENY, $access, TRUE)) {
+    $permissions[$account->uid][$cid][$op] = TRUE;
+    return FALSE;
+  }
+  elseif (in_array(PARAGRAPHS_ITEM_ACCESS_ALLOW, $access, TRUE)) {
+    $permissions[$account->uid][$cid][$op] = TRUE;
+    return TRUE;
+  }
+
+  // We always have access unless somebody implements the hook.
+  $permissions[$account->uid][$cid][$op] = TRUE;
+
+  return $permissions[$account->uid][$cid][$op];
 }
 
 /**
