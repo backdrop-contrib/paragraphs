@@ -88,7 +88,9 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
 
       foreach ($items as $delta => $item) {
         if ($paragraph = paragraphs_field_get_entity($item)) {
-          $element[$delta]['entity'] = $paragraph->view($view_mode);
+          if (entity_access('view', 'paragraphs_item', $paragraph)) {
+            $element[$delta]['entity'] = $paragraph->view($view_mode);
+          }
         }
       }
       break;
