@@ -389,8 +389,11 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
     if ($bundle_info) {
       $element['paragraph_bundle_title'] = array(
-        '#markup' => t('!title type: %bundle', array('!title' => t($instance['settings']['title']), '%bundle' => $bundle_info->name)),
+        '#type' => 'container',
         '#weight' => -100,
+      );
+      $element['paragraph_bundle_title']['info'] = array(
+        '#markup' => t('!title type: %bundle', array('!title' => t($instance['settings']['title']), '%bundle' => $bundle_info->name)),
       );
     }
 
@@ -409,9 +412,12 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             }
           }
 
-          $element['info'] = array(
+          $element['access_info'] = array(
+            '#type' => 'container',
+          );
+          $element['access_info']['info'] = array(
             '#type' => 'markup',
-            '#markup' => '<br/><em>' . t('You are not allowed to edit this item.') . '</em>',
+            '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
           );
         }
         else {
