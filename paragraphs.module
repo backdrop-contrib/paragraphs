@@ -101,12 +101,16 @@ function paragraphs_entity_info() {
         'label' => t('Full content'),
         'custom settings' => FALSE,
       ),
+      'paragraphs_editor_preview' => array(
+        'label' => t('Paragraphs Editor Preview'),
+        'custom settings' => TRUE,
+      ),
     ),
     'bundle keys' => array(
       'bundle' => 'bundle',
     ),
     'access callback' => 'paragraphs_item_access',
-    'metadata controller class' => 'ParagraphsItemMetadataController'
+    'metadata controller class' => 'ParagraphsItemMetadataController',
   );
 
   $bundles = paragraphs_bundle_load();
@@ -408,10 +412,11 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   $element['default_edit_mode'] = array(
     '#type' => 'select',
     '#title' => t('Default edit mode'),
-    '#description' => t('The default edit mode the paragraph item is in.'),
+    '#description' => t('The default edit mode the paragraph item is in. Preview will render the paragraph in the preview view mode.'),
     '#options' => array(
       'open' => t('Open'),
       'closed' => t('Closed'),
+      'preview' => t('Preview'),
     ),
     '#default_value' => isset($settings['default_edit_mode']) ? $settings['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE,
     '#required' => TRUE,

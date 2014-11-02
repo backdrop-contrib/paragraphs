@@ -347,7 +347,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
 
   $being_edited_paragraph = TRUE;
-  if ($default_edit_mode === 'closed') {
+  if ($default_edit_mode === 'closed' || $default_edit_mode === 'preview') {
     $being_edited_paragraph = FALSE;
   }
 
@@ -404,7 +404,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
           foreach (element_children($element) as $key) {
-            if ($key != 'paragraph_bundle_title' && $key != 'actions') {
+            if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview') {
               $element[$key]['#access'] = FALSE;
             }
           }
@@ -421,8 +421,17 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         }
       }
       else {
+
+        if($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraph_item)) {
+          $element['paragraph_bundle_preview'] = array(
+            '#type' => 'container',
+          );
+          $preview = $paragraph_item->view('paragraphs_editor_preview');
+          $element['paragraph_bundle_preview']['preview'] = $preview;
+        }
+
         foreach (element_children($element) as $key) {
-          if ($key != 'paragraph_bundle_title' && $key != 'actions') {
+          if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview') {
             $element[$key]['#access'] = FALSE;
           }
         }
