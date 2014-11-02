@@ -418,7 +418,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           );
           $element['access_info']['info'] = array(
             '#type' => 'markup',
-            '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
+            '#markup' => '<em>' . t('You are not allowed to edit this !title item.', array('!title' => t($instance['settings']['title']))) . '</em>',
           );
         }
         else {
@@ -449,7 +449,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_edit_button',
           '#type' => 'submit',
-          '#value' => t('Edit'),
+          '#value' => t('Edit !type paragraph', array('!type' => $bundle_info->name)),
           '#validate' => array(),
           '#submit' => array('paragraphs_edit_submit'),
           '#limit_validation_errors' => array(),
@@ -490,7 +490,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         );
         $element['access_info']['info'] = array(
           '#type' => 'markup',
-          '#markup' => '<em>' . t('You are not allowed to edit or remove this item.') . '</em>',
+          '#markup' => '<em>' . t('You are not allowed to edit or remove this !title item.', array('!title' => t($instance['settings']['title']))) . '</em>',
         );
       }
       elseif (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']) {
@@ -500,7 +500,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         );
         $element['access_info']['info'] = array(
           '#type' => 'markup',
-          '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
+          '#markup' => '<em>' . t('You are not allowed to edit this !title item.', array('!title' => t($instance['settings']['title']))) . '</em>',
         );
       }
       elseif (isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
@@ -510,7 +510,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         );
         $element['access_info']['info'] = array(
           '#type' => 'markup',
-          '#markup' => '<em>' . t('You are not allowed to remove this item.') . '</em>',
+          '#markup' => '<em>' . t('You are not allowed to remove this !title item.', array('!title' => t($instance['settings']['title']))) . '</em>',
         );
       }
     }
