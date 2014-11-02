@@ -407,7 +407,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
           foreach (element_children($element) as $key) {
-            if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview') {
+            if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
               $element[$key]['#access'] = FALSE;
             }
           }
@@ -437,7 +437,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         }
 
         foreach (element_children($element) as $key) {
-          if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview') {
+          if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
             $element[$key]['#access'] = FALSE;
           }
         }
