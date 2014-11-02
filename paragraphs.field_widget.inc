@@ -414,6 +414,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
           $element['access_info'] = array(
             '#type' => 'container',
+            '#weight' => 9998,
           );
           $element['access_info']['info'] = array(
             '#type' => 'markup',
@@ -427,7 +428,6 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         }
       }
       else {
-
         if($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraph_item)) {
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
@@ -481,11 +481,36 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         );
       }
 
+
       if (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']
           && isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
-        $element['actions']['info'] = array(
+        $element['access_info'] = array(
+          '#type' => 'container',
+          '#weight' => 9998,
+        );
+        $element['access_info']['info'] = array(
           '#type' => 'markup',
           '#markup' => '<em>' . t('You are not allowed to edit or remove this item.') . '</em>',
+        );
+      }
+      elseif (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']) {
+        $element['access_info'] = array(
+          '#type' => 'container',
+          '#weight' => 9998,
+        );
+        $element['access_info']['info'] = array(
+          '#type' => 'markup',
+          '#markup' => '<em>' . t('You are not allowed to edit this item.') . '</em>',
+        );
+      }
+      elseif (isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
+        $element['access_info'] = array(
+          '#type' => 'container',
+          '#weight' => 9998,
+        );
+        $element['access_info']['info'] = array(
+          '#type' => 'markup',
+          '#markup' => '<em>' . t('You are not allowed to remove this item.') . '</em>',
         );
       }
     }
