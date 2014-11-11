@@ -77,6 +77,10 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
   switch ($display['type']) {
     case 'paragraphs_view':
 
+      // Prevent displaying useless markup if we don't have any values.
+      if (empty($items)) {
+        return $element;
+      }
       // Get view mode from entity.
       $display_view_mode = empty($display['settings']['view_mode']) ? 'full' : $display['settings']['view_mode'];
       // Get view mode from field instance (if configured).
