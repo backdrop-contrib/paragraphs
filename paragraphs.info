@@ -7,4 +7,6 @@ dependencies[] = entity
 
 files[] = ParagraphsItemEntity.inc
 files[] = ParagraphsItemMetadataController.inc
+files[] = migrate/destinations/MigrateDestinationParagraphsItem.inc
+files[] = migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc
 files[] = views/paragraphs_handler_relationship.inc
