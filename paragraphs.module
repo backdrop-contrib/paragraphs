@@ -1168,12 +1168,16 @@ function paragraphs_field_attach_form($entity_type, $entity, &$form, &$form_stat
  * @see field_attach_prepare_translation()
  */
 function paragraphs_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, &$items, $source_entity, $source_langcode) {
-  list($id, , ) = entity_extract_ids($entity_type, $entity);
+  if (!module_exists("paragraphs_i18n")) {
+      list($id, , ) = entity_extract_ids($entity_type, $entity);
 
-  // field_attach_prepare_translation() copied the entity ids from the source,
-  // as we need a new entity for a new translation, we cannot reuse that.
-  // @todo clone existing paragraphs to new translation
-  if (empty($id)) {
-    $items = array();
+      // field_attach_prepare_translation() copied the entity ids from the source,
+      // as we need a new entity for a new translation, we cannot reuse that.
+      // @todo clone existing paragraphs to new translation
+      if (empty($id)) {
+          $items = array();
+      }
+  } else {
+      paragraphs_i18n_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, $items, $source_entity, $source_langcode);
   }
 }
