@@ -116,7 +116,19 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
       else {
         $paragraphs_item->item_id = $row->migrate_map_destid1;
         $paragraphs_item->is_new = FALSE;
-        $paragraphs_item->is_new_revision = TRUE;
+        $paragraphs_item->is_new_revision = FALSE;
+
+        // Get the existing revision_id so updates don't generate notices.
+        $values = db_select('paragraphs_item', 'p')
+          ->fields('p', array('revision_id'))
+          ->condition('item_id', $paragraphs_item->item_id)
+          ->execute()
+          ->fetchAssoc();
+        if (empty($values)) {
+          throw new MigrateException(t("Incoming paragraphs ID !item_id no longer exists",
+            array('!item_id' => $paragraphs_item->item_id)));
+        }
+        $paragraphs_item->revision_id = $values['revision_id'];
       }
     }
 
