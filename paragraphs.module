@@ -185,7 +185,7 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   // If no module specified either allow or deny, we always allow.
   $access = module_invoke_all('paragraphs_item_access', $entity, $op, $account);
   if (in_array(PARAGRAPHS_ITEM_ACCESS_DENY, $access, TRUE)) {
-    $permissions[$account->uid][$cid][$op] = TRUE;
+    $permissions[$account->uid][$cid][$op] = FALSE;
     return FALSE;
   }
   elseif (in_array(PARAGRAPHS_ITEM_ACCESS_ALLOW, $access, TRUE)) {
