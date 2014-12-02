@@ -1181,3 +1181,17 @@ function paragraphs_field_prepare_translation($entity_type, $entity, $field, $in
       paragraphs_i18n_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, $items, $source_entity, $source_langcode);
   }
 }
+
+/**
+ * Implements hook_features_api().
+ */
+function paragraphs_features_api() {
+  return array(
+    'paragraphs' => array(
+      'name' => t('Paragraphs Bundles'),
+      'feature_source' => TRUE,
+      'default_hook' => 'paragraphs_info',
+      'file' => drupal_get_path('module', 'paragraphs') . '/paragraphs.features.inc',
+    ),
+  );
+}
