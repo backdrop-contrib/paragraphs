@@ -305,6 +305,7 @@ function paragraphs_field_info() {
       'title' => PARAGRAPHS_DEFAULT_TITLE,
       'title_multiple' => PARAGRAPHS_DEFAULT_TITLE_MULTIPLE,
       'allowed_bundles' => array(),
+      'bundle_weights' => array(),
     ),
     'default_widget' => 'paragraphs_hidden',
     'default_formatter' => 'paragraphs_view',
@@ -327,14 +328,19 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
 
 function paragraphs_bundle_settings_form_submit($form, &$form_state) {
   $bundle_settings = array();
+  $bundle_weights = array();
   if (isset($form_state['values']['instance']['settings']['allowed_bundles_table'])) {
     $bundle_settings_table = $form_state['values']['instance']['settings']['allowed_bundles_table'];
     uasort($bundle_settings_table, 'drupal_sort_weight');
     foreach ($bundle_settings_table as $machine_name => $value) {
       $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : -1);
+      $bundle_weights[$machine_name] = $value['weight'];
     }
   }
+
   $form_state['values']['instance']['settings']['allowed_bundles'] = $bundle_settings;
+  $form_state['values']['instance']['settings']['bundle_weights'] = $bundle_weights;
+
   unset($form_state['values']['instance']['settings']['allowed_bundles_table']);
 }
 
@@ -346,19 +352,20 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
   $bundles = array();
   $_bundles = paragraphs_bundle_load();
+  $max_weight = 0;
+  $weights = array();
+
   foreach ($_bundles as $machine_name => $bundle) {
     $bundles[$machine_name] = $bundle->name;
-  }
-
-  $weights = array();
-  $weight = 0;
-  if (isset($settings['allowed_bundles'])) {
-    foreach ($settings['allowed_bundles'] as $machine_name => $bundle) {
-      $weights[$machine_name] = $weight;
-      $weight++;
+    if (isset($settings['bundle_weights'][$machine_name])) {
+      $weights[$machine_name] = $settings['bundle_weights'][$machine_name];
+      if ($settings['bundle_weights'][$machine_name] > $max_weight) {
+        $max_weight = $settings['bundle_weights'][$machine_name];
+      }
     }
   }
-  $max_weight = $weight;
+
+  $max_weight++;
 
   $element['allowed_bundles_table'] = array(
     '#tree' => TRUE,

@@ -169,11 +169,21 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
       $removed_a_bundle = FALSE;
 
+      $weight = 0;
       foreach ($select_bundles as $machine_name => $bundle) {
+        $select_bundles[$machine_name] = array(
+          'name' => $bundle,
+          'weight' => $weight,
+        );
+
         if (!entity_access('create', 'paragraphs_item', $machine_name)) {
           unset($select_bundles[$machine_name]);
           $removed_a_bundle = TRUE;
         }
+        elseif (isset($instance['settings']['allowed_bundles']['bundle_weights'][$machine_name])) {
+          $select_bundles[$machine_name] = $instance['settings']['allowed_bundles']['bundle_weights'][$machine_name];
+        }
+        $weight++;
       }
 
       if($removed_a_bundle && count($select_bundles) === 0) {
@@ -187,6 +197,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         );
       }
       elseif (count($select_bundles)) {
+        uasort($select_bundles, 'drupal_sort_weight');
         $field = $field_state['field'];
 
         if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['items_count'] < $field['cardinality']) {
@@ -202,11 +213,11 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $add_mode = (isset($instance['settings']['add_mode']) ? $instance['settings']['add_mode'] : PARAGRAPHS_DEFAULT_ADD_MODE);
 
           if ($add_mode == 'button') {
-            foreach ($select_bundles as $machine_name => $bundle_name) {
+            foreach ($select_bundles as $machine_name => $bundle) {
               $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
-                '#value' => t('Add a !title paragraph', array('!title' => $bundle_name)),
+                '#value' => t('Add a !title paragraph', array('!title' => $bundle['name'])),
                 '#access' => entity_access('create', 'paragraphs_item', $machine_name),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
@@ -220,19 +231,26 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             }
           }
           else {
+            uasort($select_bundles, 'drupal_sort_weight');
+
+            $select_list = array();
+            foreach ($select_bundles as $machine_name => $bundle) {
+              $select_list[$machine_name] = $bundle['name'];
+            }
+
             $field_elements['add_more']['type'] = array(
               '#type' => 'select',
               '#name' => strtr($id_prefix, '-', '_') . '_add_more_type',
               '#title' => t('!title type', array('!title' => t($instance['settings']['title']))),
-              '#options' => $select_bundles,
+              '#options' => $select_list,
               '#attributes' => array('class' => array('field-add-more-type')),
               '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
             );
 
             // Hide the bundle selection if only one bundle is allowed.
-            if (count($select_bundles) == 1) {
+            if (count($select_list) == 1) {
               $field_elements['add_more']['type']['#type'] = 'hidden';
-              $keys = array_keys($select_bundles);
+              $keys = array_keys($select_list);
               $field_elements['add_more']['type']['#value'] = $keys[0];
             }
 
