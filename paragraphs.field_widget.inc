@@ -152,7 +152,9 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           // If an item has been explicitly selected, raise our flag.
           $explicitly_enabled = TRUE;
         }
-        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+        elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
+          $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+        }
       }
 
       // If no bundle has been explicitly selected, give access to all of them.

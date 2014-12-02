@@ -331,7 +331,7 @@ function paragraphs_bundle_settings_form_submit($form, &$form_state) {
     $bundle_settings_table = $form_state['values']['instance']['settings']['allowed_bundles_table'];
     uasort($bundle_settings_table, 'drupal_sort_weight');
     foreach ($bundle_settings_table as $machine_name => $value) {
-      $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : 0);
+      $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : -1);
     }
   }
   $form_state['values']['instance']['settings']['allowed_bundles'] = $bundle_settings;
