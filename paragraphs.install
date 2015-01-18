@@ -124,3 +124,13 @@ function paragraphs_field_schema($field) {
     'columns' => $columns,
   );
 }
+
+/**
+ * Make sure all paragraph fields have the new index on revision_id.
+ */
+function paragraphs_update_7100() {
+  // Update the paragraphs_field_schema columns for all tables.
+  foreach (field_read_fields(array('type' => 'paragraphs')) as $field) {
+    field_update_field($field);
+  }
+}
