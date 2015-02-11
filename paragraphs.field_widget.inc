@@ -170,13 +170,16 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $removed_a_bundle = FALSE;
 
       $weight = 0;
+      $entity_shell = new stdClass();
+      $entity_shell->is_new = TRUE;
       foreach ($select_bundles as $machine_name => $bundle) {
         $select_bundles[$machine_name] = array(
           'name' => $bundle,
           'weight' => $weight,
         );
 
-        if (!entity_access('create', 'paragraphs_item', $machine_name)) {
+        $entity_shell->bundle = $machine_name;
+        if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
           unset($select_bundles[$machine_name]);
           $removed_a_bundle = TRUE;
         }
@@ -214,11 +217,12 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
           if ($add_mode == 'button') {
             foreach ($select_bundles as $machine_name => $bundle) {
+              $entity_shell->bundle = $machine_name;
               $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
                 '#value' => t('Add a !title paragraph', array('!title' => $bundle['name'])),
-                '#access' => entity_access('create', 'paragraphs_item', $machine_name),
+                '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
                 '#submit' => array('paragraphs_add_more_submit'),

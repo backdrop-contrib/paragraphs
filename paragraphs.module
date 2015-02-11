@@ -160,24 +160,18 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
     return FALSE;
   }
 
-  // Entity variable should be the bundle when op is create.
-  if ($op == 'create' && !is_string($entity)) {
-    return FALSE;
-  }
-
   // Cid is the bundle name when op is create.
   if ($op == 'create') {
-    $cid = $entity;
+    $cid = $entity->bundle;
   }
   else {
     $cid = $entity->item_id . '_' . $entity->revision_id;
   }
 
   // If we've already checked access for this bundle, user and op, return from
-  // cache.
-  if (isset($permissions[$account->uid][$cid][$op])) {
-    return $permissions[$account->uid][$cid][$op];
-  }
+  // cache. Otherwise, we are optimistic and consider that the user can
+  // view / update / delete or create a paragraph.
+  $user_access_permission = isset($permissions[$account->uid][$cid][$op]) ? $permissions[$account->uid][$cid][$op] : TRUE;
 
   // We grant access to the paragraph item if both of the following conditions are met:
   // - No modules say to deny access.
@@ -185,16 +179,14 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   // If no module specified either allow or deny, we always allow.
   $access = module_invoke_all('paragraphs_item_access', $entity, $op, $account);
   if (in_array(PARAGRAPHS_ITEM_ACCESS_DENY, $access, TRUE)) {
-    $permissions[$account->uid][$cid][$op] = FALSE;
-    return FALSE;
+    $user_access_permission = FALSE;
   }
   elseif (in_array(PARAGRAPHS_ITEM_ACCESS_ALLOW, $access, TRUE)) {
-    $permissions[$account->uid][$cid][$op] = TRUE;
-    return TRUE;
+    $user_access_permission = TRUE;
   }
 
-  // We always have access unless somebody implements the hook.
-  $permissions[$account->uid][$cid][$op] = TRUE;
+  // Store the result of the permission in our matrix.
+  $permissions[$account->uid][$cid][$op] = $user_access_permission;
 
   return $permissions[$account->uid][$cid][$op];
 }
