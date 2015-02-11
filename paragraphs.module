@@ -251,6 +251,16 @@ function paragraphs_menu() {
     'file' => 'paragraphs.ajax.inc',
   );
 
+  $items['paragraphs/collapse/ajax'] = array(
+    'title' => 'Close item callback',
+    'page callback' => 'paragraphs_collapse_js',
+    'delivery callback' => 'ajax_deliver',
+    'access callback' => TRUE,
+    'theme callback' => 'ajax_base_page_theme',
+    'type' => MENU_CALLBACK,
+    'file' => 'paragraphs.ajax.inc',
+  );
+
   $items['paragraphs/remove/ajax'] = array(
     'title' => 'Remove item callback',
     'page callback' => 'paragraphs_remove_js',

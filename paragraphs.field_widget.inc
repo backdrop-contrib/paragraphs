@@ -450,6 +450,24 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             $element['#after_build'][] = 'paragraphs_field_widget_embed_delay_required_validation';
           }
         }
+
+        if ($default_edit_mode != 'open') {
+          $element['actions']['collapse_button'] = array(
+            '#delta' => $delta,
+            '#name' => implode('_', $parents) . '_collapse_button',
+            '#type' => 'submit',
+            '#value' => t('Collapse !type paragraph', array('!type' => $bundle_info->name)),
+            '#validate' => array(),
+            '#submit' => array('paragraphs_collapse_submit'),
+            '#limit_validation_errors' => array(),
+            '#ajax' => array(
+              'path' => 'paragraphs/collapse/ajax',
+              'effect' => 'fade',
+            ),
+            '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
+            '#weight' => 999,
+          );
+        }
       }
       else {
         if($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraph_item)) {
@@ -469,6 +487,14 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           '#type' => 'actions',
           '#weight' => 9999,
         );
+
+        if (isset($field_state['entity'][$delta]->must_be_saved) && $field_state['entity'][$delta]->must_be_saved) {
+          $element['actions']['must_be_saved'] = array(
+            '#markup' => '<p><em>' . t('Warning: this content must be saved to reflect changes on this paragraph item.') . '</em></p>',
+            '#weight' => 998,
+          );
+        }
+
         $element['actions']['edit_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_edit_button',
@@ -829,6 +855,65 @@ function paragraphs_edit_submit($form, &$form_state) {
 
   if (isset($field_state['entity'][$delta])) {
     $field_state['entity'][$delta]->being_edited = 1;
+  }
+
+  // Fix the weights. Field UI lets the weights be in a range of
+  // (-1 * item_count) to (item_count). This means that when we remove one,
+  // the range shrinks; weights outside of that range then get set to
+  // the first item in the select by the browser, floating them to the top.
+  // We use a brute force method because we lost weights on both ends
+  // and if the user has moved things around, we have to cascade because
+  // if I have items weight weights 3 and 4, and I change 4 to 3 but leave
+  // the 3, the order of the two 3s now is undefined and may not match what
+  // the user had selected.
+  $input = drupal_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting
+  unset($input['add_more']);
+  uasort($input, '_field_sort_items_helper');
+
+  // Reweight everything in the correct order.
+  $weight = -1 * $field_state['items_count'] + 1;
+  foreach ($input as $key => $item) {
+    if ($item) {
+      $input[$key]['_weight'] = $weight++;
+    }
+  }
+
+  drupal_array_set_nested_value($form_state['input'], $address, $input);
+  field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
+
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit callback to collapse an item from the field UI multiple wrapper.
+ *
+ * When a collapse button is submitted, we need to find the item that it
+ * referenced and delete it. Since field UI has the deltas as a straight
+ * unbroken array key, we have to renumber everything down. Since we do this
+ * we *also* need to move all the deltas around in the $form_state['values']
+ * and $form_state['input'] so that user changed values follow. This is a bit
+ * of a complicated process.
+ */
+function paragraphs_collapse_submit($form, &$form_state) {
+  $button = $form_state['triggering_element'];
+  $delta = $button['#delta'];
+
+  // Where in the form we'll find the parent element.
+  $address = array_slice($button['#array_parents'], 0, -3);
+
+  // Go one level up in the form, to the widgets container.
+  $parent_element = drupal_array_get_nested_value($form, $address);
+  $field_name = $parent_element['#field_name'];
+  $langcode = $parent_element['#language'];
+  $parents = $parent_element['#field_parents'];
+
+  $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+
+  if (isset($field_state['entity'][$delta])) {
+    $field_state['entity'][$delta]->being_edited = 0;
+    $field_state['entity'][$delta]->must_be_saved = 1;
   }
 
   // Fix the weights. Field UI lets the weights be in a range of
