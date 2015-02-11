@@ -60,11 +60,6 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
   $max = $field_state['items_count'] - 1;
 
-  $load_entities = TRUE;
-  if (isset($field_state['removed_one']) && $field_state['removed_one']) {
-    $load_entities = FALSE;
-  }
-
   $title = check_plain($instance['label']);
   $description = field_filter_xss($instance['description']);
 
@@ -74,6 +69,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   $field_elements = array();
 
   $function = $instance['widget']['module'] . '_field_widget_form_build';
+  $had_first = FALSE;
   if (function_exists($function)) {
     for ($delta = 0; $delta <= $max; $delta++) {
       $multiple = TRUE;
@@ -88,12 +84,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         // For multiple fields, title and description are handled by the wrapping table.
         '#title' => $multiple ? '' : $title,
         '#description' => $multiple ? '' : $description,
-        // Only the first widget should be required.
-        '#required' => $delta == 0 && $instance['required'],
         '#delta' => $delta,
         '#weight' => $delta,
       );
-      if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element, $load_entities)) {
+      if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element)) {
         // Input field for the delta (drag-n-drop reordering).
         if ($multiple) {
           // We name the element '_weight' to avoid clashing with elements
@@ -107,6 +101,12 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             '#default_value' => isset($items[$delta]['_weight']) ? $items[$delta]['_weight'] : $delta,
             '#weight' => 100,
           );
+        }
+
+        // Because our deleted elements are still in the form, only the first showed element is required.
+        if (!$had_first && (!isset($element['#access']) || $element['#access'])) {
+          $had_first = TRUE;
+          $element['#required'] = $instance['required'];
         }
 
         // Allow modules to alter the field widget form element.
@@ -315,11 +315,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
  * @param $items
  * @param $delta
  * @param $element
- * @param bool $load_entities
  *
  * @return array
  */
-function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element, $load_entities = TRUE) {
+function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   static $recursion = 0;
 
   if (!isset($instance['settings']['title'])) {
@@ -366,6 +365,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $field_state = field_form_get_state($field_parents, $field_name, $language, $form_state);
 
   $deleted_paragraph = FALSE;
+  $confirmed_deleted_paragraph = FALSE;
   $is_new_paragraph = FALSE;
 
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
@@ -379,6 +379,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     if (isset($field_state['entity'][$delta]->removed) && $field_state['entity'][$delta]->removed) {
       $deleted_paragraph = TRUE;
     }
+    if (isset($field_state['entity'][$delta]->confirmed_removed) && $field_state['entity'][$delta]->confirmed_removed) {
+      $confirmed_deleted_paragraph = TRUE;
+    }
     if ($being_edited_paragraph || (isset($field_state['entity'][$delta]->being_edited) && $field_state['entity'][$delta]->being_edited)) {
       $being_edited_paragraph = TRUE;
     }
@@ -388,7 +391,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     $paragraph_item = $field_state['entity'][$delta];
   }
   else {
-    if (isset($items[$delta]) && $load_entities) {
+    if (isset($items[$delta])) {
       $paragraph_item = paragraphs_field_get_entity($items[$delta]);
     }
 
@@ -603,6 +606,11 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     }
   }
 
+  // Hide full item when we are confirmed delete.
+  if ($confirmed_deleted_paragraph) {
+    $element['#access'] = FALSE;
+  }
+
   $recursion--;
   return $element;
 }
@@ -667,7 +675,7 @@ function paragraphs_field_widget_embed_validate($element, &$form_state, $complet
     field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
 
     // Now validate required elements if the entity is not empty.
-    if ((!isset($paragraph_item->removed) || !$paragraph_item->removed) && !empty($element['#paragraphs_required_elements'])) {
+    if (((!isset($paragraph_item->removed) || !$paragraph_item->removed) && (!isset($paragraph_item->confirmed_removed) || !$paragraph_item->confirmed_removed)) && !empty($element['#paragraphs_required_elements'])) {
       foreach ($element['#paragraphs_required_elements'] as &$elements) {
 
         // Copied from _form_validate().
@@ -970,43 +978,9 @@ function paragraphs_deleteconfirm_submit($form, &$form_state) {
 
   $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
 
-  // Go ahead and renumber everything from our delta to the last
-  // item down one. This will overwrite the item being removed.
-  for ($i = $delta; $i <= $field_state['items_count']; $i++) {
-    $old_element_address = array_merge($address, array($i + 1));
-    $new_element_address = array_merge($address, array($i));
-
-    $moving_element = drupal_array_get_nested_value($form, $old_element_address);
-    $moving_element_value = drupal_array_get_nested_value($form_state['values'], $old_element_address);
-    $moving_element_input = drupal_array_get_nested_value($form_state['input'], $old_element_address);
-
-    // Tell the element where it's being moved to.
-    $moving_element['#parents'] = $new_element_address;
-
-    // Move the element around.
-    form_set_value($moving_element, $moving_element_value, $form_state);
-    drupal_array_set_nested_value($form_state['input'], $moving_element['#parents'], $moving_element_input);
-
-    // Move the entity in our saved state.
-    if (isset($field_state['entity'][$i + 1])) {
-      $field_state['entity'][$i] = $field_state['entity'][$i + 1];
-    }
-    else {
-      unset($field_state['entity'][$i]);
-    }
-  }
-
-  // Replace the deleted entity with an empty one. This helps to ensure that
-  // trying to add a new entity won't ressurect a deleted entity from the
-  // trash bin.
-  $count = count($field_state['entity']);
-  unset($field_state['entity'][$count]);
-
-  $field_state['removed_one'] = TRUE;
-
-  // Then remove the last item. But we must not go negative.
-  if ($field_state['items_count'] > 0) {
-    $field_state['items_count']--;
+  if (isset($field_state['entity'][$delta])) {
+    $field_state['entity'][$delta]->removed = 1;
+    $field_state['entity'][$delta]->confirmed_removed = 1;
   }
 
   // Fix the weights. Field UI lets the weights be in a range of

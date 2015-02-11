@@ -1010,7 +1010,9 @@ function theme_paragraphs_field_multiple_value_form($variables) {
       $add_more_button_type = &$element[$key];
     }
     else {
-      $items[] = &$element[$key];
+      if (!isset($element[$key]['#access']) || $element[$key]['#access']) {
+        $items[] = &$element[$key];
+      }
     }
   }
   usort($items, '_field_sort_items_value_helper');
