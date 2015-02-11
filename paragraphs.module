@@ -1202,3 +1202,24 @@ function paragraphs_features_api() {
     ),
   );
 }
+
+/**
+ * Implements hook_bundle_copy_info to provide a bundle copy
+ * export and import tab.
+ */
+function paragraphs_bundle_copy_info() {
+  return array(
+    'paragraphs_item' => array(
+      'bundle_export_callback' => 'paragraphs_bundle_load',
+      'bundle_save_callback' => 'paragraphs_bundle_save',
+      'export_menu' => array(
+        'path' => 'admin/structure/paragraphs/export',
+        'access arguments' => 'administer content types',
+      ),
+      'import_menu' => array(
+        'path' => 'admin/structure/paragraphs/import',
+        'access arguments' => 'administer content types',
+      ),
+    ),
+  );
+}
