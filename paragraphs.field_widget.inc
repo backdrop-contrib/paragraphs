@@ -70,6 +70,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
   $function = $instance['widget']['module'] . '_field_widget_form_build';
   $had_first = FALSE;
+  $actual_item_count = 0;
+
   if (function_exists($function)) {
     for ($delta = 0; $delta <= $max; $delta++) {
       $multiple = TRUE;
@@ -109,6 +111,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $element['#required'] = $instance['required'];
         }
 
+        if (!isset($element['#access']) || $element['#access']) {
+          $actual_item_count++;
+        }
+
         // Allow modules to alter the field widget form element.
         $context = array(
           'form' => $form,
@@ -123,6 +129,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $field_elements[$delta] = $element;
       }
     }
+
+    $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+    $field_state['real_items_count'] = $actual_item_count;
+    field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
     $field_elements += array(
       '#theme' => 'paragraphs_field_multiple_value_form',
@@ -203,7 +213,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         uasort($select_bundles, 'drupal_sort_weight');
         $field = $field_state['field'];
 
-        if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['items_count'] < $field['cardinality']) {
+        if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
           if (!isset($instance['settings']['title'])) {
             $instance['settings']['title'] = PARAGRAPHS_DEFAULT_TITLE;
           }
@@ -739,7 +749,7 @@ function paragraphs_add_more_submit($form, &$form_state) {
 
   $field = $field_state['field'];
 
-  if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['items_count'] < $field['cardinality']) {
+  if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
     $field_state['items_count']++;
   }
 
