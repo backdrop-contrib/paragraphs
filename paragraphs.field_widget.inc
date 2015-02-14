@@ -231,7 +231,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
               $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
-                '#value' => t('Add a !title paragraph', array('!title' => $bundle['name'])),
+                '#value' => t('Add !title', array('!title' => $bundle['name'])),
                 '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
