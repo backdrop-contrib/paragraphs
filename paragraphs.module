@@ -215,9 +215,15 @@ function paragraphs_menu() {
     'description' => 'Manage Paragraph bundles',
     'page callback' => 'paragraphs_admin_bundle_overview',
     'access arguments' => array('administer paragraphs bundles'),
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'paragraphs.admin.inc',
   );
+
+  $items['admin/structure/paragraphs/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+
   $items['admin/structure/paragraphs/add'] = array(
     'title' => 'Add Paragraph Bundle',
     'page callback' => 'drupal_get_form',
@@ -226,13 +232,22 @@ function paragraphs_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'paragraphs.admin.inc',
   );
+
   $items['admin/structure/paragraphs/%paragraphs_bundle'] = array(
-    'title' => 'Edit Paragraph Bundle',
+    'title' => 'Edit paragraph bundle',
+    'title callback' => 'paragraphs_bundle_title_callback',
+    'title arguments' => array(3),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
   );
+
+  $items['admin/structure/paragraphs/%paragraphs_bundle/edit'] = array(
+    'title' => 'Edit',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
   $items['admin/structure/paragraphs/%paragraphs_bundle/delete'] = array(
     'title' => 'Delete Paragraph Bundle',
     'page callback' => 'drupal_get_form',
