@@ -73,6 +73,14 @@ function paragraphs_item_load_multiple($ids = array(), $conditions = array(), $r
   return entity_load('paragraphs_item', $ids, $conditions, $reset);
 }
 
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function paragraphs_ctools_plugin_directory($module, $plugin) {
+  if ($module == 'panelizer' && $plugin == 'entity') {
+    return 'plugins/panelizer/entity';
+  }
+}
 
 /**
  * Implements hook_entity_info().
@@ -821,6 +829,15 @@ function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
   }
   else {
     return $bundles;
+  }
+}
+
+/**
+ * Menu load callback to scrub a paragraphs bundle from the URL safe equivalent.
+ */
+function paragraphs_panelizer_bundle_name_load($name) {
+  if (($bundle = paragraphs_bundle_load($name))) {
+    return $bundle->bundle;
   }
 }
 
