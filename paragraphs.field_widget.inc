@@ -272,7 +272,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
               $field_elements['add_more']['type']['#default_value'] = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
             }
 
-            $text = 'Add a !title';
+            $text = 'Add new !title';
             if ($max >= 0) {
               $text = 'Add another !title';
             }
