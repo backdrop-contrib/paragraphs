@@ -1,4 +1,4 @@
-g<?php
+<?php
 /**
  * @file
  * Definition of the paragraphs item plugin.
