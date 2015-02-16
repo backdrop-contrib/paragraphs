@@ -2,11 +2,11 @@
 
 /**
  * @file
- * Holds relevant functions for paragraph's node clone intragration.
+ * Holds relevant functions for paragraph's node clone integration.
  */
 
 /**
- * Implements hook_node_clone_alter().
+ * Implements hook_clone_node_alter().
  */
 function paragraphs_clone_node_alter(&$node, $context) {
   foreach (field_info_fields() as $field_name => $field) {
@@ -44,7 +44,7 @@ function paragraphs_form_node_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Clone a Paragraphs item. Helper function for hook_node_clone_alter().
+ * Clone a Paragraphs item. Helper function for hook_clone_node_alter().
  */
 function paragraphs_clone_items($entity_type, &$entity, $field_name, $language = LANGUAGE_NONE) {
   $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
