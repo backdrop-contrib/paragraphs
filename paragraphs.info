@@ -5,6 +5,12 @@ package = Paragraphs
 
 dependencies[] = entity
 
+test_dependencies[] = ctools
+test_dependencies[] = entity
+test_dependencies[] = features
+test_dependencies[] = panelizer
+test_dependencies[] = strongarm
+
 files[] = ParagraphsItemEntity.inc
 files[] = ParagraphsItemMetadataController.inc
 files[] = migrate/destinations/MigrateDestinationParagraphsItem.inc
