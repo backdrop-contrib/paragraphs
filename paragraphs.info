@@ -16,3 +16,4 @@ files[] = ParagraphsItemMetadataController.inc
 files[] = migrate/destinations/MigrateDestinationParagraphsItem.inc
 files[] = migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc
 files[] = views/paragraphs_handler_relationship.inc
+files[] = tests/paragraphs.test
