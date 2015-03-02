@@ -89,6 +89,7 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
       $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items');
       $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
       $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items-field-' . $instance['field_name']);
+      $element['#view_mode'] = $view_mode;
 
       foreach ($items as $delta => $item) {
         if ($paragraph = paragraphs_field_get_entity($item)) {
