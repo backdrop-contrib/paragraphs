@@ -161,7 +161,7 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
         if (isset($form['#parents']) && drupal_array_nested_key_exists($form_state['values'], $form['#parents'])) {
           $values = drupal_array_get_nested_value($form_state['values'], $form['#parents']);
           if (isset($values['panelizer'][$view_mode]['name'])) {
-            $entity->panelizer[$view_mode] = $this->get_default_panelizer_object($bundle . '.' . $view_mode, $values['panelizer'][$view_mode]['name']);
+            $entity->panelizer[$view_mode] = clone $this->get_default_panelizer_object($bundle . '.' . $view_mode, $values['panelizer'][$view_mode]['name']);
             if (!empty($entity->panelizer[$view_mode])) {
               $entity->panelizer[$view_mode]->did = NULL;
 
