@@ -681,25 +681,28 @@ function paragraphs_field_widget_embed_validate($element, &$form_state, $complet
   if (isset($field_state['entity'][$element['#delta']])) {
     $paragraph_item = $field_state['entity'][$element['#delta']];
 
-    // Attach field API validation of the embedded form.
-    field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
+    // Now validate elements if the entity is not empty.
+    if (((!isset($paragraph_item->removed) || !$paragraph_item->removed) && (!isset($paragraph_item->confirmed_removed) || !$paragraph_item->confirmed_removed))) {
 
-    // Now validate required elements if the entity is not empty.
-    if (((!isset($paragraph_item->removed) || !$paragraph_item->removed) && (!isset($paragraph_item->confirmed_removed) || !$paragraph_item->confirmed_removed)) && !empty($element['#paragraphs_required_elements'])) {
-      foreach ($element['#paragraphs_required_elements'] as &$elements) {
+      // Attach field API validation of the embedded form.
+      field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
 
-        // Copied from _form_validate().
-        if (isset($elements['#needs_validation'])) {
-          $is_empty_multiple = (!count($elements['#value']));
-          $is_empty_string = (is_string($elements['#value']) && drupal_strlen(trim($elements['#value'])) == 0);
-          $is_empty_value = ($elements['#value'] === 0);
-          if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
-            if (isset($elements['#title'])) {
-              $error_text = t('!name field is required.', array('!name' => $elements['#title']));
-              form_error($elements, filter_xss_admin($error_text));
-            }
-            else {
-              form_error($elements);
+      if (!empty($element['#paragraphs_required_elements'])) {
+        foreach ($element['#paragraphs_required_elements'] as &$elements) {
+
+          // Copied from _form_validate().
+          if (isset($elements['#needs_validation'])) {
+            $is_empty_multiple = (!count($elements['#value']));
+            $is_empty_string = (is_string($elements['#value']) && drupal_strlen(trim($elements['#value'])) == 0);
+            $is_empty_value = ($elements['#value'] === 0);
+            if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
+              if (isset($elements['#title'])) {
+                $error_text = t('!name field is required.', array('!name' => $elements['#title']));
+                form_error($elements, filter_xss_admin($error_text));
+              }
+              else {
+                form_error($elements);
+              }
             }
           }
         }
