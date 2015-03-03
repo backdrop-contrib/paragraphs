@@ -742,6 +742,11 @@ function paragraphs_field_item_to_ids($items) {
  * Implements hook_field_is_empty().
  */
 function paragraphs_field_is_empty($item, $field) {
+  // Item is empty when we removed it.
+  if (isset($item['entity']) && ((isset($item['entity']->removed) && $item['entity']->removed) || (isset($item['entity']->confirmed_removed) && $item['entity']->confirmed_removed))) {
+    dpm($item);
+    return TRUE;
+  }
   if (!empty($item['value'])) {
     return FALSE;
   }
