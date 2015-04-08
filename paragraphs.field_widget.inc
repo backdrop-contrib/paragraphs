@@ -193,8 +193,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           unset($select_bundles[$machine_name]);
           $removed_a_bundle = TRUE;
         }
-        elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
-            $select_bundles[$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
+        elseif (isset($instance['settings']['allowed_bundles']['bundle_weights'][$machine_name])) {
+          $select_bundles[$machine_name] = $instance['settings']['allowed_bundles']['bundle_weights'][$machine_name];
         }
         $weight++;
       }
