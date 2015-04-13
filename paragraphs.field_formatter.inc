@@ -62,6 +62,9 @@ function paragraphs_field_formatter_settings_summary($field, $instance, $view_mo
     if (!empty($entity_type['view modes'][$settings['view_mode']]['label'])) {
       $output[] =  t('View mode: @mode', array('@mode' => $entity_type['view modes'][$settings['view_mode']]['label']));
     }
+    else {
+      $output[] = ' ';
+    }
   }
 
   return implode('<br>', $output);
