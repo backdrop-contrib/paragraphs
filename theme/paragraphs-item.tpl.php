@@ -31,4 +31,3 @@
     <?php print render($content); ?>
   </div>
 </div>
-
