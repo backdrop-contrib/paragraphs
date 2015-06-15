@@ -5,6 +5,7 @@
  * Paragraphs allows you to embed multiple entity bundles in field.
  */
 
+define('PARAGRAPHS_RECURSION_LIMIT', 20);
 define('PARAGRAPHS_DEFAULT_TITLE', 'Paragraph');
 define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE', 'open');

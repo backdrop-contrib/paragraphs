@@ -341,7 +341,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
   // If the paragraph item form contains another paragraph,
   // we might ran into a recursive loop. Prevent that.
-  if ($recursion++ > 3) {
+  if ($recursion++ > PARAGRAPHS_RECURSION_LIMIT) {
     drupal_set_message(t('The paragraphs item form has not been embedded to avoid recursive loops.'), 'error');
     return $element;
   }
