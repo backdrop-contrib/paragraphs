@@ -33,9 +33,11 @@ function paragraphs_form_node_form_alter(&$form, &$form_state, $form_id) {
         // Unset the item_id and revision_id of each paragraphs item so
         // that new items are created on save.
         foreach ($field_config as $language => $items) {
-          foreach ($items['entity'] as $paragraph_item) {
-            $paragraph_item->item_id = NULL;
-            $paragraph_item->revision_id = NULL;
+          if (isset($items['entity']) && count($items['entity'])) {
+            foreach ($items['entity'] as $paragraph_item) {
+              $paragraph_item->item_id = NULL;
+              $paragraph_item->revision_id = NULL;
+            }
           }
         }
       }
