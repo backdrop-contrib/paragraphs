@@ -379,6 +379,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
   $bundles = array();
   $_bundles = paragraphs_bundle_load();
+  $form_delta = count($_bundles) * 2;
   $max_weight = 0;
   $weights = array();
 
@@ -419,7 +420,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
         '#type' => 'weight',
         '#title' => t('Weight'),
         '#default_value' => (isset($weights[$machine_name]) ? $weights[$machine_name] : $weight + $max_weight),
-        '#delta' => 10,
+        '#delta' => $form_delta,
         '#title_display' => 'invisible',
       ),
     );
