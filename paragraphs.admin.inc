@@ -21,7 +21,7 @@ function paragraphs_admin_bundle_overview() {
   foreach ($bundles as $bundle) {
     $rows[$bundle->bundle] = array(
       array(
-        'data' => $bundle->name . ' (' . $bundle->bundle . ')',
+        'data' => check_plain($bundle->name) . ' (' . $bundle->bundle . ')',
       ),
       array(
         'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/fields')
