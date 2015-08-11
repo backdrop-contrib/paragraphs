@@ -1067,7 +1067,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     );
     $rows[] = array(
       'data' => $cells,
-      'class' => array('draggable'),
+      'class' => array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])),
     );
   }
 
