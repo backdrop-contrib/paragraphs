@@ -151,9 +151,6 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
    * Implements hook_field_attach_submit().
    */
   public function hook_field_attach_submit($entity, &$form, &$form_state) {
-    // Call parent.
-    parent::hook_field_attach_submit($entity, $form, $form_state);
-
     // Save paragraph item panelizer settings.
     if (!empty($form_state['panelizer has choice'])) {
       list($entity_id, $revision_id, $bundle) = entity_extract_ids($this->entity_type, $entity);
