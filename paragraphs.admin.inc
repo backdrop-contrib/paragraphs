@@ -15,27 +15,46 @@
 function paragraphs_admin_bundle_overview() {
   $page = array();
   $bundles = paragraphs_bundle_load();
+  $field_ui = module_exists('field_ui');
 
-  $header = array(t('Bundle name'), array('data' => t('Operations'), 'colspan' => '4'));
+  $header = array(
+    t('Bundle name'),
+    array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2')
+  );
   $rows = array();
   foreach ($bundles as $bundle) {
-    $rows[$bundle->bundle] = array(
+
+    $type_url_str = strtr($bundle->bundle, array('_' => '-'));
+
+    $row = array(
       array(
-        'data' => check_plain($bundle->name) . ' (' . $bundle->bundle . ')',
-      ),
-      array(
-        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/fields')
-      ),
-      array(
-        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/display')
-      ),
-      array(
-        'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/edit')
-      ),
-      array(
-        'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . strtr($bundle->bundle, array('_' => '-')) . '/delete')
-      ),
+        'data' => $bundle->name . ' (' . $bundle->bundle . ')',
+      )
     );
+
+    if ($field_ui) {
+
+      // Manage fields.
+      $row[] = array(
+        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields')
+      );
+
+      // Display fields.
+      $row[] = array(
+        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display')
+      );
+    }
+
+    // Manage bundle.
+    $row[] = array(
+      'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/edit')
+    );
+    // Delete bundle.
+    $row[] = array(
+      'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/delete')
+    );
+
+    $rows[$bundle->bundle] = $row;
   }
 
   // Sort rows by bundle.
