@@ -202,6 +202,77 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
 }
 
 /**
+ * Access check for paragraphs.
+ *
+ * Finds the parent entity and then checks for access on the parent entity.
+ *
+ * @return bool
+ *   Whether the user has access to a paragraphs item.
+ */
+function paragraphs_paragraphs_item_access($entity, $op, $account) {
+  $permissions = &drupal_static(__FUNCTION__, array());
+
+  if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    // If there was no bundle to check against, or the $op was not one of the
+    // supported ones, we return access denied.
+    return PARAGRAPHS_ITEM_ACCESS_IGNORE;
+  }
+
+  $bundle = $entity->bundle;
+
+  // Set static cache id to use the bundle machine name.
+  $cid = $bundle;
+
+  // If we've already checked access for this bundle, user and op, return from
+  // cache.
+  if (isset($permissions[$account->uid][$cid][$op])) {
+    return $permissions[$account->uid][$cid][$op];
+  }
+
+  $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
+
+  if (isset($entity->hostEntity) && isset($entity->hostEntityType)) {
+    $entity_access = entity_access($op, $entity->hostEntityType, $entity->hostEntity, $account);
+    if ($entity_access) {
+      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+    } else {
+      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+    }
+  } else {
+    $field_info = field_info_field($entity->field_name);
+
+    // Currently we only support reverse load with the sql storage.
+    if ($field_info['storage']['type'] == 'field_sql_storage') {
+      $table = array_keys($field_info['storage']['details']['sql'][FIELD_LOAD_CURRENT]);
+      $table = $table[0];
+      $result = db_select($table, 'f')
+        ->condition($field_info['storage']['details']['sql']['FIELD_LOAD_CURRENT'][$table]['value'], $entity->item_id)
+        ->fields('f')
+        ->execute();
+
+      while($record = $result->fetchAssoc()) {
+        $parent_entity = entity_load_single($record['entity_type'], $record['entity_id']);
+
+        if ($parent_entity && $entity_access = entity_access($op, $record['entity_type'], $parent_entity, $account)) {
+
+          if ($entity_access) {
+            $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+
+            // 1 allowed, we break out.
+            break;
+          }
+        }
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+      }
+    } else {
+      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
+    }
+  }
+
+  return $permissions[$account->uid][$cid][$op];
+}
+
+/**
  * Implements hook_permission().
  */
 function paragraphs_permission() {

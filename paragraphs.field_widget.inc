@@ -182,6 +182,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $weight = 0;
       $entity_shell = new stdClass();
       $entity_shell->is_new = TRUE;
+      $entity_shell->hostEntity = $form['#entity'];
+      $entity_shell->hostEntityType = $field_state['instance']['entity_type'];
       foreach ($select_bundles as $machine_name => $bundle) {
         $select_bundles[$machine_name] = array(
           'name' => $bundle,
@@ -415,6 +417,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     }
 
     if (!empty($paragraph_item)) {
+      $paragraph_item->forceHostEntity($element['#entity']);
+      $paragraph_item->forceHostEntityType($field_state['instance']['entity_type']);
+
       // Put our entity in the form state, so FAPI callbacks can access it.
       $field_state['entity'][$delta] = $paragraph_item;
     }

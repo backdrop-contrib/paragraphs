@@ -223,6 +223,16 @@ class ParagraphsItemEntity extends Entity {
   }
 
   /**
+   * Function to force change the host entity type of this paragraph item.
+   *
+   * @param $entity
+   *   The entity to force the host to.
+   */
+  public function forceHostEntityType($entity_type) {
+    $this->hostEntityType = $entity_type;
+  }
+
+  /**
    * Returns the host entity, which embeds this paragraph item.
    */
   public function hostEntity() {
