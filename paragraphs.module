@@ -239,33 +239,20 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
       $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
     }
   } else {
-    $field_info = field_info_field($entity->field_name);
 
-    // Currently we only support reverse load with the sql storage.
-    if ($field_info['storage']['type'] == 'field_sql_storage') {
-      $table = array_keys($field_info['storage']['details']['sql'][FIELD_LOAD_CURRENT]);
-      $table = $table[0];
-      $result = db_select($table, 'f')
-        ->condition($field_info['storage']['details']['sql']['FIELD_LOAD_CURRENT'][$table]['value'], $entity->item_id)
-        ->fields('f')
-        ->execute();
+    if ($entity->hostEntity()) {
+      $parent_entity = $entity->hostEntity();
 
-      while($record = $result->fetchAssoc()) {
-        $parent_entity = entity_load_single($record['entity_type'], $record['entity_id']);
+      if ($parent_entity && $entity_access = entity_access($op, $entity->hostEntityType(), $parent_entity, $account)) {
+        if ($entity_access) {
+          $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
 
-        if ($parent_entity && $entity_access = entity_access($op, $record['entity_type'], $parent_entity, $account)) {
-
-          if ($entity_access) {
-            $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
-
-            // 1 allowed, we break out.
-            break;
-          }
+          // 1 allowed, we break out.
+          return $permissions[$account->uid][$cid][$op];
         }
-        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
       }
-    } else {
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
+
+      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
     }
   }
 
