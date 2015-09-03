@@ -218,6 +218,12 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
     return PARAGRAPHS_ITEM_ACCESS_IGNORE;
   }
 
+  if (isset($entity->is_new) && $entity->is_new) {
+    // If our entity is new, we force the operation to $create as the parent
+    // entity might not be complete either.
+    $op = 'create';
+  }
+
   $bundle = $entity->bundle;
 
   // Set static cache id to use the bundle machine name.
