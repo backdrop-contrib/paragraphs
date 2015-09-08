@@ -211,6 +211,7 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
  */
 function paragraphs_paragraphs_item_access($entity, $op, $account) {
   $permissions = &drupal_static(__FUNCTION__, array());
+  $real_op = $op;
 
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     // If there was no bundle to check against, or the $op was not one of the
@@ -218,51 +219,71 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
     return PARAGRAPHS_ITEM_ACCESS_IGNORE;
   }
 
-  if (isset($entity->is_new) && $entity->is_new) {
-    // If our entity is new, we force the operation to $create as the parent
-    // entity might not be complete either.
-    $op = 'create';
+  // Update/Delete/Create access requires update access on the parent.
+  if (in_array($op, array('update', 'delete', 'create'), TRUE)) {
+    $op = 'update';
   }
 
   $bundle = $entity->bundle;
 
-  // Set static cache id to use the bundle machine name.
-  $cid = $bundle;
-
-  // If we've already checked access for this bundle, user and op, return from
-  // cache.
-  if (isset($permissions[$account->uid][$cid][$op])) {
-    return $permissions[$account->uid][$cid][$op];
+  // Cid is the bundle name when op is create.
+  if ($real_op == 'create') {
+    $cid = $entity->bundle;
+  }
+  else {
+    $cid = $entity->item_id . '_' . $entity->revision_id;
   }
 
-  $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
+  // If we've already checked access for this cid, user and op, return from
+  // cache.
+  if (isset($permissions[$account->uid][$cid][$real_op])) {
+    return $permissions[$account->uid][$cid][$real_op];
+  }
+
+  $permissions[$account->uid][$cid][$real_op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
 
   if (isset($entity->hostEntity) && isset($entity->hostEntityType)) {
+    $entity_info = entity_get_info($entity->hostEntityType);
+    $id_key = $entity_info['entity keys']['id'];
+
+    // Check if we have an ID key set, if not parent entity is new, we check for create access.
+    if (!isset($entity->hostEntity->{$id_key}) || empty($entity->hostEntity->{$id_key})) {
+      $op = 'create';
+    }
+
     $entity_access = entity_access($op, $entity->hostEntityType, $entity->hostEntity, $account);
     if ($entity_access) {
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+      $permissions[$account->uid][$cid][$real_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
     } else {
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+      $permissions[$account->uid][$cid][$real_op] = PARAGRAPHS_ITEM_ACCESS_DENY;
     }
   } else {
 
     if ($entity->hostEntity()) {
       $parent_entity = $entity->hostEntity();
 
+      $entity_info = entity_get_info($entity->hostEntityType());
+      $id_key = $entity_info['entity keys']['id'];
+
+      // Check if we have an ID key set, if not parent entity is new, we check for create access.
+      if (!isset($parent_entity->{$id_key}) || empty($parent_entity->{$id_key})) {
+        $op = 'create';
+      }
+
       if ($parent_entity && $entity_access = entity_access($op, $entity->hostEntityType(), $parent_entity, $account)) {
         if ($entity_access) {
-          $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+          $permissions[$account->uid][$cid][$real_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
 
           // 1 allowed, we break out.
-          return $permissions[$account->uid][$cid][$op];
+          return $permissions[$account->uid][$cid][$real_op];
         }
       }
 
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+      $permissions[$account->uid][$cid][$real_op] = PARAGRAPHS_ITEM_ACCESS_DENY;
     }
   }
 
-  return $permissions[$account->uid][$cid][$op];
+  return $permissions[$account->uid][$cid][$real_op];
 }
 
 /**

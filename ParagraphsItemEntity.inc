@@ -45,6 +45,13 @@ class ParagraphsItemEntity extends Entity {
   protected $hostEntityType;
 
   /**
+   * The host entity bundle.
+   *
+   * @var string
+   */
+  protected $hostEntityBundle;
+
+  /**
    * The language under which the paragraphs item is stored.
    *
    * @var string
@@ -66,7 +73,7 @@ class ParagraphsItemEntity extends Entity {
   public $revision_id;
 
   /**
-   * The name of the field-collection field this item is associated with.
+   * The name of the paragraphs field this item is associated with.
    *
    * @var string
    */
@@ -237,12 +244,7 @@ class ParagraphsItemEntity extends Entity {
    */
   public function hostEntity() {
     if ($this->fetchHostDetails()) {
-      if (!isset($this->hostEntity) && $this->isInUse()) {
-        $this->hostEntity = entity_load_single($this->hostEntityType, $this->hostEntityId);
-      }
-      elseif (!isset($this->hostEntity) && $this->hostEntityRevisionId) {
-        $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
-      }
+      $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
       return $this->hostEntity;
     }
   }
@@ -262,9 +264,6 @@ class ParagraphsItemEntity extends Entity {
    */
   public function hostEntityId() {
     if ($this->fetchHostDetails()) {
-      if (!$this->hostEntityId && $this->hostEntityRevisionId) {
-        $this->hostEntityId = entity_id($this->hostEntityType, $this->hostEntity());
-      }
       return $this->hostEntityId;
     }
   }
@@ -274,9 +273,8 @@ class ParagraphsItemEntity extends Entity {
    * item.
    */
   public function hostEntityBundle() {
-    if ($entity = $this->hostEntity()) {
-      list($id, $rev_id, $bundle) = entity_extract_ids($this->hostEntityType, $entity);
-      return $bundle;
+    if ($this->fetchHostDetails()) {
+      return $this->hostEntityBundle;
     }
   }
 
@@ -293,25 +291,30 @@ class ParagraphsItemEntity extends Entity {
         // right host entity.
         $query = new EntityFieldQuery();
         $query->fieldCondition($this->fieldInfo(), 'revision_id', $this->revision_id);
-        if (!$this->isInUse()) {
-          $query->age(FIELD_LOAD_REVISION);
-        }
+        $query->age(FIELD_LOAD_REVISION);
         $result = $query->execute();
         list($this->hostEntityType, $data) = each($result);
 
-        if ($this->isInUse()) {
-          $this->hostEntityId = $data ? key($data) : FALSE;
-          $this->hostEntityRevisionId = FALSE;
+        if ($data) {
+          $data_values = array_shift($data);
+          $host_entity_info = entity_get_info($this->hostEntityType);
+          $host_entity_keys = $host_entity_info['entity keys'];
+
+          $this->hostEntityId = $data_values->{$host_entity_keys['id']};
+          $this->hostEntityRevisionId = $data_values->{$host_entity_keys['revision']};
+          $this->hostEntityBundle = $data_values->{$host_entity_keys['bundle']};
         }
-        // If we are querying for revisions, we get the revision ID.
         else {
           $this->hostEntityId = FALSE;
-          $this->hostEntityRevisionId = $data ? key($data) : FALSE;
+          $this->hostEntityRevisionId = FALSE;
+          $this->hostEntityBundle = FALSE;
         }
       }
       else {
         // No host entity available yet.
         $this->hostEntityId = FALSE;
+        $this->hostEntityRevisionId = FALSE;
+        $this->hostEntityBundle = FALSE;
       }
     }
     return !empty($this->hostEntityId) || !empty($this->hostEntity) || !empty($this->hostEntityRevisionId);
