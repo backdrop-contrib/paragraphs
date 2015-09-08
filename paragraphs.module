@@ -104,6 +104,7 @@ function paragraphs_entity_info() {
       'id' => 'item_id',
       'revision' => 'revision_id',
       'bundle' => 'bundle',
+      'field_name' => 'field_name',
     ),
     'module' => 'paragraphs',
     'view modes' => array(
