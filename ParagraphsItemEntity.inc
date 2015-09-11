@@ -345,7 +345,7 @@ class ParagraphsItemEntity extends Entity {
    * Determines the language code under which the item is stored.
    */
   public function langcode() {
-    if ($this->delta() != NULL) {
+    if ($this->delta() !== NULL) {
       return $this->langcode;
     }
   }
