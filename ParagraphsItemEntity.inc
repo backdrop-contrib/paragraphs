@@ -516,7 +516,7 @@ class ParagraphsItemEntity extends Entity {
         // Add the URI to the field on the entity for display.
         if (isset($image_field[$langcode])) {
           foreach ($image_field[$langcode] as &$field_to_be_updated) {
-            if (!isset($field_to_be_updated['uri'])) {
+            if (!isset($field_to_be_updated['uri']) && isset($field_to_be_updated['fid'])) {
               $image = file_load($field_to_be_updated['fid']);
               if ($image) {
                 $field_to_be_updated['uri'] = $image->uri;
