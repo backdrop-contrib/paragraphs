@@ -39,8 +39,7 @@ function paragraphs_field_widget_form(&$form, &$form_state, $field, $instance, $
 
       break;
     case 'paragraphs_embed':
-      $form['#entity'] = $element['#entity'];
-      return paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, $form, $form_state);
+      return paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, $form, $form_state, $delta, $element);
       break;
   }
 }
@@ -53,7 +52,7 @@ function paragraphs_field_widget_form(&$form, &$form_state, $field, $instance, $
  * - AHAH-'add more' button
  * - drag-n-drop value reordering
  */
-function paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, &$form, &$form_state) {
+function paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, &$form, &$form_state, $delta, $original_element) {
   $field_name = $field['field_name'];
   $parents = $form['#parents'];
 
@@ -76,9 +75,9 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
     for ($delta = 0; $delta <= $max; $delta++) {
       $multiple = TRUE;
       $element = array(
-        '#entity_type' => $instance['entity_type'],
-        '#entity' => $form['#entity'],
-        '#bundle' => $instance['bundle'],
+        '#entity_type' => $original_element['#entity_type'],
+        '#entity' => $original_element['#entity'],
+        '#bundle' => $original_element['#bundle'],
         '#field_name' => $field_name,
         '#language' => $langcode,
         '#field_parents' => $parents,
@@ -180,17 +179,18 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $removed_a_bundle = FALSE;
 
       $weight = 0;
-      $entity_shell = new stdClass();
-      $entity_shell->is_new = TRUE;
-      $entity_shell->hostEntity = $form['#entity'];
-      $entity_shell->hostEntityType = $field_state['instance']['entity_type'];
+
       foreach ($select_bundles as $machine_name => $bundle) {
         $select_bundles[$machine_name] = array(
           'name' => $bundle,
           'weight' => $weight,
         );
 
-        $entity_shell->bundle = $machine_name;
+
+        /* @var $entity_shell ParagraphsItemEntity */
+        $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
+        $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
+
         if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
           unset($select_bundles[$machine_name]);
           $removed_a_bundle = TRUE;
@@ -229,7 +229,11 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
           if ($add_mode == 'button') {
             foreach ($select_bundles as $machine_name => $bundle) {
-              $entity_shell->bundle = $machine_name;
+
+              /* @var $entity_shell ParagraphsItemEntity */
+              $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
+              $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
+
               $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
@@ -400,7 +404,10 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     else {
       $being_edited_paragraph = FALSE;
     }
+
+    /* @var $paragraph_item ParagraphsItemEntity */
     $paragraph_item = $field_state['entity'][$delta];
+    $paragraph_item->setHostEntity($field_state['instance']['entity_type'], $element['#entity'], $langcode, FALSE);
   }
   else {
     if (isset($items[$delta])) {
@@ -410,6 +417,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     // Show an empty collection if we have no existing one or it does not
     // load.
     if (empty($paragraph_item) && $bundle) {
+      /* @var $paragraph_item ParagraphsItemEntity */
       $paragraph_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
       $paragraph_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
@@ -417,8 +425,8 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     }
 
     if (!empty($paragraph_item)) {
-      $paragraph_item->forceHostEntity($element['#entity']);
-      $paragraph_item->forceHostEntityType($field_state['instance']['entity_type']);
+      /* @var $paragraph_item ParagraphsItemEntity */
+      $paragraph_item->setHostEntity($element['#entity_type'], $element['#entity'], $langcode, FALSE);
 
       // Put our entity in the form state, so FAPI callbacks can access it.
       $field_state['entity'][$delta] = $paragraph_item;

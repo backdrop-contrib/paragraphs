@@ -59,6 +59,8 @@ function paragraphs_clone_items($entity_type, &$entity, $field_name, $language =
 
   foreach ($old_items as $old_item) {
     list( , , $bundle) = entity_extract_ids('paragraphs_item', $old_item);
+
+    /* @var $new_item ParagraphsItemEntity */
     $new_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
     $new_item->setHostEntity($entity_type, $entity, $language);
 
