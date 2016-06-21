@@ -385,11 +385,10 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $is_new_paragraph = FALSE;
 
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
+  $default_edit_mode_override = isset($instance['settings']['default_edit_mode_override']) ? $instance['settings']['default_edit_mode_override'] : PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE;
+  $force_open = (!empty($instance['widget']['paragraphs_edit_mode_open']) || count($items) < $default_edit_mode_override);
 
-  $being_edited_paragraph = TRUE;
-  if ($default_edit_mode === 'closed' || $default_edit_mode === 'preview') {
-    $being_edited_paragraph = FALSE;
-  }
+  $being_edited_paragraph = ($default_edit_mode === 'open');
 
   if (isset($field_state['entity'][$delta])) {
     if (isset($field_state['entity'][$delta]->removed) && $field_state['entity'][$delta]->removed) {
@@ -427,6 +426,11 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
     if (!empty($paragraph_item)) {
       /* @var $paragraph_item ParagraphsItemEntity */
       $paragraph_item->setHostEntity($element['#entity_type'], $element['#entity'], $langcode, FALSE);
+
+      if ($force_open) {
+        $paragraph_item->being_edited = TRUE;
+        $being_edited_paragraph = TRUE;
+      }
 
       // Put our entity in the form state, so FAPI callbacks can access it.
       $field_state['entity'][$delta] = $paragraph_item;
