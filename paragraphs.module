@@ -1124,19 +1124,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
 
   $add_mode = (isset($instance['settings']['add_mode']) ? $instance['settings']['add_mode'] : PARAGRAPHS_DEFAULT_ADD_MODE);
 
-  $table_id = drupal_html_id($element['#field_name'] . '_values');
-  $order_class = $element['#field_name'] . '-delta-order';
   $required = !empty($element['#required']) ? theme('form_required_marker', $variables) : '';
-
-  $header = array(
-    array(
-      'data' => '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>",
-      'colspan' => 2,
-      'class' => array('field-label'),
-    ),
-    t('Order'),
-  );
-  $rows = array();
 
   // Sort items according to '_weight' (needed when the form comes back after
   // preview or failed validation)
@@ -1156,24 +1144,55 @@ function theme_paragraphs_field_multiple_value_form($variables) {
   }
   usort($items, '_field_sort_items_value_helper');
 
-  // Add the items as table rows.
-  foreach ($items as $key => $item) {
-    $item['_weight']['#attributes']['class'] = array($order_class);
-    $delta_element = drupal_render($item['_weight']);
-    $cells = array(
-      array('data' => '', 'class' => array('field-multiple-drag')),
-      drupal_render($item),
-      array('data' => $delta_element, 'class' => array('delta-order')),
+  // If the field can hold more than one item, display it as a draggable table.
+  if ($element['#cardinality'] != 1) {
+    $table_id = drupal_html_id($element['#field_name'] . '_values');
+    $order_class = $element['#field_name'] . '-delta-order';
+
+    $header = array(
+      array(
+        'data' => '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>',
+        'colspan' => 2,
+        'class' => array('field-label'),
+      ),
+      t('Order'),
     );
-    $rows[] = array(
-      'data' => $cells,
-      'class' => array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])),
-    );
+    $rows = array();
+
+    // Add the items as table rows.
+    foreach ($items as $key => $item) {
+      $item['_weight']['#attributes']['class'] = array($order_class);
+      $delta_element = drupal_render($item['_weight']);
+      $cells = array(
+        array('data' => '', 'class' => array('field-multiple-drag')),
+        drupal_render($item),
+        array('data' => $delta_element, 'class' => array('delta-order')),
+      );
+      $rows[] = array(
+        'data' => $cells,
+        'class' => array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])),
+      );
+    }
+
+    $field_content = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+
+    drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
   }
+  // If the field can only hold one item, display it without the table wrapper.
+  else {
+    $value_id = drupal_html_id($element['#field_name'] . '_value');
+    $field_content = '<label for="' . $value_id . '">' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>';
+    if (count($items)) {
+      // We don't need to render a weight field when there can only be one item.
+      unset($items[0]['_weight']);
+      $field_content .= '<div id="' . $value_id . '>' . drupal_render($items[0]) . '</div>';
+    }
+  }
+
 
   $output = '<div class="form-item">';
   if (count($items)) {
-    $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
+    $output .= $field_content;
   }
   else {
     $add_text = 'No !title_multiple added yet. Select a !title type and press the button below to add one.';
@@ -1186,8 +1205,6 @@ function theme_paragraphs_field_multiple_value_form($variables) {
   $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
   $output .= '<div class="clearfix">' . drupal_render($add_more_button_type) . drupal_render($add_more_button) . '</div>';
   $output .= '</div>';
-
-  drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
 
   return $output;
 }
