@@ -770,6 +770,12 @@ function paragraphs_field_update($entity_type, $entity, $field, $instance, $lang
   if (!empty($entity->workbench_moderation['updating_live_revision'])) {
     return;
   }
+  // Prevent State Flow Entity from deleting paragraphs on node_save()
+  // when adding new paragraphs item and a published revision of the node exist.
+  // @see state_flow_entity_exit().
+  if (!empty($entity->state_flow) && isset($entity->revision) && $entity->revision === FALSE) {
+    return;
+  }
 
   $items_original = !empty($entity->original->{$field['field_name']}[$langcode]) ? $entity->original->{$field['field_name']}[$langcode] : array();
   $original_by_id = array_flip(paragraphs_field_item_to_ids($items_original));
