@@ -132,7 +132,7 @@ function paragraphs_entity_info() {
   // to work.
   foreach ($bundles as $machine_name => $bundle) {
     $return['paragraphs_item']['bundles'][$bundle->bundle] = array(
-      'label' => t('Paragraphs bundle @bundle', array('@bundle' => $bundle->bundle)),
+      'label' => $bundle->name,
       'admin' => array(
         'path' => 'admin/structure/paragraphs/%paragraphs_bundle',
         'real path' => 'admin/structure/paragraphs/' . strtr($machine_name, array('_' => '-')),
