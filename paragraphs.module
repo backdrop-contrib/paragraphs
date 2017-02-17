@@ -1219,7 +1219,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     if (count($items)) {
       // We don't need to render a weight field when there can only be one item.
       unset($items[0]['_weight']);
-      $field_content .= '<div id="' . $value_id . '>' . drupal_render($items[0]) . '</div>';
+      $field_content .= '<div id="' . $value_id . '">' . drupal_render($items[0]) . '</div>';
     }
   }
 
