@@ -277,6 +277,7 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
     // Check if we have an ID key set, if not parent entity is new, we check for create access.
     if (!isset($host_entity->{$host_id_key}) || empty($host_entity->{$host_id_key})) {
       $check_parent_op = 'create';
+      $host_entity->is_new = TRUE;
     }
 
     if (isset($parent_permissions[$account->uid][$parent_cid][$check_parent_op])) {
