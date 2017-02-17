@@ -1181,7 +1181,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
   // If the field can hold more than one item, display it as a draggable table.
   if ($element['#cardinality'] != 1) {
     $table_id = drupal_html_id($element['#field_name'] . '_values');
-    $order_class = $element['#field_name'] . '-delta-order';
+    $order_class = $element['#field_name'] . '-' . $table_id . '-delta-order';
 
     $header = array(
       array(
