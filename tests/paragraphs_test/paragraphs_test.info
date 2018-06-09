@@ -1,5 +1,6 @@
 name = Paragraphs test
-core = 7.x
+backdrop = 1.x
+type = module
 package = Paragraphs
 dependencies[] = features (2.x)
 dependencies[] = node

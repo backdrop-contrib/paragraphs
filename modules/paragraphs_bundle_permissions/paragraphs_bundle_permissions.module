@@ -25,7 +25,7 @@
  *   TRUE if the operation may be performed, FALSE otherwise.
  */
 function paragraphs_bundle_permissions_paragraphs_item_access($entity, $op, $account) {
-  $permissions = &drupal_static(__FUNCTION__, array());
+  $permissions = &backdrop_static(__FUNCTION__, array());
 
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     // If there was no bundle to check against, or the $op was not one of the
@@ -74,7 +74,7 @@ function paragraphs_bundle_permissions_permission() {
   $bundles = paragraphs_bundle_load();
   foreach ($bundles as $machine_name => $bundle) {
     $perms += array(
-      'view paragraph content ' .$machine_name => array(
+      'view paragraph content ' . $machine_name => array(
         'title' => t('%type_name: View content', array('%type_name' => $bundle->name)),
         'description' => t('Is able to view paragraphs content of bundle %type_name', array('%type_name' => $bundle->name)),
       ),

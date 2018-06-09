@@ -13,7 +13,7 @@ function paragraphs_field_formatter_info() {
     'paragraphs_view' => array(
       'label' => t('Paragraphs items'),
       'field types' => array('paragraphs'),
-      'settings' =>  array(
+      'settings' => array(
         'view_mode' => 'full',
       ),
     ),
@@ -89,9 +89,9 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
       // Get view mode from field instance (if configured).
       $view_mode = empty($instance['display'][$display_view_mode]['settings']['view_mode']) ? $display_view_mode : $instance['display'][$display_view_mode]['settings']['view_mode'];
       $element['#theme_wrappers'] = array('paragraphs_items');
-      $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items');
-      $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
-      $element['#attributes']['class'][] = drupal_clean_css_identifier('paragraphs-items-field-' . $instance['field_name']);
+      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items');
+      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
+      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-field-' . $instance['field_name']);
       $element['#view_mode'] = $view_mode;
 
       foreach ($items as $delta => $item) {

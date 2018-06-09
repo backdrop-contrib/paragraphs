@@ -518,7 +518,7 @@ class ParagraphsItemEntity extends Entity {
     $field_instances = field_info_instances($this->entityType, $this->bundle);
     foreach ($field_instances as $field_name => $field) {
       $info = field_info_field($field_name);
-      if (is_array($info) && $info['type'] == 'image' && $image_field = &$this->{$field_name}) {
+      if (is_array($info) && $info['type'] == 'image' && $image_field = & $this->{$field_name}) {
         // Add the URI to the field on the entity for display.
         if (isset($image_field[$langcode])) {
           foreach ($image_field[$langcode] as &$field_to_be_updated) {
@@ -553,7 +553,7 @@ class ParagraphsItemEntity extends Entity {
 
     // Also key the returned array with the variable names so the method may
     // be easily overridden and customized.
-    return drupal_map_assoc(array_keys($vars));
+    return backdrop_map_assoc(array_keys($vars));
   }
 
   /**

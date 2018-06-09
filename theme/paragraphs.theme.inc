@@ -13,9 +13,9 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
 
   $variables['content'] = $variables['element']['#children'];
 
-  $variables['classes_array'][] = drupal_html_class('paragraphs-items-' . $variables['element']['#field_name']);
-  $variables['classes_array'][] = drupal_html_class('paragraphs-items-' . $variables['element']['#field_name'] . '-' . $variables['view_mode']);
-  $variables['classes_array'][] = drupal_html_class('paragraphs-items-' . $variables['view_mode']);
+  $variables['classes_array'][] = backdrop_html_class('paragraphs-items-' . $variables['element']['#field_name']);
+  $variables['classes_array'][] = backdrop_html_class('paragraphs-items-' . $variables['element']['#field_name'] . '-' . $variables['view_mode']);
+  $variables['classes_array'][] = backdrop_html_class('paragraphs-items-' . $variables['view_mode']);
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_items__' . $variables['element']['#field_name'];
   $variables['theme_hook_suggestions'][] = 'paragraphs_items__' . $variables['element']['#field_name'] . '__' . $variables['view_mode'];

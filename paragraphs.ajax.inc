@@ -14,7 +14,7 @@
  * output by doing a replace command on the id of the entire form element.
  */
 function paragraphs_edit_js() {
-  // drupal_html_id() very helpfully ensures that all html IDS are unique
+  // backdrop_html_id() very helpfully ensures that all html IDS are unique
   // on a page. Unfortunately what it doesn't realize is that the IDs
   // we are generating are going to replace IDs that already exist, so
   // this actually works against us.
@@ -23,17 +23,17 @@ function paragraphs_edit_js() {
   }
 
   list($form, $form_state) = ajax_get_form();
-  drupal_process_form($form['#form_id'], $form, $form_state);
+  backdrop_process_form($form['#form_id'], $form, $form_state);
 
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
     '#commands' => array(
-      ajax_command_replace('#' . $element['#id'], drupal_render($element))
+      ajax_command_replace('#' . $element['#id'], backdrop_render($element)),
     ),
   );
 
@@ -56,7 +56,7 @@ function paragraphs_edit_js() {
  * output by doing a replace command on the id of the entire form element.
  */
 function paragraphs_collapse_js() {
-  // drupal_html_id() very helpfully ensures that all html IDS are unique
+  // backdrop_html_id() very helpfully ensures that all html IDS are unique
   // on a page. Unfortunately what it doesn't realize is that the IDs
   // we are generating are going to replace IDs that already exist, so
   // this actually works against us.
@@ -65,17 +65,17 @@ function paragraphs_collapse_js() {
   }
 
   list($form, $form_state) = ajax_get_form();
-  drupal_process_form($form['#form_id'], $form, $form_state);
+  backdrop_process_form($form['#form_id'], $form, $form_state);
 
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
     '#commands' => array(
-      ajax_command_replace('#' . $element['#id'], drupal_render($element))
+      ajax_command_replace('#' . $element['#id'], backdrop_render($element)),
     ),
   );
 
@@ -98,7 +98,7 @@ function paragraphs_collapse_js() {
  * output by doing a replace command on the id of the entire form element.
  */
 function paragraphs_remove_js() {
-  // drupal_html_id() very helpfully ensures that all html IDS are unique
+  // backdrop_html_id() very helpfully ensures that all html IDS are unique
   // on a page. Unfortunately what it doesn't realize is that the IDs
   // we are generating are going to replace IDs that already exist, so
   // this actually works against us.
@@ -107,17 +107,17 @@ function paragraphs_remove_js() {
   }
 
   list($form, $form_state) = ajax_get_form();
-  drupal_process_form($form['#form_id'], $form, $form_state);
+  backdrop_process_form($form['#form_id'], $form, $form_state);
 
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
     '#commands' => array(
-      ajax_command_replace('#' . $element['#id'], drupal_render($element))
+      ajax_command_replace('#' . $element['#id'], backdrop_render($element)),
     ),
   );
 
@@ -141,7 +141,7 @@ function paragraphs_remove_js() {
  * output by doing a replace command on the id of the entire form element.
  */
 function paragraphs_deleteconfirm_js() {
-  // drupal_html_id() very helpfully ensures that all html IDS are unique
+  // backdrop_html_id() very helpfully ensures that all html IDS are unique
   // on a page. Unfortunately what it doesn't realize is that the IDs
   // we are generating are going to replace IDs that already exist, so
   // this actually works against us.
@@ -150,17 +150,17 @@ function paragraphs_deleteconfirm_js() {
   }
 
   list($form, $form_state) = ajax_get_form();
-  drupal_process_form($form['#form_id'], $form, $form_state);
+  backdrop_process_form($form['#form_id'], $form, $form_state);
 
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
     '#commands' => array(
-      ajax_command_replace('#' . $element['#id'], drupal_render($element))
+      ajax_command_replace('#' . $element['#id'], backdrop_render($element)),
     ),
   );
 
@@ -183,7 +183,7 @@ function paragraphs_deleteconfirm_js() {
  * output by doing a replace command on the id of the entire form element.
  */
 function paragraphs_restore_js() {
-  // drupal_html_id() very helpfully ensures that all html IDS are unique
+  // backdrop_html_id() very helpfully ensures that all html IDS are unique
   // on a page. Unfortunately what it doesn't realize is that the IDs
   // we are generating are going to replace IDs that already exist, so
   // this actually works against us.
@@ -192,17 +192,17 @@ function paragraphs_restore_js() {
   }
 
   list($form, $form_state) = ajax_get_form();
-  drupal_process_form($form['#form_id'], $form, $form_state);
+  backdrop_process_form($form['#form_id'], $form, $form_state);
 
   // Get the information on what we're removing.
   $button = $form_state['triggering_element'];
   // Go two levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
   // Now send back the proper AJAX command to replace it.
   $return = array(
     '#type' => 'ajax',
     '#commands' => array(
-      ajax_command_replace('#' . $element['#id'], drupal_render($element))
+      ajax_command_replace('#' . $element['#id'], backdrop_render($element)),
     ),
   );
 

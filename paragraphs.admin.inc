@@ -19,7 +19,10 @@ function paragraphs_admin_bundle_overview() {
 
   $header = array(
     t('Bundle name'),
-    array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2')
+    array(
+      'data' => t('Operations'),
+      'colspan' => $field_ui ? '4' : '2',
+    ),
   );
   $rows = array();
   foreach ($bundles as $bundle) {
@@ -32,29 +35,29 @@ function paragraphs_admin_bundle_overview() {
           '@bundle_name' => $bundle->name,
           '@bundle_machine_name' => $bundle->bundle,
         )),
-      )
+      ),
     );
 
     if ($field_ui) {
 
       // Manage fields.
       $row[] = array(
-        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields')
+        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields'),
       );
 
       // Display fields.
       $row[] = array(
-        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display')
+        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display'),
       );
     }
 
     // Manage bundle.
     $row[] = array(
-      'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/edit')
+      'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/edit'),
     );
     // Delete bundle.
     $row[] = array(
-      'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/delete')
+      'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/delete'),
     );
 
     $rows[$bundle->bundle] = $row;
@@ -88,8 +91,8 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
   }
   else {
     if (!$bundle) {
-      drupal_set_message(t('Could not load bundle'), 'error');
-      drupal_goto('admin/structure/paragraphs');
+      backdrop_set_message(t('Could not load bundle'), 'error');
+      backdrop_goto('admin/structure/paragraphs');
     }
   }
 
@@ -191,10 +194,10 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   $t_args = array('%name' => $bundle->name);
 
   if ($status == SAVED_UPDATED) {
-    drupal_set_message(t('The paragraph bundle %name has been updated.', $t_args));
+    backdrop_set_message(t('The paragraph bundle %name has been updated.', $t_args));
   }
   elseif ($status == SAVED_NEW) {
-    drupal_set_message(t('The paragraph bundle %name has been added.', $t_args));
+    backdrop_set_message(t('The paragraph bundle %name has been added.', $t_args));
     watchdog('paragraphs', 'Added paragraph bundle %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
   }
 
@@ -209,12 +212,18 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
  */
 function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
   if (!$bundle) {
-    drupal_set_message(t('Could not load bundle'), 'error');
-    drupal_goto('admin/structure/paragraphs');
+    backdrop_set_message(t('Could not load bundle'), 'error');
+    backdrop_goto('admin/structure/paragraphs');
   }
 
-  $form['type'] = array('#type' => 'value', '#value' => $bundle->bundle);
-  $form['name'] = array('#type' => 'value', '#value' => $bundle->name);
+  $form['type'] = array(
+    '#type' => 'value',
+    '#value' => $bundle->bundle,
+  );
+  $form['name'] = array(
+    '#type' => 'value',
+    '#value' => $bundle->name,
+  );
 
   $message = t('Are you sure you want to delete the paragraph bundle %bundle?', array('%bundle' => $bundle->name));
   $caption = '<p>' . t('This action cannot be undone. Content using the bundle will be broken.') . '</p>';
@@ -231,7 +240,7 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
   paragraphs_bundle_delete($form_state['values']['type']);
 
   $t_args = array('%name' => $form_state['values']['name']);
-  drupal_set_message(t('The paragraph bundle %name has been deleted.', $t_args));
+  backdrop_set_message(t('The paragraph bundle %name has been deleted.', $t_args));
   watchdog('paragraphs', 'Deleted paragraph bundle %name.', $t_args, WATCHDOG_NOTICE);
 
   $form_state['redirect'] = 'admin/structure/paragraphs';

@@ -1,0 +1,6 @@
+[ParagraphsWebTestCase]
+name = Paragraphs test
+description = Ensure that the simpletest_example content type provided functions properly.
+group = Paragraphs
+file = tests/paragraphs.test
+

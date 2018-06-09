@@ -165,7 +165,7 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   if (empty($account)) {
     $account = $GLOBALS['user'];
   }
-  $permissions = &drupal_static(__FUNCTION__, array());
+  $permissions = &backdrop_static(__FUNCTION__, array());
 
   // If the $op was not one of the supported ones, we return access denied.
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
@@ -202,7 +202,8 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   }
   elseif (in_array(PARAGRAPHS_ITEM_ACCESS_ALLOW, $access, TRUE)) {
     $user_access_permission = TRUE;
-  } else {
+  }
+  else {
     // Deny access by default.
     $user_access_permission = FALSE;
   }
@@ -231,8 +232,8 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
  *   Whether the user has access to a paragraphs item.
  */
 function paragraphs_paragraphs_item_access($entity, $op, $account) {
-  $permissions = &drupal_static(__FUNCTION__, array());
-  $parent_permissions = &drupal_static(__FUNCTION__  . '_parents', array());
+  $permissions = &backdrop_static(__FUNCTION__, array());
+  $parent_permissions = &backdrop_static(__FUNCTION__  . '_parents', array());
 
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     // If there was no bundle to check against, or the $op was not one of the
@@ -268,7 +269,8 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
   if (empty($entity)) {
     // Ignore access when we don't have a host entity.
     $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
-  } elseif ($host_entity = $entity->hostEntity()) {
+  }
+  elseif ($host_entity = $entity->hostEntity()) {
     $host_entity_info = entity_get_info($entity->hostEntityType());
     $host_id_key = $host_entity_info['entity keys']['id'];
 
@@ -287,12 +289,14 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
     if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
       $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
       $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
-    } else {
+    }
+    else {
       // Deny access as parent entity access failed.
       $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
       $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_DENY;
     }
-  } else {
+  }
+  else {
     // Ignore access when we don't have a host entity.
     $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_IGNORE;
   }
@@ -335,7 +339,7 @@ function paragraphs_menu() {
 
   $items['admin/structure/paragraphs/add'] = array(
     'title' => 'Add Paragraph Bundle',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form'),
     'access arguments' => array('administer paragraphs bundles'),
     'type' => MENU_LOCAL_ACTION,
@@ -346,7 +350,7 @@ function paragraphs_menu() {
     'title' => 'Edit paragraph bundle',
     'title callback' => 'paragraphs_bundle_title_callback',
     'title arguments' => array(3),
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
@@ -359,7 +363,7 @@ function paragraphs_menu() {
 
   $items['admin/structure/paragraphs/%paragraphs_bundle/delete'] = array(
     'title' => 'Delete Paragraph Bundle',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_delete_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
@@ -452,12 +456,16 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function paragraphs_bundle_settings_form_submit($form, &$form_state) {
   $bundle_settings = array();
   $bundle_weights = array();
   if (isset($form_state['values']['instance']['settings']['allowed_bundles_table'])) {
     $bundle_settings_table = $form_state['values']['instance']['settings']['allowed_bundles_table'];
-    uasort($bundle_settings_table, 'drupal_sort_weight');
+    uasort($bundle_settings_table, 'backdrop_sort_weight');
     foreach ($bundle_settings_table as $machine_name => $value) {
       $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : -1);
       $bundle_weights[$machine_name] = $value['weight'];
@@ -568,15 +576,15 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#states' => array(
       // Hide the settings when the the default edit mode is set to "Open."
       'invisible' => array(
-       ':input[name="instance[settings][default_edit_mode]"]' => array('value' => 'open'),
+        ':input[name="instance[settings][default_edit_mode]"]' => array('value' => 'open'),
       ),
     ),
-      '#size' => 2,
-      '#maxlength' => 2,
-      // Specify width, since size property isn't supported on number fields.
-      '#attributes' => $elements_exists ? array('style' => 'width:3em') : array(),
-      '#min' => 1,
-      '#max' => 99,
+    '#size' => 2,
+    '#maxlength' => 2,
+    // Specify width, since size property isn't supported on number fields.
+    '#attributes' => $elements_exists ? array('style' => 'width:3em') : array(),
+    '#min' => 1,
+    '#max' => 99,
   );
   if (!$elements_exists) {
     $element['default_edit_mode_override']['#element_validate'] = array('element_validate_integer_positive');
@@ -597,7 +605,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   if (!count($bundles)) {
     $element['allowed_bundles_explain'] = array(
       '#type' => 'markup',
-      '#markup' => t('You did not add any paragraph bundles yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => drupal_get_destination()))))
+      '#markup' => t('You did not add any paragraph bundles yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => backdrop_get_destination())))),
     );
   }
 
@@ -623,6 +631,10 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   return $element;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function theme_paragraphs_bundle_settings_form($variables) {
   $form = $variables['form'];
 
@@ -636,7 +648,7 @@ function theme_paragraphs_bundle_settings_form($variables) {
 
     // Before we add our 'weight' column to the row, we need to give the
     // element a custom class so that it can be identified in the
-    // drupal_add_tabledrag call.
+    // backdrop_add_tabledrag call.
     //
     // This could also have been done during the form declaration by adding
     // '#attributes' => array('class' => 'example-item-weight'),
@@ -645,18 +657,15 @@ function theme_paragraphs_bundle_settings_form($variables) {
 
     // We are now ready to add each element of our $form data to the $rows
     // array, so that they end up as individual table cells when rendered
-    // in the final table.  We run each element through the drupal_render()
+    // in the final table.  We run each element through the backdrop_render()
     // function to generate the final html markup for that element.
     $rows[] = array(
       'data' => array(
-
         // Add our 'enabled' column.
-        drupal_render($form['instance']['settings']['allowed_bundles_table'][$id]['enabled']),
-
+        backdrop_render($form['instance']['settings']['allowed_bundles_table'][$id]['enabled']),
         // Add our 'weight' column.
-        drupal_render($form['instance']['settings']['allowed_bundles_table'][$id]['weight']),
+        backdrop_render($form['instance']['settings']['allowed_bundles_table'][$id]['weight']),
       ),
-
       // To support the tabledrag behaviour, we need to assign each row of the
       // table a class attribute of 'draggable'. This will add the 'draggable'
       // class to the <tr> element for that row when the final table is
@@ -669,11 +678,11 @@ function theme_paragraphs_bundle_settings_form($variables) {
   // matches the final column count for your table.
   $header = array(t('Bundle'), t('Weight'));
 
-  // We also need to pass the drupal_add_tabledrag() function an id which will
+  // We also need to pass the backdrop_add_tabledrag() function an id which will
   // be used to identify the <table> element containing our tabledrag form.
   // Because an element's 'id' should be unique on a page, make sure the value
   // you select is NOT the same as the form ID used in your form declaration.
-  $table_id = drupal_html_id('paragraphs-bundle-table');
+  $table_id = backdrop_html_id('paragraphs-bundle-table');
 
   // We can render our tabledrag table for output.
   $output = theme('table', array(
@@ -685,9 +694,9 @@ function theme_paragraphs_bundle_settings_form($variables) {
   $form['instance']['settings']['allowed_bundles_table']['#markup'] = $output;
 
   // And then render any remaining form elements (such as our submit button).
-  $output = drupal_render_children($form);
+  $output = backdrop_render_children($form);
 
-  // We now call the drupal_add_tabledrag() function in order to add the
+  // We now call the backdrop_add_tabledrag() function in order to add the
   // tabledrag.js goodness onto our page.
   //
   // For a basic sortable table, we need to pass it:
@@ -695,7 +704,7 @@ function theme_paragraphs_bundle_settings_form($variables) {
   // - the $action to be performed on our form items ('order'),
   // - a string describing where $action should be applied ('siblings'),
   // - and the class of the element containing our 'weight' element.
-  drupal_add_tabledrag($table_id, 'order', 'sibling', 'paragraphs-bundle-item-weight');
+  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'paragraphs-bundle-item-weight');
 
   return $output;
 }
@@ -725,7 +734,8 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
     $entity = FALSE;
     if (isset($item['entity'])) {
       $entity = paragraphs_field_get_entity($item);
-    } elseif (isset($item['revision_id'])) {
+    }
+    elseif (isset($item['revision_id'])) {
       $entity = paragraphs_item_revision_load($item['revision_id']);
     }
 
@@ -919,7 +929,7 @@ function paragraphs_item_is_empty(ParagraphsItemEntity $item) {
   }
 
   // Allow other modules a chance to alter the value before returning.
-  drupal_alter('paragraphs_is_empty', $is_empty, $item);
+  backdrop_alter('paragraphs_is_empty', $is_empty, $item);
   return $is_empty;
 }
 
@@ -939,8 +949,8 @@ function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
   $cid = 'paragraphs_bundles';
   $bundles = array();
 
-  // Load bundles from static or from Drupal cache
-  $_bundles = &drupal_static($cid);
+  // Load bundles from static or from Backdrop cache
+  $_bundles = &backdrop_static($cid);
   if (isset($_bundles) && !$rebuild) {
     $bundles = $_bundles;
   }
@@ -1019,7 +1029,8 @@ function paragraphs_bundle_save($bundle) {
 
   paragraphs_bundle_load(NULL, TRUE);
   entity_info_cache_clear();
-  variable_set('menu_rebuild_needed', TRUE);
+  // TODO This variable was probably removed in Backdrop without replacement.
+  state_set('menu_rebuild_needed', TRUE);
   return $status;
 }
 
@@ -1038,7 +1049,8 @@ function paragraphs_bundle_delete($bundle_machine_name) {
     field_attach_delete_bundle('paragraphs_item', $bundle->bundle);
     paragraphs_bundle_load(NULL, TRUE);
     entity_info_cache_clear();
-    variable_set('menu_rebuild_needed', TRUE);
+    // TODO This variable was probably removed in Backdrop without replacement.
+    state_set('menu_rebuild_needed', TRUE);
   }
 }
 
@@ -1180,7 +1192,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
 
   // If the field can hold more than one item, display it as a draggable table.
   if ($element['#cardinality'] != 1) {
-    $table_id = drupal_html_id($element['#field_name'] . '_values');
+    $table_id = backdrop_html_id($element['#field_name'] . '_values');
     $order_class = $element['#field_name'] . '-' . $table_id . '-delta-order';
 
     $header = array(
@@ -1196,30 +1208,36 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     // Add the items as table rows.
     foreach ($items as $key => $item) {
       $item['_weight']['#attributes']['class'] = array($order_class);
-      $delta_element = drupal_render($item['_weight']);
+      $delta_element = backdrop_render($item['_weight']);
       $cells = array(
-        array('data' => '', 'class' => array('field-multiple-drag')),
-        drupal_render($item),
-        array('data' => $delta_element, 'class' => array('delta-order')),
+        array(
+          'data' => '',
+          'class' => array('field-multiple-drag'),
+        ),
+        backdrop_render($item),
+        array(
+          'data' => $delta_element,
+          'class' => array('delta-order'),
+        ),
       );
       $rows[] = array(
         'data' => $cells,
-        'class' => array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])),
+        'class' => array('draggable', backdrop_html_class('paragraphs_item_type_' . $item['#bundle'])),
       );
     }
 
     $field_content = theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => $table_id, 'class' => array('field-multiple-table'))));
 
-    drupal_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+    backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
   }
   // If the field can only hold one item, display it without the table wrapper.
   else {
-    $value_id = drupal_html_id($element['#field_name'] . '_value');
+    $value_id = backdrop_html_id($element['#field_name'] . '_value');
     $field_content = '<label for="' . $value_id . '">' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>';
     if (count($items)) {
       // We don't need to render a weight field when there can only be one item.
       unset($items[0]['_weight']);
-      $field_content .= '<div id="' . $value_id . '">' . drupal_render($items[0]) . '</div>';
+      $field_content .= '<div id="' . $value_id . '">' . backdrop_render($items[0]) . '</div>';
     }
   }
 
@@ -1237,7 +1255,7 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     $output .= '<p><em>' . t($add_text, array('@title_multiple' => t($instance['settings']['title_multiple']), '@title' => t($instance['settings']['title']))) . '</em></p>';
   }
   $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
-  $output .= '<div class="clearfix">' . drupal_render($add_more_button_type) . drupal_render($add_more_button) . '</div>';
+  $output .= '<div class="clearfix">' . backdrop_render($add_more_button_type) . backdrop_render($add_more_button) . '</div>';
   $output .= '</div>';
 
   return $output;
@@ -1257,13 +1275,13 @@ function paragraphs_theme() {
     'paragraphs_items' => array(
       'render element' => 'element',
       'template' => 'paragraphs-items',
-      'path' => drupal_get_path('module', 'paragraphs') . '/theme',
+      'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
     'paragraphs_item' => array(
       'render element' => 'elements',
       'template' => 'paragraphs-item',
-      'path' => drupal_get_path('module', 'paragraphs') . '/theme',
+      'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
   );
@@ -1280,7 +1298,8 @@ function paragraphs_field_create_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    variable_set('menu_rebuild_needed', TRUE);
+    // TODO This variable was probably removed in Backdrop without replacement.
+    state_set('menu_rebuild_needed', TRUE);
   }
 }
 
@@ -1295,7 +1314,8 @@ function paragraphs_field_delete_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    variable_set('menu_rebuild_needed', TRUE);
+    // TODO This variable was probably removed in Backdrop without replacement.
+    state_set('menu_rebuild_needed', TRUE);
   }
 }
 
@@ -1305,7 +1325,7 @@ function paragraphs_field_delete_field($field) {
 function paragraphs_views_api() {
   return array(
     'api' => '3.0-alpha1',
-    'path' => drupal_get_path('module', 'paragraphs') . '/views',
+    'path' => backdrop_get_path('module', 'paragraphs') . '/views',
   );
 }
 
@@ -1354,7 +1374,7 @@ function paragraphs_field_attach_form($entity_type, $entity, &$form, &$form_stat
         if (!empty($element['#process'])) {
           $key = array_search('entity_translation_prepare_element', $element['#process']);
 
-          if ($key !== FALSE)  {
+          if ($key !== FALSE) {
             unset($element['#process'][$key]);
           }
         }
@@ -1370,16 +1390,17 @@ function paragraphs_field_attach_form($entity_type, $entity, &$form, &$form_stat
  */
 function paragraphs_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, &$items, $source_entity, $source_langcode) {
   if (!module_exists("paragraphs_i18n")) {
-      list($id, , ) = entity_extract_ids($entity_type, $entity);
+    list($id, ,   ) = entity_extract_ids($entity_type, $entity);
 
-      // field_attach_prepare_translation() copied the entity ids from the source,
-      // as we need a new entity for a new translation, we cannot reuse that.
-      // @todo clone existing paragraphs to new translation
-      if (empty($id)) {
-          $items = array();
-      }
-  } else {
-      paragraphs_i18n_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, $items, $source_entity, $source_langcode);
+    // field_attach_prepare_translation() copied the entity ids from the source,
+    // as we need a new entity for a new translation, we cannot reuse that.
+    // @todo clone existing paragraphs to new translation
+    if (empty($id)) {
+      $items = array();
+    }
+  }
+  else {
+    paragraphs_i18n_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, $items, $source_entity, $source_langcode);
   }
 }
 
@@ -1392,7 +1413,7 @@ function paragraphs_features_api() {
       'name' => t('Paragraphs Bundles'),
       'feature_source' => TRUE,
       'default_hook' => 'paragraphs_info',
-      'file' => drupal_get_path('module', 'paragraphs') . '/paragraphs.features.inc',
+      'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.features.inc',
     ),
   );
 }
@@ -1423,8 +1444,8 @@ function paragraphs_bundle_copy_info() {
  */
 function paragraphs_ensure_entitycache_table() {
   if (module_exists('entitycache') && !db_table_exists('cache_entity_paragraphs_item')) {
-    drupal_load('module', 'entitycache');
-    $cache_schema = drupal_get_schema_unprocessed('system', 'cache');
+    backdrop_load('module', 'entitycache');
+    $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
     $cache_schema['description'] = 'Cache table used to store paragraphs_item entity records.';
     db_create_table('cache_entity_paragraphs_item', $cache_schema);
   }
@@ -1455,4 +1476,18 @@ function paragraphs_modules_uninstalled($modules) {
   if (in_array('entitycache', $modules)) {
     paragraphs_remove_entitycache_table();
   }
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function paragraphs_autoload_info() {
+  return array(
+    'ParagraphsItemEntity' => 'ParagraphsItemEntity.inc',
+    'ParagraphsItemMetadataController' => 'ParagraphsItemMetadataController.inc',
+    'MigrateDestinationParagraphsItem' => 'migrate/destinations/MigrateDestinationParagraphsItem.inc',
+    'ParagraphsMigrateParagraphsFieldHandler' => 'migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc',
+    'PanelizerEntityParagraphsItem' => 'plugins/panelizer/entity/PanelizerEntityParagraphsItem.class.php',
+    'paragraphs_handler_relationship' => 'views/paragraphs_handler_relationship.inc',
+  );
 }
