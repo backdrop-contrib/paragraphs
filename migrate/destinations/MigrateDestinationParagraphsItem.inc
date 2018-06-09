@@ -71,8 +71,8 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
     $fields['field_name'] = t('Field name');
     $fields['archived'] = t('Archived status of the paragraph item');
 
-    $fields += migrate_handler_invoke_all('Entity', 'fields', $this->entityType, $this->bundle, $migration);
-    $fields += migrate_handler_invoke_all('ParagraphsItem', 'fields', $this->entityType, $this->bundle, $migration);
+    $fields += migrate_handler_invoke_all('Entity', 'fields', $this->entityType(), $this->bundle, $migration);
+    $fields += migrate_handler_invoke_all('ParagraphsItem', 'fields', $this->entityType(), $this->bundle, $migration);
 
     return $fields;
   }

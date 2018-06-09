@@ -403,7 +403,7 @@ class ParagraphsItemEntity extends Entity {
     // we always save via the host as saving the host might trigger saving
     // paragraphs items anyway (for example, if a new revision is created).
     if ($skip_host_save) {
-      return entity_get_controller($this->entityType)->save($this);
+      return entity_get_controller($this->entityType())->save($this);
     }
     else {
       $host_entity = $this->hostEntity();
@@ -515,7 +515,7 @@ class ParagraphsItemEntity extends Entity {
     }
 
     // Iterate over fields in the collection to add URIs for image fields.
-    $field_instances = field_info_instances($this->entityType, $this->bundle);
+    $field_instances = field_info_instances($this->entityType(), $this->bundle);
     foreach ($field_instances as $field_name => $field) {
       $info = field_info_field($field_name);
       if (is_array($info) && $info['type'] == 'image' && $image_field = & $this->{$field_name}) {
@@ -532,7 +532,7 @@ class ParagraphsItemEntity extends Entity {
         }
       }
     }
-    return entity_get_controller($this->entityType)->view(array($this), $view_mode, $langcode, $page);
+    return entity_get_controller($this->entityType())->view(array($this), $view_mode, $langcode, $page);
   }
 
   /**
@@ -569,7 +569,7 @@ class ParagraphsItemEntity extends Entity {
    * Set up the object instance on construction or unserializiation.
    */
   protected function setUp() {
-    $this->entityInfo = entity_get_info($this->entityType);
+    $this->entityInfo = entity_get_info($this->entityType());
     $this->idKey = $this->entityInfo['entity keys']['id'];
     $this->nameKey = isset($this->entityInfo['entity keys']['name']) ? $this->entityInfo['entity keys']['name'] : $this->idKey;
     $this->statusKey = empty($this->entityInfo['entity keys']['status']) ? 'status' : $this->entityInfo['entity keys']['status'];

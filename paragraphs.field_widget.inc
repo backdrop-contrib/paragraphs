@@ -212,7 +212,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         );
       }
       elseif (count($select_bundles)) {
-        uasort($select_bundles, 'backdrop_sort_weight');
+        // uasort($select_bundles, 'backdrop_sort_weight');
+        backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
         $field = $field_state['field'];
 
         if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
@@ -251,7 +252,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             }
           }
           else {
-            uasort($select_bundles, 'backdrop_sort_weight');
+            // uasort($select_bundles, 'backdrop_sort_weight');
+            backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
 
             $select_list = array();
             foreach ($select_bundles as $machine_name => $bundle) {
