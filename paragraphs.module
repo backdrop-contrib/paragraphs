@@ -94,7 +94,7 @@ function paragraphs_entity_info() {
     'label callback' => 'entity_class_label',
     'uri callback' => 'entity_class_uri',
     'entity class' => 'ParagraphsItemEntity',
-    'controller class' => 'EntityAPIController',
+    'controller class' => 'ParagraphsItemController',
     'base table' => 'paragraphs_item',
     'revision table' => 'paragraphs_item_revision',
     'fieldable' => TRUE,
@@ -745,7 +745,7 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
       // If the host entity supports revisions and is saved as new revision, do the same for the item.
       if (!empty($host_entity->revision)) {
         $entity->revision = TRUE;
-        $is_default = entity_revision_is_default($host_entity_type, $host_entity);
+        $is_default = paragraphs_entity_revision_is_default($host_entity_type, $host_entity);
         // If an entity type does not support saving non-default entities,
         // assume it will be saved as default.
         if (!isset($is_default) || $is_default) {
@@ -1484,10 +1484,24 @@ function paragraphs_modules_uninstalled($modules) {
 function paragraphs_autoload_info() {
   return array(
     'ParagraphsItemEntity' => 'ParagraphsItemEntity.inc',
+    'ParagraphsItemController' => 'ParagraphsItemController.inc',
     'ParagraphsItemMetadataController' => 'ParagraphsItemMetadataController.inc',
     'MigrateDestinationParagraphsItem' => 'migrate/destinations/MigrateDestinationParagraphsItem.inc',
     'ParagraphsMigrateParagraphsFieldHandler' => 'migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc',
     'PanelizerEntityParagraphsItem' => 'plugins/panelizer/entity/PanelizerEntityParagraphsItem.class.php',
     'paragraphs_handler_relationship' => 'views/paragraphs_handler_relationship.inc',
   );
+}
+
+function paragraphs_entity_revision_is_default($entity_type, $entity) {
+  $info = entity_get_info($entity_type);
+  if (empty($info['entity keys']['revision'])) {
+    return TRUE;
+  }
+  // Newly created entities will always be created in default revision.
+  if (!empty($entity->is_new) || empty($entity->{$info['entity keys']['id']})) {
+    return TRUE;
+  }
+  $default = entity_load($entity_type, $entity->{$info['entity keys']['id']});
+  return $default->{$info['entity keys']['revision']} == $entity->{$info['entity keys']['revision']};
 }

@@ -210,7 +210,7 @@ class ParagraphsItemEntity extends Entity {
     }
     // We are create a new paragraphs for a non-default entity, thus
     // set archived to TRUE.
-    if (!entity_revision_is_default($entity_type, $entity)) {
+    if (!paragraphs_entity_revision_is_default($entity_type, $entity)) {
       $this->hostEntityId = FALSE;
       $this->archived = TRUE;
     }
@@ -563,5 +563,43 @@ class ParagraphsItemEntity extends Entity {
    */
   public function __wakeup() {
     $this->setUp();
+  }
+
+  /**
+   * Set up the object instance on construction or unserializiation.
+   */
+  protected function setUp() {
+    $this->entityInfo = entity_get_info($this->entityType);
+    $this->idKey = $this->entityInfo['entity keys']['id'];
+    $this->nameKey = isset($this->entityInfo['entity keys']['name']) ? $this->entityInfo['entity keys']['name'] : $this->idKey;
+    $this->statusKey = empty($this->entityInfo['entity keys']['status']) ? 'status' : $this->entityInfo['entity keys']['status'];
+  }
+
+  /**
+   * Implements EntityInterface::id().
+   */
+  public function id() {
+    return $this->item_id;
+  }
+
+  /**
+   * Implements EntityInterface::entityType().
+   */
+  public function entityType() {
+    return 'paragraphs_item';
+  }
+
+  /**
+   * Implements EntityInterface::label().
+   */
+  public function label() {
+    return $this->field_name;
+  }
+
+  /**
+   * Implements EntityInterface::uri().
+   */
+  public function uri() {
+    return array();
   }
 }
