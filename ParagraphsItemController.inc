@@ -9,25 +9,74 @@
  */
 class ParagraphsItemController extends EntityDatabaseStorageController  {
 
-  // public function entityPropertyInfo() {
-    // $info = parent::entityPropertyInfo();
-    // $properties = &$info['paragraphs']['properties'];
+  /**
+   * Implements EntityStorageControllerInterface::save().
+   */
+  public function save(EntityInterface $entity) {
+    $transaction = db_transaction();
+    try {
+      // Load the stored entity, if any.
+      if (!$entity->isNew() && !isset($entity->original)) {
+        $entity->original = entity_load_unchanged($this->entityType, $entity->id());
+      }
+
+      $this->preSave($entity);
+      $this->invokeHook('presave', $entity);
+
+      if (!$entity->isNew()) {
+        $return = backdrop_write_record($this->entityInfo['base table'], $entity, $this->idKey);
+        $this->resetCache(array($entity->{$this->idKey}));
+        $this->postSave($entity, TRUE);
+        $this->invokeHook('update', $entity);
+      }
+      else {
+        $return = backdrop_write_record($this->entityInfo['base table'], $entity);
+        // Reset general caches, but keep caches specific to certain entities.
+        $this->resetCache(array());
+        $this->postSave($entity, FALSE);
+        $this->invokeHook('insert', $entity);
+      }
+
+      if ($this->revisionKey) {
+        $this->saveRevision($entity);
+      }
 
 
-    // $properties['field_name']['label'] = t('Field name');
-    // $properties['field_name']['description'] = t('The machine-readable name of the paragraphs field containing this item.');
-    // $properties['field_name']['required'] = TRUE;
+      // Ignore slave server temporarily.
+      db_ignore_slave();
+      unset($entity->is_new);
+      unset($entity->original);
 
-    // $properties['host_entity'] = array(
-      // 'label' => t('Host entity'),
-      // 'type' => 'entity',
-      // 'description' => t('The entity containing the paragraphs field.'),
-      // 'getter callback' => 'paragraphs_item_get_host_entity',
-      // 'setter callback' => 'paragraphs_item_set_host_entity',
-      // 'required' => TRUE,
-    // );
+      return $return;
+    }
+    catch (Exception $e) {
+      $transaction->rollback();
+      watchdog_exception($this->entityType, $e);
+      throw new EntityStorageException($e->getMessage(), (int) $e->getCode(), $e);
+    }
+  }
 
-    // return $info;
-  // }
+  /**
+   * Saves a new revision.
+   *
+   * @param ParagraphsItem $entity
+   *   The paragraphs item entity whose revision should be saved.
+   */
+  protected function saveRevision(EntityInterface $entity) {
+    $record = clone $entity;
+
+    if (empty($entity->{$this->revisionKey}) || !empty($entity->revision)) {
+      backdrop_write_record($this->revisionTable, $record);
+      db_update($this->entityInfo['base table'])
+        ->fields(array($this->revisionKey => $record->{$this->revisionKey}))
+        ->condition($this->idKey, $entity->{$this->idKey})
+        ->execute();
+    }
+    else {
+      backdrop_write_record($this->revisionTable, $record, $this->revisionKey);
+    }
+    // Make sure to update the new revision key for the entity.
+    $entity->{$this->revisionKey} = $record->{$this->revisionKey};
+  }
 
 }

@@ -73,7 +73,7 @@ function paragraphs_item_revision_load($revision_id) {
  *   An array of paragraphs item entities.
  */
 function paragraphs_item_load_multiple($ids = array(), $conditions = array(), $reset = FALSE) {
-  return entity_load('paragraphs_item', $ids, $conditions, $reset);
+  return entity_load_multiple('paragraphs_item', $ids, $conditions, $reset);
 }
 
 /**
@@ -94,7 +94,7 @@ function paragraphs_entity_info() {
     'label callback' => 'entity_class_label',
     'uri callback' => 'entity_class_uri',
     'entity class' => 'ParagraphsItemEntity',
-    'controller class' => 'ParagraphsItemController',
+    'controller class' => 'EMWController',
     'base table' => 'paragraphs_item',
     'revision table' => 'paragraphs_item_revision',
     'fieldable' => TRUE,
@@ -122,7 +122,7 @@ function paragraphs_entity_info() {
       'bundle' => 'bundle',
     ),
     'access callback' => 'paragraphs_item_access',
-    'metadata controller class' => 'ParagraphsItemMetadataController',
+    //'metadata controller class' => 'ParagraphsItemMetadataController',
   );
 
   $bundles = paragraphs_bundle_load();
