@@ -7,17 +7,17 @@
 
   /**
    * Allows submit buttons in entity forms to trigger uploads by undoing
-   * work done by Drupal.behaviors.fileButtons.
+   * work done by Backdrop.behaviors.fileButtons.
    */
-  Drupal.behaviors.paragraphs = {
+  Backdrop.behaviors.paragraphs = {
     attach: function (context) {
-      if (Drupal.file) {
-        $('input.paragraphs-add-more-submit', context).unbind('mousedown', Drupal.file.disableFields);
+      if (Backdrop.file) {
+        $('input.paragraphs-add-more-submit', context).unbind('mousedown', Backdrop.file.disableFields);
       }
     },
     detach: function (context) {
-      if (Drupal.file) {
-        $('input.form-submit', context).bind('mousedown', Drupal.file.disableFields);
+      if (Backdrop.file) {
+        $('input.form-submit', context).bind('mousedown', Backdrop.file.disableFields);
       }
     }
   };

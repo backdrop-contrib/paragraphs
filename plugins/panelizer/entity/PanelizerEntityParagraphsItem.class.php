@@ -155,8 +155,8 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
     if (!empty($form_state['panelizer has choice'])) {
       list($entity_id, $revision_id, $bundle) = entity_extract_ids($this->entity_type, $entity);
       foreach ($this->plugin['view modes'] as $view_mode => $view_mode_info) {
-        if (isset($form['#parents']) && drupal_array_nested_key_exists($form_state['values'], $form['#parents'])) {
-          $values = drupal_array_get_nested_value($form_state['values'], $form['#parents']);
+        if (isset($form['#parents']) && backdrop_array_nested_key_exists($form_state['values'], $form['#parents'])) {
+          $values = backdrop_array_get_nested_value($form_state['values'], $form['#parents']);
           if (isset($values['panelizer'][$view_mode]['name'])) {
             $entity->panelizer[$view_mode] = clone $this->get_default_panelizer_object($bundle . '.' . $view_mode, $values['panelizer'][$view_mode]['name']);
             if (!empty($entity->panelizer[$view_mode])) {
