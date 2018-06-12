@@ -94,7 +94,7 @@ function paragraphs_entity_info() {
     'label callback' => 'entity_class_label',
     'uri callback' => 'entity_class_uri',
     'entity class' => 'ParagraphsItemEntity',
-    'controller class' => 'EMWController',
+    'controller class' => 'ParagraphsItemController',
     'base table' => 'paragraphs_item',
     'revision table' => 'paragraphs_item_revision',
     'fieldable' => TRUE,
