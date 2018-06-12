@@ -122,7 +122,6 @@ function paragraphs_entity_info() {
       'bundle' => 'bundle',
     ),
     'access callback' => 'paragraphs_item_access',
-    //'metadata controller class' => 'ParagraphsItemMetadataController',
   );
 
   $bundles = paragraphs_bundle_load();
@@ -286,7 +285,7 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
       return $parent_permissions[$account->uid][$parent_cid][$check_parent_op];
     }
 
-    if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
+    if (paragraphs_entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
       $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
       $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
     }
@@ -440,8 +439,6 @@ function paragraphs_field_info() {
     'default_widget' => 'paragraphs_hidden',
     'default_formatter' => 'paragraphs_view',
     'settings' => array(),
-    'property_type' => 'paragraphs_item',
-    'property_callbacks' => array('paragraphs_entity_metadata_property_callback'),
   );
   return $info;
 }
@@ -1055,66 +1052,6 @@ function paragraphs_bundle_delete($bundle_machine_name) {
 }
 
 /**
- * Entity property info setter callback for the host entity property.
- *
- * As the property is of type entity, the value will be passed as a wrapped
- * entity.
- */
-function paragraphs_item_set_host_entity($item, $property_name, $wrapper) {
-  if (empty($item->is_new)) {
-    throw new EntityMetadataWrapperException('The host entity may be set only during creation of a paragraphs item.');
-  }
-  $item->setHostEntity($wrapper->type(), $wrapper->value());
-}
-
-/**
- * Entity property info getter callback for the host entity property.
- */
-function paragraphs_item_get_host_entity($item) {
-  // As the property is defined as 'entity', we have to return a wrapped entity.
-  return entity_metadata_wrapper($item->hostEntityType(), $item->hostEntity());
-}
-
-/**
- * Callback for generating entity metadata property info for our field instances.
- *
- * @see paragraphs_field_info()
- */
-function paragraphs_entity_metadata_property_callback(&$info, $entity_type, $field, $instance, $field_type) {
-  $property = &$info[$entity_type]['bundles'][$instance['bundle']]['properties'][$field['field_name']];
-
-  $property['field_name'] = $field['field_name'];
-  $property['getter callback'] = 'paragraphs_field_property_get';
-}
-
-/**
- * Entity property info getter callback for the paragraph items.
- *
- * Like entity_metadata_field_property_get(), but additionally supports getting
- * not-yet saved collection items from @code $item['entity'] @endcode.
- */
-function paragraphs_field_property_get($entity, array $options, $name, $entity_type, $info) {
-  $field = field_info_field($name);
-  $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->language : NULL);
-  $values = array();
-  if (isset($entity->{$name}[$langcode])) {
-    foreach ($entity->{$name}[$langcode] as $delta => $data) {
-      // Wrappers do not support multiple entity references being revisions or
-      // not yet saved entities. In the case of a single reference we can return
-      // the entity object though.
-      if ($field['cardinality'] == 1) {
-        $values[$delta] = paragraphs_field_get_entity($data);
-      }
-      elseif (isset($data['value'])) {
-        $values[$delta] = $data['value'];
-      }
-    }
-  }
-  // For an empty single-valued field, we have to return NULL.
-  return $field['cardinality'] == 1 ? ($values ? reset($values) : NULL) : $values;
-}
-
-/**
  * Gets a paragraphs item entity for a given field item.
  *
  * @param $field_name
@@ -1485,7 +1422,6 @@ function paragraphs_autoload_info() {
   return array(
     'ParagraphsItemEntity' => 'ParagraphsItemEntity.inc',
     'ParagraphsItemController' => 'ParagraphsItemController.inc',
-    'ParagraphsItemMetadataController' => 'ParagraphsItemMetadataController.inc',
     'MigrateDestinationParagraphsItem' => 'migrate/destinations/MigrateDestinationParagraphsItem.inc',
     'ParagraphsMigrateParagraphsFieldHandler' => 'migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc',
     'PanelizerEntityParagraphsItem' => 'plugins/panelizer/entity/PanelizerEntityParagraphsItem.class.php',
@@ -1504,4 +1440,81 @@ function paragraphs_entity_revision_is_default($entity_type, $entity) {
   }
   $default = entity_load($entity_type, $entity->{$info['entity keys']['id']});
   return $default->{$info['entity keys']['revision']} == $entity->{$info['entity keys']['revision']};
+}
+
+/**
+ * This recreates D7 Entity API entity_access and will need to go once that
+ * function is in core.
+ */
+function paragraphs_entity_access($op, $entity_type, $entity = NULL, $account = NULL) {
+  if (($info = entity_get_info()) && isset($info[$entity_type]['access callback'])) {
+    return $info[$entity_type]['access callback']($op, $entity, $account, $entity_type);
+  }
+  else {
+    switch ($entity_type) {
+      case 'node':
+        if (isset($node)) {
+          return node_access($op, $node, $account);
+        }
+        // Is access to all nodes allowed?
+        if (!user_access('access content', $account)) {
+          return FALSE;
+        }
+        if (user_access('bypass node access', $account) || (!isset($account) && $op == 'view' && node_access_view_all_nodes())) {
+          return TRUE;
+        }
+        return FALSE;
+        break;
+      case 'user':
+        $account = isset($account) ? $account : $GLOBALS['user'];
+        // Grant access to the users own user account and to the anonymous one.
+        if (isset($entity) && $op != 'delete' && (($entity->uid == $account->uid && $entity->uid) || (!$entity->uid && $op == 'view'))) {
+          return TRUE;
+        }
+        if (user_access('administer users', $account) || user_access('access user profiles', $account) && $op == 'view' && $entity->status) {
+          return TRUE;
+        }
+        return FALSE;
+        break;
+      case 'comment':
+        // When determining access to a comment, 'comment_access' does not take any
+        // access restrictions to the comment's associated node into account. If a
+        // comment has an associated node, the user must be able to view it in order
+        // to access the comment.
+        if (isset($entity->nid)) {
+          if (!entity_access('view', 'node', node_load($entity->nid), $account)) {
+            return FALSE;
+          }
+        }
+        if (isset($entity) && $op == 'update') {
+          // Because 'comment_access' only checks the current user, we need to do our
+          // own access checking if an account was specified.
+          if (!isset($account)) {
+            return comment_access('edit', $entity);
+          }
+          else {
+            return ($account->uid && $account->uid == $entity->uid && $entity->status == COMMENT_PUBLISHED && user_access('edit own comments', $account)) || user_access('administer comments', $account);
+          }
+        }
+        if (user_access('administer comments', $account) || user_access('access comments', $account) && $op == 'view') {
+          return TRUE;
+        }
+        return FALSE;
+        break;
+      case 'taxonomy_term':
+      case 'taxonomy_vocabulary':
+        if ($entity_type == 'taxonomy_vocabulary') {
+          return user_access('administer taxonomy', $account);
+        }
+        $taxonomy_term_edit_access = user_access("edit terms in $entity->vid") || user_access('administer taxonomy');
+        if (isset($entity) && $op == 'edit' && !isset($account) && $taxonomy_term_edit_access) {
+          return TRUE;
+        }
+        if (user_access('administer taxonomy', $account) || user_access('access content', $account) && $op == 'view') {
+          return TRUE;
+        }
+        return FALSE;
+        break;
+    }
+  }
 }

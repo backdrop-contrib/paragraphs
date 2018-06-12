@@ -22,8 +22,8 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
   /**
    * {@inheritdoc}
    */
-  public function entity_access($op, $entity) {
-    return entity_access($op, $this->entity_type, $entity);
+  public function paragraphs_entity_access($op, $entity) {
+    return paragraphs_entity_access($op, $this->entity_type, $entity);
   }
 
   /**
@@ -54,7 +54,7 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
     $retval = array();
 
     $retval[0] = TRUE;
-    $retval[1] = $this->entity_access(!empty($entity->is_new) ? 'create' : 'update', $entity);
+    $retval[1] = $this->paragraphs_entity_access(!empty($entity->is_new) ? 'create' : 'update', $entity);
 
     return $retval;
   }

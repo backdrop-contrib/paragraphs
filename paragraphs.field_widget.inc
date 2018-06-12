@@ -191,7 +191,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
         $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
-        if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
+        if (!paragraphs_entity_access('create', 'paragraphs_item', $entity_shell)) {
           unset($select_bundles[$machine_name]);
           $removed_a_bundle = TRUE;
         }
@@ -239,7 +239,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
                 '#type' => 'submit',
                 '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
                 '#value' => t('Add !title', array('!title' => $bundle['name'])),
-                '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
+                '#access' => paragraphs_entity_access('create', 'paragraphs_item', $entity_shell),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
                 '#submit' => array('paragraphs_add_more_submit'),
@@ -465,7 +465,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
       field_attach_form('paragraphs_item', $paragraph_item, $element, $form_state, $language);
       if ($being_edited_paragraph) {
-        if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
+        if (!$is_new_paragraph && !paragraphs_entity_access('update', 'paragraphs_item', $paragraph_item)) {
           foreach (element_children($element) as $key) {
             if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
               $element[$key]['#access'] = FALSE;
@@ -500,13 +500,13 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
               'path' => 'paragraphs/collapse/ajax',
               'effect' => 'fade',
             ),
-            '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
+            '#access' => paragraphs_entity_access('update', 'paragraphs_item', $paragraph_item),
             '#weight' => 999,
           );
         }
       }
       else {
-        if ($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraph_item)) {
+        if ($default_edit_mode === 'preview' && paragraphs_entity_access('view', 'paragraphs_item', $paragraph_item)) {
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
           );
@@ -543,7 +543,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             'path' => 'paragraphs/edit/ajax',
             'effect' => 'fade',
           ),
-          '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
+          '#access' => paragraphs_entity_access('update', 'paragraphs_item', $paragraph_item),
           '#weight' => 999,
         );
       }
@@ -562,7 +562,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             'path' => 'paragraphs/remove/ajax',
             'effect' => 'fade',
           ),
-          '#access' => entity_access('delete', 'paragraphs_item', $paragraph_item),
+          '#access' => paragraphs_entity_access('delete', 'paragraphs_item', $paragraph_item),
           '#weight' => 1000,
         );
       }

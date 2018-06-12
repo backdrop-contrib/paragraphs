@@ -97,7 +97,7 @@ class ParagraphsItemController extends EntityDatabaseStorageController  {
     foreach ($entities as $entity) {
       $build = $this->buildContent($entity, $view_mode, $langcode);
       $build += array(
-        '#theme' => 'entity',
+        //'#theme' => 'entity',
         '#entity_type' => $this->entityType,
         '#entity' => $entity,
         '#view_mode' => $view_mode,

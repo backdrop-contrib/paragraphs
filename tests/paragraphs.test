@@ -33,7 +33,7 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
    */
   public function setUp() {
     $modules = array(
-      'paragraphs_test', 'entity_metadata_wrapper',
+      'paragraphs_test',
     );
     parent::setUp($modules);
 

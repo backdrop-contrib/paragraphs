@@ -49,7 +49,13 @@ function paragraphs_form_node_form_alter(&$form, &$form_state, $form_id) {
  * Clone a Paragraphs item. Helper function for hook_clone_node_alter().
  */
 function paragraphs_clone_items($entity_type, &$entity, $field_name, $language = LANGUAGE_NONE) {
-  $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
+  $field_items = field_get_items($entity_type, $entity, $field_name);
+  if ($field_items) {
+    $reset_item = reset($field_items);
+    $old_items = $reset_item['value'];
+  }
+  
+  // $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
   $old_items = $entity_wrapper->{$field_name}->value();
   if (!is_array($old_items)) {
     $old_items = array($old_items);
