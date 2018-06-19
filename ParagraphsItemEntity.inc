@@ -461,8 +461,8 @@ class ParagraphsItemEntity extends Entity {
       $this->deleteHostEntityReference();
     }
 
-    if (!$this->isDefaultRevision()) {
-      entity_revision_delete('paragraphs_item', $this->revision_id);
+    if (!empty($this->default_revision)) {
+      paragraphs_entity_revision_delete('paragraphs_item', $this->revision_id);
     }
     // If deleting the default revision, take care!
     else {
@@ -483,7 +483,7 @@ class ParagraphsItemEntity extends Entity {
           ->condition('item_id', $this->item_id)
           ->execute();
         entity_get_controller('paragraphs_item')->resetCache(array($this->item_id));
-        entity_revision_delete('paragraphs_item', $this->revision_id);
+        paragraphs_entity_revision_delete('paragraphs_item', $this->revision_id);
       }
     }
   }

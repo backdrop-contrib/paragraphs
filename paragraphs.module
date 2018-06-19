@@ -1443,6 +1443,28 @@ function paragraphs_entity_revision_is_default($entity_type, $entity) {
 }
 
 /**
+ * Deletes an entity revision.
+ *
+ * @param $entity_type
+ *   The type of the entity.
+ * @param $revision_id
+ *   The revision ID to delete.
+ *
+ * @return
+ *   TRUE if the entity revision could be deleted, FALSE otherwise.
+ */
+function paragraphs_entity_revision_delete($entity_type, $revision_id) {
+  $info = entity_get_info($entity_type);
+  if (isset($info['revision deletion callback'])) {
+    return $info['revision deletion callback']($revision_id, $entity_type);
+  }
+  else {
+    return entity_get_controller($entity_type)->deleteRevision($revision_id);
+  }
+}
+
+
+/**
  * This recreates D7 Entity API entity_access and will need to go once that
  * function is in core.
  */
@@ -1453,8 +1475,8 @@ function paragraphs_entity_access($op, $entity_type, $entity = NULL, $account = 
   else {
     switch ($entity_type) {
       case 'node':
-        if (isset($node)) {
-          return node_access($op, $node, $account);
+        if (isset($entity)) {
+          return node_access($op, $entity, $account);
         }
         // Is access to all nodes allowed?
         if (!user_access('access content', $account)) {

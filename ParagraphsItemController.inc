@@ -80,7 +80,31 @@ class ParagraphsItemController extends EntityDatabaseStorageController  {
   }
 
   /**
-   * Implements EMWControllerInterface.
+   * Deletes a ParagraphItem revision.
+   */
+  public function deleteRevision($revision_id) {
+    $info = entity_get_info($this->entityType);
+    $entity_revisions = entity_load_multiple($this->entityType, FALSE, array($info['entity keys']['revision'] => $revision_id));
+
+    if (!empty($entity_revisions)) {
+      $entity_revision = reset($entity_revisions);
+      // Prevent deleting the default revision.
+      if (paragraphs_entity_revision_is_default($this->entityType, $entity_revision)) {
+        return FALSE;
+      }
+
+      db_delete($this->revisionTable)
+        ->condition($this->revisionKey, $revision_id)
+        ->execute();
+
+      $this->invoke('revision_delete', $entity_revision);
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Builds a ParagraphItem display.
    */
   public function view($entities, $view_mode = 'full', $langcode = NULL, $page = NULL) {
     $entities_keyed = array();
