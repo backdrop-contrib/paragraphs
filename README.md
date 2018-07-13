@@ -69,7 +69,7 @@ Credits
 
 Maintainers on drupal.org
 
-https://www.drupal.org/u/berdir
-https://www.drupal.org/u/miro_dietiker
-https://www.drupal.org/u/primsi
-https://www.drupal.org/u/jeroenb
+- https://www.drupal.org/u/berdir
+- https://www.drupal.org/u/miro_dietiker
+- https://www.drupal.org/u/primsi
+- https://www.drupal.org/u/jeroenb
