@@ -313,7 +313,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   if (module_exists('file')) {
     // file.js triggers uploads when the main Submit button is clicked.
     $field_elements['#attached']['js'] = array(
-      backdrop_get_path('module', 'file') . '/file.js',
+      backdrop_get_path('module', 'file') . '/js/file.js',
       array(
         'data' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.js',
         'type' => 'file',
