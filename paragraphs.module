@@ -1528,7 +1528,7 @@ function paragraphs_entity_access($op, $entity_type, $entity = NULL, $account = 
         if ($entity_type == 'taxonomy_vocabulary') {
           return user_access('administer taxonomy', $account);
         }
-        $taxonomy_term_edit_access = user_access("edit terms in $entity->vid") || user_access('administer taxonomy');
+        $taxonomy_term_edit_access = user_access("edit terms in $entity->vocabulary") || user_access('administer taxonomy');
         if (isset($entity) && $op == 'edit' && !isset($account) && $taxonomy_term_edit_access) {
           return TRUE;
         }
