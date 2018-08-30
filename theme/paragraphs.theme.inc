@@ -20,3 +20,21 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
   $variables['theme_hook_suggestions'][] = 'paragraphs_items__' . $variables['element']['#field_name'];
   $variables['theme_hook_suggestions'][] = 'paragraphs_items__' . $variables['element']['#field_name'] . '__' . $variables['view_mode'];
 }
+
+/**
+ * Process variables for paragraphs-item.tpl.php
+ */
+function template_preprocess_paragraphs_item(&$variables, $hook) {
+  $key = key($variables['elements']['entity']['paragraphs_item']);
+  $variables['view_mode'] = $variables['elements']['entity']['paragraphs_item'][$key]['#view_mode'];
+  $variables['bundle'] = $variables['elements']['entity']['paragraphs_item'][$key]['#bundle'];
+
+  $variables['content'] = $variables['elements']['#children'];
+
+  $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $variables['bundle']);
+  $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $variables['bundle'] . '-' . $variables['view_mode']);
+  $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $variables['view_mode']);
+
+  $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $variables['bundle'];
+  $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $variables['bundle'] . '__' . $variables['view_mode'];
+}
