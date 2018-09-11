@@ -60,16 +60,15 @@ complete text.
 Current Maintainers
 -------------------
 
- Ported by @docwilmot (https://github.com/docwilmot)
- 
- Seeking new maintainers
+ - [Laryn Kragt Bakker](https://github.com/laryn) - [CEDC.org](https://cedc.org)
 
 Credits
 -------
 
-Maintainers on drupal.org
+ - Ported to BackdropCMS by [@docwilmot](https://github.com/docwilmot)
 
-- https://www.drupal.org/u/berdir
-- https://www.drupal.org/u/miro_dietiker
-- https://www.drupal.org/u/primsi
-- https://www.drupal.org/u/jeroenb
+ - Maintainers on drupal.org
+    - [berdir](https://www.drupal.org/u/berdir)
+    - [miro_dietiker](https://www.drupal.org/u/miro_dietiker)
+    - [primsi](https://www.drupal.org/u/primsi)
+    - [jeroenb](https://www.drupal.org/u/jeroenb)
