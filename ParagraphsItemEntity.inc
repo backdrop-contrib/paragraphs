@@ -590,6 +590,13 @@ class ParagraphsItemEntity extends Entity {
   }
 
   /**
+   * Implements EntityInterface::bundle().
+   */
+  public function bundle() {
+    return $this->bundle;
+  }
+
+  /**
    * Implements EntityInterface::label().
    */
   public function label() {
