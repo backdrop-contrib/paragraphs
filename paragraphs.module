@@ -1052,6 +1052,16 @@ function paragraphs_bundle_delete($bundle_machine_name) {
 }
 
 /**
+ * Helper to get the title of a bundle.
+ *
+ * @param $bundle
+ *   The bundle.
+ */
+function paragraphs_bundle_title_callback($bundle) {
+  return t('Edit Paragraph Bundle !name', array('!name' => $bundle->name));
+}
+
+/**
  * Gets a paragraphs item entity for a given field item.
  *
  * @param $field_name
