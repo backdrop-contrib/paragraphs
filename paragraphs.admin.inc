@@ -246,13 +246,3 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
   $form_state['redirect'] = 'admin/structure/paragraphs';
   return;
 }
-
-/**
- * Helper to get the title of a bundle.
- *
- * @param $bundle
- *   The bundle.
- */
-function paragraphs_bundle_title_callback($bundle) {
-  return t('Edit Paragraph Bundle !name', array('!name' => $bundle->name));
-}
