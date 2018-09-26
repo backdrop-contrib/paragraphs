@@ -462,7 +462,7 @@ function paragraphs_bundle_settings_form_submit($form, &$form_state) {
   $bundle_weights = array();
   if (isset($form_state['values']['instance']['settings']['allowed_bundles_table'])) {
     $bundle_settings_table = $form_state['values']['instance']['settings']['allowed_bundles_table'];
-    uasort($bundle_settings_table, 'backdrop_sort_weight');
+    backdrop_sort($bundle_settings_table, array('#weight'));
     foreach ($bundle_settings_table as $machine_name => $value) {
       $bundle_settings[$machine_name] = (($value['enabled'] === 1) ? $machine_name : -1);
       $bundle_weights[$machine_name] = $value['weight'];
