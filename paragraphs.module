@@ -1040,7 +1040,6 @@ function paragraphs_bundle_delete($bundle_machine_name) {
     field_attach_delete_bundle('paragraphs_item', $bundle->bundle);
     paragraphs_bundle_load(NULL, TRUE);
     entity_info_cache_clear();
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
@@ -1239,7 +1238,6 @@ function paragraphs_field_create_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
@@ -1255,7 +1253,6 @@ function paragraphs_field_delete_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
