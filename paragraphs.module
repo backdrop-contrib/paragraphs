@@ -1021,7 +1021,6 @@ function paragraphs_bundle_save($bundle) {
 
   paragraphs_bundle_load(NULL, TRUE);
   entity_info_cache_clear();
-  // TODO This variable was probably removed in Backdrop without replacement.
   state_set('menu_rebuild_needed', TRUE);
   return $status;
 }
