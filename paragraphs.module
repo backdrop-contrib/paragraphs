@@ -561,10 +561,8 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#required' => TRUE,
   );
 
-  $elements_exists = module_exists('elements');
   $element['default_edit_mode_override'] = array(
-    // If the Elements module is installed then use a real number field.
-    '#type' => $elements_exists ? 'numberfield' : 'textfield',
+    '#type' => 'number',
     '#title' => t('Edit mode override'),
     '#title_display' => 'invisible',
     '#field_prefix' => t('Force items to display as "Open" when there are less then '),
@@ -579,13 +577,10 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#size' => 2,
     '#maxlength' => 2,
     // Specify width, since size property isn't supported on number fields.
-    '#attributes' => $elements_exists ? array('style' => 'width:3em') : array(),
+    '#attributes' => array('style' => 'width:3em'),
     '#min' => 1,
     '#max' => 99,
   );
-  if (!$elements_exists) {
-    $element['default_edit_mode_override']['#element_validate'] = array('element_validate_integer_positive');
-  }
 
   $element['add_mode'] = array(
     '#type' => 'select',
@@ -1026,7 +1021,6 @@ function paragraphs_bundle_save($bundle) {
 
   paragraphs_bundle_load(NULL, TRUE);
   entity_info_cache_clear();
-  // TODO This variable was probably removed in Backdrop without replacement.
   state_set('menu_rebuild_needed', TRUE);
   return $status;
 }
@@ -1046,7 +1040,6 @@ function paragraphs_bundle_delete($bundle_machine_name) {
     field_attach_delete_bundle('paragraphs_item', $bundle->bundle);
     paragraphs_bundle_load(NULL, TRUE);
     entity_info_cache_clear();
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
@@ -1245,7 +1238,6 @@ function paragraphs_field_create_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
@@ -1261,7 +1253,6 @@ function paragraphs_field_delete_field($field) {
     // Do not directly issue menu rebuilds here to avoid potentially multiple
     // rebuilds. Instead, let menu_get_item() issue the rebuild on the next
     // request.
-    // TODO This variable was probably removed in Backdrop without replacement.
     state_set('menu_rebuild_needed', TRUE);
   }
 }
