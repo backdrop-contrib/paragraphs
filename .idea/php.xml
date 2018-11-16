@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PhpIncludePathManager">
+    <include_path>
+      <path value="$USER_HOME$/Websites/drupal7dev/web/includes" />
+      <path value="$USER_HOME$/Websites/drupal7dev/web/modules" />
+      <path value="$USER_HOME$/Websites/drupal7dev/web/sites/all/modules" />
+    </include_path>
+  </component>
+</project>

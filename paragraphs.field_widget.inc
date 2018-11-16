@@ -304,7 +304,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       else {
         $field_elements['add_more']['add_more'] = array(
           '#type' => 'markup',
-          '#markup' => '<em>' . t('No bundles available, edit field settings') . '</em>',
+          '#markup' => '<em>' . t('No Paragraph types available, edit field settings') . '</em>',
         );
       }
     }
@@ -354,7 +354,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   // If the paragraph item form contains another paragraph,
   // we might ran into a recursive loop. Prevent that.
   if ($recursion++ > PARAGRAPHS_RECURSION_LIMIT) {
-    backdrop_set_message(t('The paragraphs item form has not been embedded to avoid recursive loops.'), 'error');
+    backdrop_set_message(t('The Paragraphs item form has not been embedded to avoid recursive loops.'), 'error');
     return $element;
   }
 

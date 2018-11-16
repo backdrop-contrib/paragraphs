@@ -18,7 +18,8 @@ function paragraphs_admin_bundle_overview() {
   $field_ui = module_exists('field_ui');
 
   $header = array(
-    t('Bundle name'),
+    t('Label'),
+    t('Machine name'),
     array(
       'data' => t('Operations'),
       'colspan' => $field_ui ? '4' : '2',
@@ -31,10 +32,10 @@ function paragraphs_admin_bundle_overview() {
 
     $row = array(
       array(
-        'data' => format_string('@bundle_name (@bundle_machine_name)', array(
-          '@bundle_name' => $bundle->name,
-          '@bundle_machine_name' => $bundle->bundle,
-        )),
+        'data' => $bundle->name,
+      ),
+      array(
+        'data' => $bundle->bundle,
       ),
     );
 
@@ -71,7 +72,7 @@ function paragraphs_admin_bundle_overview() {
     '#theme' => 'table',
     '#header' => $header,
     '#rows' => $rows,
-    '#empty' => t('No paragraph bundles have been defined yet.'),
+    '#empty' => t('No paragraph types have been defined yet.'),
   );
 
   return $page;
@@ -91,7 +92,7 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
   }
   else {
     if (!$bundle) {
-      backdrop_set_message(t('Could not load bundle'), 'error');
+      backdrop_set_message(t('Could not load Paragraph type'), 'error');
       backdrop_goto('admin/structure/paragraphs');
     }
   }
@@ -99,10 +100,10 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
   $form['#paragraphs_bundle'] = $bundle;
 
   $form['name'] = array(
-    '#title' => t('Name'),
+    '#title' => t('Label'),
     '#type' => 'textfield',
     '#default_value' => $bundle->name,
-    '#description' => t('The human-readable name of this bundle. It is recommended that this name begin with a capital letter and contain only letters, numbers, and spaces. This name must be unique.'),
+    '#description' => t('The human-readable name of this Paragraph type. It is recommended that this label begin with a capital letter and contain only letters, numbers, and spaces. This label must be unique.'),
     '#required' => TRUE,
     '#size' => 30,
   );
@@ -117,7 +118,7 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
       '#machine_name' => array(
         'exists' => 'paragraphs_bundle_load',
       ),
-      '#description' => t('A unique machine-readable name for this paragraph bundle. It must only contain lowercase letters, numbers, and underscores.'),
+      '#description' => t('A unique machine-readable name for this Paragraph type. It must only contain lowercase letters, numbers, and underscores.'),
     );
   }
 
@@ -129,7 +130,7 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Save Paragraph bundle'),
+    '#value' => t('Save Paragraph type'),
     '#weight' => 40,
   );
 
@@ -194,11 +195,11 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   $t_args = array('%name' => $bundle->name);
 
   if ($status == SAVED_UPDATED) {
-    backdrop_set_message(t('The paragraph bundle %name has been updated.', $t_args));
+    backdrop_set_message(t('The Paragraph type %name has been updated.', $t_args));
   }
   elseif ($status == SAVED_NEW) {
-    backdrop_set_message(t('The paragraph bundle %name has been added.', $t_args));
-    watchdog('paragraphs', 'Added paragraph bundle %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
+    backdrop_set_message(t('The Paragraph type %name has been added.', $t_args));
+    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
   }
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
@@ -212,7 +213,7 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
  */
 function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
   if (!$bundle) {
-    backdrop_set_message(t('Could not load bundle'), 'error');
+    backdrop_set_message(t('Could not load Paragraph type'), 'error');
     backdrop_goto('admin/structure/paragraphs');
   }
 
@@ -225,8 +226,8 @@ function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
     '#value' => $bundle->name,
   );
 
-  $message = t('Are you sure you want to delete the paragraph bundle %bundle?', array('%bundle' => $bundle->name));
-  $caption = '<p>' . t('This action cannot be undone. Content using the bundle will be broken.') . '</p>';
+  $message = t('Are you sure you want to delete the Paragraph type %bundle?', array('%bundle' => $bundle->name));
+  $caption = '<p>' . t('This action cannot be undone. Content using this Paragraph type will be broken.') . '</p>';
 
   return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs', filter_xss_admin($caption), t('Delete'));
 }
@@ -240,8 +241,8 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
   paragraphs_bundle_delete($form_state['values']['type']);
 
   $t_args = array('%name' => $form_state['values']['name']);
-  backdrop_set_message(t('The paragraph bundle %name has been deleted.', $t_args));
-  watchdog('paragraphs', 'Deleted paragraph bundle %name.', $t_args, WATCHDOG_NOTICE);
+  backdrop_set_message(t('The Paragraph type %name has been deleted.', $t_args));
+  watchdog('paragraphs', 'Deleted Paragraph type %name.', $t_args, WATCHDOG_NOTICE);
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
   return;

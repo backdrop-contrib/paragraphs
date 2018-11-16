@@ -309,8 +309,8 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
 function paragraphs_permission() {
   $perms = array(
     'administer paragraphs bundles' => array(
-      'title' => t('Administer paragraphs bundles'),
-      'description' => t('Is able to administer paragraph bundles for the Paragraphs module'),
+      'title' => t('Administer Paragraph types'),
+      'description' => t('Is able to administer Paragraph types for the Paragraphs module'),
     ),
   );
   return $perms;
@@ -323,8 +323,8 @@ function paragraphs_permission() {
 function paragraphs_menu() {
   $items = array();
   $items['admin/structure/paragraphs'] = array(
-    'title' => 'Paragraph Bundles',
-    'description' => 'Manage Paragraph bundles',
+    'title' => 'Paragraph Types',
+    'description' => 'Manage Paragraph types',
     'page callback' => 'paragraphs_admin_bundle_overview',
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
@@ -337,7 +337,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/add'] = array(
-    'title' => 'Add Paragraph Bundle',
+    'title' => 'Add Paragraph Type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form'),
     'access arguments' => array('administer paragraphs bundles'),
@@ -346,7 +346,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle'] = array(
-    'title' => 'Edit paragraph bundle',
+    'title' => 'Edit Paragraph type',
     'title callback' => 'paragraphs_bundle_title_callback',
     'title arguments' => array(3),
     'page callback' => 'backdrop_get_form',
@@ -361,7 +361,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle/delete'] = array(
-    'title' => 'Delete Paragraph Bundle',
+    'title' => 'Delete Paragraph Type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_delete_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
@@ -429,7 +429,7 @@ function paragraphs_field_info() {
   $info = array();
   $info['paragraphs'] = array(
     'label' => t('Paragraphs'),
-    'description' => t('Paragraphs field using the paragraph bundles.'),
+    'description' => t('Paragraphs field using the Paragraph types.'),
     'instance_settings' => array(
       'title' => PARAGRAPHS_DEFAULT_TITLE,
       'title_multiple' => PARAGRAPHS_DEFAULT_TITLE_MULTIPLE,
@@ -501,8 +501,8 @@ function paragraphs_field_instance_settings_form($field, $instance) {
 
   $element['allowed_bundles_table'] = array(
     '#tree' => TRUE,
-    '#prefix' => '<label>' . t('Allowed Paragraph bundles') . '</label>',
-    '#suffix' => '<div class="description">' . t('If no bundle is selected, all the bundles will be available.') . '</div>',
+    '#prefix' => '<label>' . t('Allowed Paragraph types') . '</label>',
+    '#suffix' => '<div class="description">' . t('If no Paragraph type is selected, all the types will be available.') . '</div>',
   );
 
   $weight = 1;
@@ -597,7 +597,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   if (!count($bundles)) {
     $element['allowed_bundles_explain'] = array(
       '#type' => 'markup',
-      '#markup' => t('You did not add any paragraph bundles yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => backdrop_get_destination())))),
+      '#markup' => t('You did not add any Paragraph types yet, click !here to add one.', array('!here' => l(t('here'), 'admin/structure/paragraphs/add', array('query' => backdrop_get_destination())))),
     );
   }
 
@@ -617,7 +617,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
   );
   $element['fieldset']['content'] = array(
     '#pre' => '<p>',
-    '#markup' => t('To specify a default value, configure it via the regular default value setting of each field that is part of the paragraph bundle. To do so, go to the <a href="!url">Manage fields</a> screen of the paragraph bundle.', array('!url' => url('admin/structure/paragraphs'))),
+    '#markup' => t('To specify a default value, configure it via the regular default value setting of each field that is part of the Paragraph type. To do so, go to the <a href="!url">Manage fields</a> screen of the Paragraph type.', array('!url' => url('admin/structure/paragraphs'))),
     '#suffix' => '</p>',
   );
   return $element;
@@ -668,7 +668,7 @@ function theme_paragraphs_bundle_settings_form($variables) {
 
   // We now define the table header values.  Ensure that the 'header' count
   // matches the final column count for your table.
-  $header = array(t('Bundle'), t('Weight'));
+  $header = array(t('Paragraph Type'), t('Weight'));
 
   // We also need to pass the backdrop_add_tabledrag() function an id which will
   // be used to identify the <table> element containing our tabledrag form.
@@ -1051,7 +1051,7 @@ function paragraphs_bundle_delete($bundle_machine_name) {
  *   The bundle.
  */
 function paragraphs_bundle_title_callback($bundle) {
-  return t('Edit Paragraph Bundle !name', array('!name' => $bundle->name));
+  return t('Edit Paragraph type !name', array('!name' => $bundle->name));
 }
 
 /**
@@ -1348,7 +1348,7 @@ function paragraphs_field_prepare_translation($entity_type, $entity, $field, $in
 function paragraphs_features_api() {
   return array(
     'paragraphs' => array(
-      'name' => t('Paragraphs Bundles'),
+      'name' => t('Paragraphs Types'),
       'feature_source' => TRUE,
       'default_hook' => 'paragraphs_info',
       'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.features.inc',
