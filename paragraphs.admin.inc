@@ -20,12 +20,10 @@ function paragraphs_admin_bundle_overview() {
   $header = array(
     t('Label'),
     t('Machine name'),
-    array(
-      'data' => t('Operations'),
-      'colspan' => $field_ui ? '4' : '2',
-    ),
+    t('Operations'),
   );
   $rows = array();
+  $operations = array();
   foreach ($bundles as $bundle) {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
@@ -42,25 +40,36 @@ function paragraphs_admin_bundle_overview() {
     if ($field_ui) {
 
       // Manage fields.
-      $row[] = array(
-        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields'),
+      $operations['manage_fields'] = array(
+        'title' => t('Manage fields'),
+        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/fields',
       );
 
       // Display fields.
-      $row[] = array(
-        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display'),
+      $operations['manage_display'] = array(
+        'title' => t('Manage display'),
+        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/display',
       );
     }
 
     // Manage bundle.
-    $row[] = array(
-      'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/edit'),
+    $operations['edit_type'] = array(
+      'title' => t('Edit type'),
+      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
     );
     // Delete bundle.
-    $row[] = array(
-      'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/delete'),
+    $operations['delete_type'] = array(
+      'title' => t('Delete type'),
+      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/delete',
     );
 
+    $row['operations'] = array(
+      'data' => array(
+        '#type' => 'dropbutton',
+        '#links' => $operations,
+      ),
+    );
+    
     $rows[$bundle->bundle] = $row;
   }
 
