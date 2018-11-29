@@ -4,4 +4,5 @@ backdrop = 1.x
 type = module
 package = Paragraphs
 
+stylesheets[all][] = css/paragraphs.css
 dependencies[] = entity

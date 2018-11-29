@@ -18,8 +18,9 @@ function paragraphs_admin_bundle_overview() {
   $field_ui = module_exists('field_ui');
 
   $header = array(
+    t('Icon'),
     t('Label'),
-    t('Machine name'),
+    t('Description'),
     t('Operations'),
   );
   $rows = array();
@@ -27,13 +28,25 @@ function paragraphs_admin_bundle_overview() {
   foreach ($bundles as $bundle) {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
-
+    $label = '<div class="paragraphs-label">' . $bundle->name .
+      '</div><div class="paragraphs-machine-name">(' . $bundle->bundle . ')</div>';
+    $iconfile = file_load($bundle->icon);
+    $iconrender = theme('image_style', array(
+      'style_name' => 'thumbnail',
+      'uri' => $iconfile->uri,
+      'attributes' => array(
+        'class' => 'paragraphs-icon',
+        ),
+      ));
     $row = array(
       array(
-        'data' => $bundle->name,
+        'data' => $iconrender,
       ),
       array(
-        'data' => $bundle->bundle,
+        'data' => $label,
+      ),
+      array(
+        'data' => $bundle->description,
       ),
     );
 
@@ -54,12 +67,12 @@ function paragraphs_admin_bundle_overview() {
 
     // Manage bundle.
     $operations['edit_type'] = array(
-      'title' => t('Edit type'),
+      'title' => t('Configure'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
     );
     // Delete bundle.
     $operations['delete_type'] = array(
-      'title' => t('Delete type'),
+      'title' => t('Delete'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/delete',
     );
 
@@ -69,7 +82,7 @@ function paragraphs_admin_bundle_overview() {
         '#links' => $operations,
       ),
     );
-    
+
     $rows[$bundle->bundle] = $row;
   }
 
@@ -112,8 +125,27 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     '#title' => t('Label'),
     '#type' => 'textfield',
     '#default_value' => $bundle->name,
-    '#description' => t('The human-readable name of this Paragraph type. It is recommended that this label begin with a capital letter and contain only letters, numbers, and spaces. This label must be unique.'),
+    '#description' => t('Label for the Paragraph type.'),
     '#required' => TRUE,
+    '#size' => 30,
+  );
+
+  $form['icon'] = array(
+    '#title' => t('Icon'),
+    '#type' => 'managed_file',
+    '#default_value' => $bundle->icon,
+    '#upload_location' => 'public://paragraph_icons/',
+    '#description' => t('Paragraph type icon.'),
+    '#required' => FALSE,
+    '#size' => 40,
+  );
+
+  $form['description'] = array(
+    '#title' => t('Description'),
+    '#type' => 'textarea',
+    '#default_value' => $bundle->description,
+    '#description' => t('This text will be displayed on the <em>Add new paragraph</em> page.'),
+    '#required' => FALSE,
     '#size' => 30,
   );
 
@@ -185,6 +217,14 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
+  $bundle->description = trim($form_state['values']['description']);
+  $bundle->icon = trim($form_state['values']['icon']);
+
+  // Make file permanent
+  $file = file_load($form_state['values']['icon']);
+  $file->status = FILE_STATUS_PERMANENT;
+  file_save($file);
+  file_usage_add($file, 'paragraphs', 'paragraphs_type_icon', $form_state['values']['icon']);
 
   $variables = $form_state['values'];
 

@@ -6,6 +6,33 @@
  */
 
 /**
+ * Implements hook_update_N().
+ *
+ * Adds new fields for icon and description on Paragraph types.
+ */
+
+function paragraphs_update_1100() {
+  $icon = array(
+    'description' => 'An icon representing this Paragraph type.',
+    'type' => 'int',
+    'size' => 'small',
+    'not null' => FALSE,
+    'default' => NULL,
+  );
+  $description = array(
+    'description' => 'This text will be displayed on the <em>Add new paragraph</em> page. ',
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+    'translatable' => TRUE,
+  );
+  db_add_field('paragraphs_bundle', 'icon', $icon);
+  db_add_field('paragraphs_bundle', 'description', $description);
+  return;
+}
+
+/**
  * Implements hook_schema().
  */
 function paragraphs_schema() {
@@ -21,6 +48,21 @@ function paragraphs_schema() {
       ),
       'name' => array(
         'description' => 'The human-readable label for this Paragraph type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
+      ),
+      'icon' => array(
+        'description' => 'An icon representing this Paragraph type.',
+        'type' => 'int',
+        'size' => 'small',
+        'not null' => FALSE,
+        'default' => NULL,
+      ),
+      'description' => array(
+        'description' => 'This text will be displayed on the <em>Add new paragraph</em> page. ',
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
