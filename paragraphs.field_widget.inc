@@ -605,7 +605,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         '#type' => 'actions',
         '#weight' => 9999,
       );
+      // Specific #type to match assumptions of form_process_actions()
       $element['actions']['remove_button'] = array(
+        '#type' => 'markup',
         '#markup' => '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => t($instance['settings']['title']))) . ' </p><p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array('@title' => $instance['settings']['title'], '!confirm' => t('Confirm Deletion'), '!save' => t('Save'))) . '</em></p>',
       );
       $element['actions']['restore_button'] = array(
