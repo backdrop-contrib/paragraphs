@@ -308,7 +308,7 @@ class ParagraphsItemEntity extends Entity {
           $this->hostEntityBundle = (isset($data_values->{$host_entity_keys['bundle']}) ? $data_values->{$host_entity_keys['bundle']} : NULL);
 
           if ($this->isInUse()) {
-            $this->hostEntity = entity_load_single($this->hostEntityType, $this->hostEntityId);
+            $this->hostEntity = entity_load($this->hostEntityType, $this->hostEntityId);
           }
           elseif ($this->hostEntityRevisionId) {
             $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
