@@ -14,7 +14,7 @@
  */
 function paragraphs_admin_type_overview() {
   $page = array();
-  $bundles = paragraphs_type_load();
+  $types = paragraphs_type_load();
   $field_ui = module_exists('field_ui');
 
   $header = array(
@@ -25,13 +25,13 @@ function paragraphs_admin_type_overview() {
   );
   $rows = array();
   $operations = array();
-  foreach ($bundles as $bundle) {
+  foreach ($types as $type) {
 
-    $type_url_str = strtr($bundle->bundle, array('_' => '-'));
-    $label = '<div class="paragraphs-label">' . $bundle->name .
-      '</div><div class="paragraphs-machine-name">(' . $bundle->bundle . ')</div>';
-    if (!empty($bundle->icon)) {
-      $iconfile = file_load($bundle->icon);
+    $type_url_str = strtr($type->bundle, array('_' => '-'));
+    $label = '<div class="paragraphs-label">' . $type->name .
+      '</div><div class="paragraphs-machine-name">(' . $type->bundle . ')</div>';
+    if (!empty($type->icon)) {
+      $iconfile = file_load($type->icon);
       $iconrender = theme('image_style', array(
         'style_name' => 'thumbnail',
         'uri' => $iconfile->uri,
@@ -51,7 +51,7 @@ function paragraphs_admin_type_overview() {
         'data' => $label,
       ),
       array(
-        'data' => $bundle->description,
+        'data' => $type->description,
       ),
     );
 
@@ -70,12 +70,12 @@ function paragraphs_admin_type_overview() {
       );
     }
 
-    // Manage bundle.
+    // Manage type.
     $operations['edit_type'] = array(
       'title' => t('Configure'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
     );
-    // Delete bundle.
+    // Delete type.
     $operations['delete_type'] = array(
       'title' => t('Delete'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/delete',
@@ -88,13 +88,13 @@ function paragraphs_admin_type_overview() {
       ),
     );
 
-    $rows[$bundle->bundle] = $row;
+    $rows[$type->bundle] = $row;
   }
 
-  // Sort rows by bundle.
+  // Sort rows by type.
   ksort($rows);
 
-  // Render paragraphs bundle table.
+  // Render paragraphs type table.
   $page['paragraphs_type_table'] = array(
     '#theme' => 'table',
     '#header' => $header,
@@ -106,7 +106,7 @@ function paragraphs_admin_type_overview() {
 }
 
 /**
- * Form to create or edit an paragraph bundle.
+ * Form to create or edit an paragraph type.
  */
 function paragraphs_admin_type_form($form, &$form_state, $type = NULL) {
 
