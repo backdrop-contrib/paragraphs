@@ -77,7 +77,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $element = array(
         '#entity_type' => $original_element['#entity_type'],
         '#entity' => $original_element['#entity'],
-        '#bundle' => $original_element['#bundle'],
+        '#type' => $original_element['#bundle'],
         '#field_name' => $field_name,
         '#language' => $langcode,
         '#field_parents' => $parents,
@@ -148,41 +148,41 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
     // Add 'add more' button, if not working with a programmed form.
     if (empty($form_state['programmed'])) {
-      $available_bundles = paragraphs_bundle_load();
-      $select_bundles = array();
-      $select_bundles_weighted = array();
+      $available_types = paragraphs_type_load();
+      $select_types = array();
+      $select_types_weighted = array();
 
-      // By default, consider that no bundle has been explicitly picked.
+      // By default, consider that no type has been explicitly picked.
       $explicitly_enabled = FALSE;
-      foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
-        if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
-          $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+      foreach ($instance['settings']['allowed_types'] as $allowed_type_key => $allowed_type_value) {
+        if ($allowed_type_key === $allowed_type_value && isset($available_types[$allowed_type_key])) {
+          $select_types[$available_types[$allowed_type_key]->bundle] = $available_types[$allowed_type_key]->name;
 
           // If an item has been explicitly selected, raise our flag.
           $explicitly_enabled = TRUE;
         }
-        elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
-          $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+        elseif (isset($available_types[$allowed_type_key]->bundle)) {
+          $select_types_weighted[$available_types[$allowed_type_key]->bundle] = $available_types[$allowed_type_key]->name;
         }
       }
 
-      // If no bundle has been explicitly selected, give access to all of them.
+      // If no type has been explicitly selected, give access to all of them.
       if (!$explicitly_enabled) {
-        $select_bundles = $select_bundles_weighted;
-        foreach ($available_bundles as $bundle) {
-          if (!isset($select_bundles[$bundle->bundle])) {
-            $select_bundles[$bundle->bundle] = $bundle->name;
+        $select_types = $select_types_weighted;
+        foreach ($available_types as $type) {
+          if (!isset($select_types[$type->bundle])) {
+            $select_types[$type->bundle] = $type->name;
           }
         }
       }
 
-      $removed_a_bundle = FALSE;
+      $removed_a_type = FALSE;
 
       $weight = 0;
 
-      foreach ($select_bundles as $machine_name => $bundle) {
-        $select_bundles[$machine_name] = array(
-          'name' => $bundle,
+      foreach ($select_types as $machine_name => $type) {
+        $select_types[$machine_name] = array(
+          'name' => $type,
           'weight' => $weight,
         );
 
@@ -192,28 +192,28 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
         if (!paragraphs_entity_access('create', 'paragraphs_item', $entity_shell)) {
-          unset($select_bundles[$machine_name]);
-          $removed_a_bundle = TRUE;
+          unset($select_types[$machine_name]);
+          $removed_a_type = TRUE;
         }
-        elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
-          $select_bundles[$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
+        elseif (isset($instance['settings']['type_weights'][$machine_name])) {
+          $select_types[$machine_name]['weight'] = $instance['settings']['type_weights'][$machine_name];
         }
         $weight++;
       }
 
-      if ($removed_a_bundle && count($select_bundles) === 0) {
+      if ($removed_a_type && count($select_types) === 0) {
         $field_elements['add_more'] = array(
           '#type' => 'container',
           '#tree' => TRUE,
         );
         $field_elements['add_more']['add_more'] = array(
           '#type' => 'markup',
-          '#markup' => '<em>' . t('You are not allowed to add any of the bundles.') . '</em>',
+          '#markup' => '<em>' . t('You are not allowed to add any of the types.') . '</em>',
         );
       }
-      elseif (count($select_bundles)) {
-        // uasort($select_bundles, 'backdrop_sort_weight');
-        backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
+      elseif (count($select_types)) {
+        // uasort($select_types, 'backdrop_sort_weight');
+        backdrop_sort($select_types, array('weight' => SORT_NUMERIC));
         $field = $field_state['field'];
 
         if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
@@ -229,16 +229,16 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           $add_mode = (isset($instance['settings']['add_mode']) ? $instance['settings']['add_mode'] : PARAGRAPHS_DEFAULT_ADD_MODE);
 
           if ($add_mode == 'button') {
-            foreach ($select_bundles as $machine_name => $bundle) {
+            foreach ($select_types as $machine_name => $type) {
 
               /* @var $entity_shell ParagraphsItemEntity */
               $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
               $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
-              $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
+              $field_elements['add_more']['add_more_type_' . $machine_name] = array(
                 '#type' => 'submit',
-                '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
-                '#value' => t('Add !title', array('!title' => $bundle['name'])),
+                '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_type_' . $machine_name,
+                '#value' => t('Add !title', array('!title' => $type['name'])),
                 '#access' => paragraphs_entity_access('create', 'paragraphs_item', $entity_shell),
                 '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
                 '#limit_validation_errors' => array(),
@@ -252,12 +252,12 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
             }
           }
           else {
-            // uasort($select_bundles, 'backdrop_sort_weight');
-            backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
+            // uasort($select_types, 'backdrop_sort_weight');
+            backdrop_sort($select_types, array('weight' => SORT_NUMERIC));
 
             $select_list = array();
-            foreach ($select_bundles as $machine_name => $bundle) {
-              $select_list[$machine_name] = $bundle['name'];
+            foreach ($select_types as $machine_name => $type) {
+              $select_list[$machine_name] = $type['name'];
             }
 
             $field_elements['add_more']['type'] = array(
@@ -269,7 +269,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
               '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
             );
 
-            // Hide the bundle selection if only one bundle is allowed.
+            // Hide the type selection if only one type is allowed.
             if (count($select_list) == 1) {
               $field_elements['add_more']['type']['#type'] = 'hidden';
               $keys = array_keys($select_list);
@@ -362,15 +362,15 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $field_name = $element['#field_name'];
   $language = $element['#language'];
 
-  $bundle = FALSE;
+  $type = FALSE;
   $id_prefix = implode('-', array_merge($field_parents, array($field_name)));
 
   if (isset($form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'])) {
-    $bundle = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
+    $type = $form_state['input'][strtr($id_prefix, '-', '_') . '_add_more_type'];
   }
   elseif (isset($form_state['input']['_triggering_element_name'])) {
-    if (strpos($form_state['input']['_triggering_element_name'], strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_') === 0) {
-      $bundle = substr($form_state['input']['_triggering_element_name'], backdrop_strlen(strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_'));
+    if (strpos($form_state['input']['_triggering_element_name'], strtr($id_prefix, '-', '_') . '_add_more_add_more_type_') === 0) {
+      $type = substr($form_state['input']['_triggering_element_name'], backdrop_strlen(strtr($id_prefix, '-', '_') . '_add_more_add_more_type_'));
     }
   }
 
@@ -421,9 +421,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
     // Show an empty collection if we have no existing one or it does not
     // load.
-    if (empty($paragraph_item) && $bundle) {
+    if (empty($paragraph_item) && $type) {
       /* @var $paragraph_item ParagraphsItemEntity */
-      $paragraph_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
+      $paragraph_item = entity_create('paragraphs_item', array('bundle' => $type, 'field_name' => $field_name));
       $paragraph_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
@@ -445,15 +445,15 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   field_form_set_state($field_parents, $field_name, $language, $form_state, $field_state);
   if (!empty($paragraph_item)) {
 
-    $bundle_info = paragraphs_bundle_load($paragraph_item->bundle);
+    $type_info = paragraphs_type_load($paragraph_item->bundle);
 
-    if ($bundle_info) {
-      $element['paragraph_bundle_title'] = array(
+    if ($type_info) {
+      $element['paragraph_type_title'] = array(
         '#type' => 'container',
         '#weight' => -100,
       );
-      $element['paragraph_bundle_title']['info'] = array(
-        '#markup' => t('@title type: %bundle', array('@title' => t($instance['settings']['title']), '%bundle' => $bundle_info->name)),
+      $element['paragraph_type_title']['info'] = array(
+        '#markup' => t('@title type: %type', array('@title' => t($instance['settings']['title']), '%type' => $type_info->name)),
       );
     }
 
@@ -467,7 +467,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !paragraphs_entity_access('update', 'paragraphs_item', $paragraph_item)) {
           foreach (element_children($element) as $key) {
-            if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
+            if ($key != 'paragraph_type_title' && $key != 'actions' && $key != 'paragraph_type_preview' && $key != 'access_info') {
               $element[$key]['#access'] = FALSE;
             }
           }
@@ -507,15 +507,15 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
       }
       else {
         if ($default_edit_mode === 'preview' && paragraphs_entity_access('view', 'paragraphs_item', $paragraph_item)) {
-          $element['paragraph_bundle_preview'] = array(
+          $element['paragraph_type_preview'] = array(
             '#type' => 'container',
           );
           $preview = $paragraph_item->view('paragraphs_editor_preview');
-          $element['paragraph_bundle_preview']['preview'] = $preview;
+          $element['paragraph_type_preview']['preview'] = $preview;
         }
 
         foreach (element_children($element) as $key) {
-          if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
+          if ($key != 'paragraph_type_title' && $key != 'actions' && $key != 'paragraph_type_preview' && $key != 'access_info') {
             $element[$key]['#access'] = FALSE;
           }
         }

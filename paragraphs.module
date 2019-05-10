@@ -104,8 +104,9 @@ function paragraphs_entity_info() {
     'entity keys' => array(
       'id' => 'item_id',
       'revision' => 'revision_id',
-      // TODO: adjust 'bundle' to 'type' after schema is updated
+      // TODO: deprecate warning on 'bundle'?
       'bundle' => 'bundle',
+      'type' => 'type',
       'field_name' => 'field_name',
     ),
     'module' => 'paragraphs',
@@ -119,9 +120,12 @@ function paragraphs_entity_info() {
         'custom settings' => TRUE,
       ),
     ),
-    // TODO: adjust 'bundle' to 'type' after schema is updated
+    // TODO: deprecate warning on 'bundle'?
     'bundle keys' => array(
       'bundle' => 'bundle',
+    ),
+    'type keys' => array(
+      'type' => 'type',
     ),
     'access callback' => 'paragraphs_item_access',
   );
@@ -180,7 +184,7 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   }
   // When OP is create, or the entity is new, the type is the cache key.
   elseif ($op == 'create' || (isset($entity->is_new) && $entity->is_new)) {
-    $cid = $entity->type;
+    $cid = $entity->bundle;
   }
   // Else our cid is entity specific.
   else {
@@ -256,7 +260,7 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
   }
   // When OP is create, or the entity is new, the type is the cache key.
   elseif ($op == 'create' || (isset($entity->is_new) && $entity->is_new)) {
-    $cid = $entity->type;
+    $cid = $entity->bundle;
   }
   // Else our cid is entity specific.
   else {
@@ -987,7 +991,7 @@ function paragraphs_type_load($name = NULL, $rebuild = FALSE) {
  */
 function paragraphs_panelizer_type_name_load($name) {
   if (($type = paragraphs_type_load($name))) {
-    return $type->type;
+    return $type->bundle;
   }
 }
 

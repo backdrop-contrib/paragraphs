@@ -597,6 +597,14 @@ class ParagraphsItemEntity extends Entity {
   }
 
   /**
+   * Implements EntityInterface::type().
+   */
+  public function type() {
+    //TODO: Adjust after schema is fully updated and deprecate ->bundle?
+    return $this->bundle;
+  }
+
+  /**
    * Implements EntityInterface::label().
    */
   public function label() {
