@@ -57,7 +57,15 @@ function paragraphs_item_load($item_id, $reset = FALSE) {
  *   The paragraphs item entity or FALSE.
  */
 function paragraphs_item_revision_load($revision_id) {
-  return entity_revision_load('paragraphs_item', $revision_id);
+  //Note: [Temporarily?] duplicating entity_revision_load functionality. If this
+  //gets into core (https://github.com/backdrop/backdrop-issues/issues/3777)
+  //or we make a dependency on Entity Plus we could revert.
+  $info = entity_get_info('paragraphs_item');
+  if (!empty($info['entity keys']['revision'])) {
+    $entity_revisions = entity_load('paragraphs_item', FALSE, array($info['entity keys']['revision'] => $revision_id));
+    return reset($entity_revisions);
+  }
+  return FALSE;
 }
 
 /**
