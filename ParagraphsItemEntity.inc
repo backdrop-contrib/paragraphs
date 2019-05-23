@@ -584,10 +584,8 @@ class ParagraphsItemEntity extends Entity {
 
   /**
    * Implements EntityInterface::entityType().
-   *
-   * @since Backdrop 1.13.0 This method is now static.
    */
-  public static function entityType() {
+  public function entityType() {
     return 'paragraphs_item';
   }
 
