@@ -1202,9 +1202,10 @@ function theme_paragraphs_field_multiple_value_form($variables) {
         drupal_render($item),
         array('data' => $delta_element, 'class' => array('delta-order')),
       );
+      $class = !empty($item['#bundle']) ? array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])) : array();
       $rows[] = array(
         'data' => $cells,
-        'class' => array('draggable', drupal_html_class('paragraphs_item_type_' . $item['#bundle'])),
+        'class' => $class,
       );
     }
 
