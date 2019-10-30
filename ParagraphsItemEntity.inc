@@ -291,10 +291,9 @@ class ParagraphsItemEntity extends Entity {
         // For saved paragraphs, query the field data to determine the
         // right host entity.
         $query = new EntityFieldQuery();
-        $query->fieldCondition($this->fieldInfo(), 'revision_id', $this->revision_id);
-        if (!$this->isInUse()) {
-          $query->age(FIELD_LOAD_REVISION);
-        }
+        $query->fieldCondition($this->fieldInfo(), 'revision_id', $this->revision_id)
+          ->age(FIELD_LOAD_REVISION);
+
         $result = $query->execute();
         $this->hostEntityType = key($result);
         $data = current($result);
@@ -307,14 +306,7 @@ class ParagraphsItemEntity extends Entity {
           $this->hostEntityId = (isset($data_values->{$host_entity_keys['id']}) ? $data_values->{$host_entity_keys['id']} : NULL);
           $this->hostEntityRevisionId = (isset($data_values->{$host_entity_keys['revision']}) ? $data_values->{$host_entity_keys['revision']} : NULL);
           $this->hostEntityBundle = (isset($data_values->{$host_entity_keys['bundle']}) ? $data_values->{$host_entity_keys['bundle']} : NULL);
-
-          if ($this->isInUse()) {
-            $this->hostEntity = entity_load_single($this->hostEntityType, $this->hostEntityId);
-          }
-          elseif ($this->hostEntityRevisionId) {
-            $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
-          }
-
+          $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
           $this->fetchedHostEntityDetails = TRUE;
         }
         else {

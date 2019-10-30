@@ -718,6 +718,17 @@ function paragraphs_field_settings_form($field, $instance) {
  * creation or to save changes to the host entity and its collections at once.
  */
 function paragraphs_field_presave($host_entity_type, $host_entity, $field, $instance, $langcode, &$items) {
+  $top_host = $host_entity;
+  while (method_exists($top_host, 'hostEntity')) {
+    $top_host = $top_host->hostEntity();
+  }
+
+  // Prevent workbench moderation from deleting paragraphs on node_save()
+  // during workbench_moderation_store(), when $host_entity->revision == 0.
+  if (!empty($top_host->workbench_moderation['updating_live_revision'])) {
+    return;
+  }
+
   foreach ($items as $key => &$item) {
     // In case the entity has been changed / created, save it and set the id.
     // If the host entity creates a new revision, save new item-revisions as
