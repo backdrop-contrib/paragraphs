@@ -11,9 +11,8 @@
 function paragraphs_clone_node_alter(&$node, $context) {
   foreach (field_info_fields() as $field_name => $field) {
     if ($field['type'] == 'paragraphs' && isset($node->$field_name)) {
-      $language = $node->language;
-      foreach ($node->$field_name as $key => $values) {
-        paragraphs_clone_items('node', $node, $field_name, $language);
+      foreach ($node->$field_name as $field_language => $values) {
+        paragraphs_clone_items('node', $node, $field_name, $field_language);
       }
     }
   }
@@ -49,11 +48,23 @@ function paragraphs_form_node_form_alter(&$form, &$form_state, $form_id) {
  * Clone a Paragraphs item. Helper function for hook_clone_node_alter().
  */
 function paragraphs_clone_items($entity_type, &$entity, $field_name, $language = LANGUAGE_NONE) {
-  $entity_wrapper = entity_metadata_wrapper($entity_type, $entity);
-  $old_items = $entity_wrapper->{$field_name}->value();
+  if (empty($entity->{$field_name}[$language])) {
+    return;
+  }
+
+  // Resets the field_language static. Otherwise, the language returned by
+  // field_language() is FALSE, resulting in metadata-wrappers (and
+  // field_get_items()) returning FALSE or an empty array, which means that the
+  // fields in it won't be cloned.
+  drupal_static_reset('field_language');
+
+  $old_items = $entity->{$field_name}[$language];
   if (!is_array($old_items)) {
     $old_items = array($old_items);
   }
+  $old_items = array_map(function($item) {
+    return paragraphs_item_load($item['value']);
+  }, $old_items);
 
   unset($entity->{$field_name}[$language]);
 
