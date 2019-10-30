@@ -106,6 +106,7 @@ function paragraphs_entity_info() {
       'revision' => 'revision_id',
       'bundle' => 'bundle',
       'field_name' => 'field_name',
+      'language' => 'langcode',
     ),
     'module' => 'paragraphs',
     'view modes' => array(

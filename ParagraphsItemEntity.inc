@@ -56,7 +56,7 @@ class ParagraphsItemEntity extends Entity {
    *
    * @var string
    */
-  protected $langcode = LANGUAGE_NONE;
+  public $langcode = LANGUAGE_NONE;
 
   /**
    * Entity ID.
