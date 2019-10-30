@@ -356,6 +356,12 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   $field_name = $element['#field_name'];
   $language = $element['#language'];
 
+  // Set host entity data since field_attach_form() overrides the $element
+  // values with the values for the paragraph item.
+  $element['#host_entity_type'] = $element['#entity_type'];
+  $element['#host_entity'] = $element['#entity'];
+  $element['#host_bundle'] = $element['#bundle'];
+
   $bundle = FALSE;
   $id_prefix = implode('-', array_merge($field_parents, array($field_name)));
 
@@ -406,7 +412,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
     /* @var $paragraph_item ParagraphsItemEntity */
     $paragraph_item = $field_state['entity'][$delta];
-    $paragraph_item->setHostEntity($field_state['instance']['entity_type'], $element['#entity'], $langcode, FALSE);
+    $paragraph_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
   }
   else {
     if (isset($items[$delta])) {
@@ -425,7 +431,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
 
     if (!empty($paragraph_item)) {
       /* @var $paragraph_item ParagraphsItemEntity */
-      $paragraph_item->setHostEntity($element['#entity_type'], $element['#entity'], $langcode, FALSE);
+      $paragraph_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
 
       if ($force_open) {
         $paragraph_item->being_edited = TRUE;
