@@ -510,7 +510,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
           );
-          $preview = $paragraph_item->view('paragraphs_editor_preview');
+          $preview = $paragraph_item->view('paragraphs_editor_preview', $langcode);
           $element['paragraph_bundle_preview']['preview'] = $preview;
         }
 
