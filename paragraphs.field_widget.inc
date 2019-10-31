@@ -735,24 +735,39 @@ function paragraphs_field_widget_embed_validate($element, &$form_state, $complet
 
     // Only if the form is being submitted, finish the collection entity and
     // prepare it for saving.
-    if ($form_state['submitted'] && !form_get_errors()) {
-
-      field_attach_submit('paragraphs_item', $paragraph_item, $element, $form_state);
-
-      // Load initial form values into $item, so any other form values below the
-      // same parents are kept.
-      $item = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
-
-      // Set the _weight if it is a multiple field.
-      if (isset($element['_weight'])) {
-        $item['_weight'] = $element['_weight']['#value'];
+    if ($form_state['submitted']) {
+      $errors = form_get_errors();
+      if (module_exists('conditional_fields') && isset($form_state['conditional_fields_untriggered_dependents'])) {
+        // Conditional_fields will remove errors which occurred on "untriggered
+        // fields" and only remove them via the form-level validation handlers.
+        foreach ($form_state['conditional_fields_untriggered_dependents'] as $conditional_error) {
+          if (isset($conditional_error['errors'])) {
+            foreach ($conditional_error['errors'] as $key => $error) {
+              unset($errors[$key]);
+            }
+          }
+        }
       }
 
-      // Put the paragraph item in $item['entity'], so it is saved with
-      // the host entity via hook_field_presave() / field API if it is not empty.
-      // @see paragraph_field_presave()
-      $item['entity'] = $paragraph_item;
-      form_set_value($element, $item, $form_state);
+      if (!$errors) {
+        field_attach_submit('paragraphs_item', $paragraph_item, $element, $form_state);
+
+        // Load initial form values into $item, so any other form values below the
+        // same parents are kept.
+        $item = drupal_array_get_nested_value($form_state['values'], $element['#parents']);
+
+        // Set the _weight if it is a multiple field.
+        if (isset($element['_weight'])) {
+          $item['_weight'] = $element['_weight']['#value'];
+        }
+
+        // Put the paragraph item in $item['entity'], so it is saved with
+        // the host entity via hook_field_presave() / field API if it is not empty.
+        // @see paragraph_field_presave()
+        $item['entity'] = $paragraph_item;
+        form_set_value($element, $item, $form_state);
+      }
+
     }
   }
 }
