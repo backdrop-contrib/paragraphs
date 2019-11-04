@@ -897,7 +897,13 @@ function paragraphs_field_is_empty($item, $field) {
   if (!empty($item['value'])) {
     return FALSE;
   }
+  elseif (isset($item['entity']) && ($instances = field_info_instances('paragraphs_item', $item['entity']->bundle)) && !empty($instances)) {
+    // With a valid instance we can re-use the "field is empty" hook.
+    return paragraphs_item_is_empty($item['entity']);
+  }
   elseif (isset($item['entity'])) {
+    // Because of hook_entity_view_alter, the content comes from a view but not 
+    // stored in a field.
     return FALSE;
   }
   return TRUE;

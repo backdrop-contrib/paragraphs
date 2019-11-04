@@ -144,6 +144,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       '#suffix' => '</div>',
       '#max_delta' => $max,
       '#instance' => $instance,
+      '#element_validate' => array('_paragraphs_multiple_field_validate'),
     );
 
     // Add 'add more' button, if not working with a programmed form.
@@ -798,6 +799,60 @@ function paragraphs_add_more_submit($form, &$form_state) {
   field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
   $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Form Validation for submitting a node with required paragraph fields.
+ */
+function _paragraphs_multiple_field_validate($elements, &$form_state) {
+  // Check child fields of required paragraphs.
+  if (!empty($elements['#required'])) {
+    $field_values = array();
+    $field_state = field_form_get_state($elements['#field_parents'], $elements['#field_name'], $elements['#language'], $form_state);
+    $field_info = field_info_field($elements['#field_name']);
+
+    if (empty($elements['#parents'])) {
+      // Try top level structure if there are no parents.
+      if (!empty($form_state['values'][$elements['#field_name']][LANGUAGE_NONE])) {
+        $field_values = $form_state['values'][$elements['#field_name']][LANGUAGE_NONE];
+      }
+    }
+    else {
+      // Extract field values.
+      $key_exists = NULL;
+      $field_values_found = drupal_array_get_nested_value($form_state['values'], $elements['#parents'], $key_exists);
+      if ($key_exists) {
+        $field_values = $field_values_found;
+      }
+    }
+
+    if ($field_values) {
+      foreach (array_keys($field_values) as $item_key) {
+        if (!is_numeric($item_key)) {
+          // Remove non field item deltas.
+          unset($field_values[$item_key]);
+        }
+        elseif (isset($field_state['entity'][$item_key])) {
+          // Handle field item entity forms that build new objects in the field
+          // state. Examples: field_collection_item, paragraphs_item.
+          // If this is not set, then the field_is_empty check in
+          // _field_filter_items() fails.
+          $field_values[$item_key] = array(
+            'entity' => $field_state['entity'][$item_key],
+          );
+        }
+      }
+
+      // Get non-empty items.
+      $field_values = _field_filter_items($field_info, $field_values);
+    }
+
+    if (count($field_values) < 1) {
+      form_error($elements, t('The "!name" field is required', array(
+        '!name' => t($elements['#title']),
+      )));
+    }
+  }
 }
 
 /**
