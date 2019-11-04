@@ -45,7 +45,7 @@ function paragraphs_test_field_default_field_instances() {
       'bundle_weights' => array(
         'ptest' => 2,
       ),
-      'default_edit_mode' => 'open',
+      'default_edit_mode' => 'preview',
       'title' => 'Paragraph',
       'title_multiple' => 'Paragraphs',
       'user_register_form' => FALSE,
@@ -83,7 +83,7 @@ function paragraphs_test_field_default_field_instances() {
     'entity_type' => 'paragraphs_item',
     'field_name' => 'field_ptest_text',
     'label' => 'PTest Text',
-    'required' => 0,
+    'required' => 1,
     'settings' => array(
       'text_processing' => 0,
       'user_register_form' => FALSE,

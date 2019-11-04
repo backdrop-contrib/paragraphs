@@ -495,7 +495,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             '#value' => t('Collapse'),
             '#validate' => array(),
             '#submit' => array('paragraphs_collapse_submit'),
-            '#limit_validation_errors' => array(),
+            '#limit_validation_errors' => array($parents),
             '#ajax' => array(
               'path' => 'paragraphs/collapse/ajax',
               'effect' => 'fade',
