@@ -34,6 +34,8 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
   /**
    * Basic initialization.
    *
+   * @param object $bundle
+   *   A bundle.
    * @param array $options
    *   (optional) Options applied to collections.
    */
@@ -50,6 +52,9 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
    *  Default language for nodes created via this destination class.
    * @param string $text_format
    *  Default text format for nodes created via this destination class.
+   *
+   * @return array
+   *   An array of options.
    */
   static public function options($language, $text_format) {
     return compact('language', 'text_format');
@@ -80,7 +85,7 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
   /**
    * Delete a batch of nodes at once.
    *
-   * @param $nids
+   * @param array $item_ids
    *  Array of node IDs to be deleted.
    */
   public function bulkRollback(array $item_ids) {
@@ -94,13 +99,14 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
   /**
    * Import a single node.
    *
-   * @param $node
-   *  Node object to build. Prefilled with any fields mapped in the Migration.
-   * @param $row
+   * @param stdClass $paragraphs_item
+   *  Node object to build Prefilled with any fields mapped in the Migration.
+   * @param stdClass $row
    *  Raw source data object - passed through to prepare/complete handlers.
-   * @return array
+   * @return array|bool
    *  Array of key fields (nid only in this case) of the node that was saved if
    *  successful. FALSE on failure.
+   * @throws MigrateException
    */
   public function import(stdClass $paragraphs_item, stdClass $row) {
     $migration = Migration::currentMigration();

@@ -282,6 +282,8 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
  *
  * @param $bundle
  *   The bundle.
+ *
+ * @return string
  */
 function paragraphs_bundle_title_callback($bundle) {
   return t('Edit Paragraph Bundle !name', array('!name' => $bundle->name));

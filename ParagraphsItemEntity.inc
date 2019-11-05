@@ -389,6 +389,12 @@ class ParagraphsItemEntity extends Entity {
    *   (internal) If TRUE is passed, the host entity is not saved automatically
    *   and therefore no link is created between the host and the item or
    *   revision updates might be skipped. Use with care.
+   *
+   * @return DrupalEntityControllerInterface
+   *   The entity controller object for the specified entity type
+   *
+   * @throws Exception
+   *   In case a valid reference is not their for host entity.
    */
   public function save($skip_host_save = FALSE) {
 

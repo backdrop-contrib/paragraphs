@@ -86,6 +86,8 @@ class ParagraphsMigrateParagraphsFieldHandler extends MigrateSimpleFieldHandler 
    *
    * @param $values
    * @param $arguments
+   *
+   * @return array
    */
   protected function getRevisionIds($values, $arguments) {
     $return = array();

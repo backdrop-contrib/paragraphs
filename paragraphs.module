@@ -1115,6 +1115,9 @@ function paragraphs_field_get_entity(&$item, $bundle = NULL, $field_name = NULL)
  *   An associative array containing:
  *   - element: A render element representing the form element.
  *
+ * @return string
+ *   An html string.
+ *
  * @ingroup themeable
  */
 function theme_paragraphs_field_multiple_value_form($variables) {
