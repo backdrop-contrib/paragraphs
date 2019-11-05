@@ -8,7 +8,7 @@
  * Process variables for paragraphs-items.tpl.php
  */
 function template_preprocess_paragraphs_items(&$variables, $hook) {
-  $variables['view_mode'] = $variables['element']['#view_mode'];
+  $variables['view_mode'] = $variables['element']['#paragraphs_items_view_mode'];
   $variables['field_name'] = $variables['element']['#field_name'];
 
   $variables['content'] = $variables['element']['#children'];
