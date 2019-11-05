@@ -202,6 +202,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $weight++;
       }
 
+      $field_elements['#select_bundles'] = $select_bundles;
       if($removed_a_bundle && count($select_bundles) === 0) {
         $field_elements['add_more'] = array(
           '#type' => 'container',

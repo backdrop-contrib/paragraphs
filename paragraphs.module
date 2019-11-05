@@ -1248,12 +1248,28 @@ function theme_paragraphs_field_multiple_value_form($variables) {
     $output .= $field_content;
   }
   else {
-    $add_text = 'No @title_multiple added yet. Select a @title type and press the button below to add one.';
-    if ($add_mode == 'button') {
-      $add_text = 'No @title_multiple added yet. Select a @title type and press a button below to add one.';
+    $replacements = array(
+      '@title_multiple' => t('@title', array('@title' => $instance['settings']['title_multiple'])),
+      '@title' => t('@title', array('@title' => $instance['settings']['title'])),
+    );
+
+    if (count($element['#select_bundles']) === 1) {
+      if ($element['#cardinality'] == 1) {
+        $add_text = t('The @title has not been added yet. Press the button below to add it.', $replacements);
+      }
+      else {
+        $add_text = t('No @title_multiple added yet. Press the button below to add one.', $replacements);
+      }
     }
+    elseif ($add_mode == 'button') {
+      $add_text = t('No @title_multiple added yet. Select a @title type and press a button below to add one.', $replacements);
+    }
+    else {
+      $add_text = t('No @title_multiple added yet. Select a @title type and press the button below to add one.', $replacements);
+    }
+
     $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>";
-    $output .= '<p><em>' . t($add_text, array('@title_multiple' => t($instance['settings']['title_multiple']), '@title' => t($instance['settings']['title']))) . '</em></p>';
+    $output .= '<p><em>' . $add_text . '</em></p>';
   }
   $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
   $output .= '<div class="clearfix">' . drupal_render($add_more_button_type) . drupal_render($add_more_button) . '</div>';
