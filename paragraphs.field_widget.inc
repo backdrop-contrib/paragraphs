@@ -158,13 +158,13 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
       $explicitly_enabled = FALSE;
       foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
         if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
-          $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+          $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
 
           // If an item has been explicitly selected, raise our flag.
           $explicitly_enabled = TRUE;
         }
         elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
-          $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->name;
+          $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
         }
       }
 
@@ -173,7 +173,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         $select_bundles = $select_bundles_weighted;
         foreach ($available_bundles as $bundle) {
           if (!isset($select_bundles[$bundle->bundle])) {
-            $select_bundles[$bundle->bundle] = $bundle->name;
+            $select_bundles[$bundle->bundle] = $bundle->label;
           }
         }
       }
@@ -456,7 +456,7 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         '#weight' => -100,
       );
       $element['paragraph_bundle_title']['info'] = array(
-        '#markup' => t('@title type: %bundle', array('@title' => t($instance['settings']['title']), '%bundle' => $bundle_info->name)),
+        '#markup' => t('@title type: %bundle', array('@title' => t($instance['settings']['title']), '%bundle' => $bundle_info->label)),
       );
     }
 

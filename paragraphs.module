@@ -462,7 +462,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     $element['allowed_bundles_table'][$machine_name] = array(
       'enabled' => array(
         '#type' => 'checkbox',
-        '#title' => check_plain($bundle->name),
+        '#title' => check_plain($bundle->name) . ' <em>(' . check_plain($bundle->label) . ')</em>',
         '#title_display' => 'after',
         '#default_value' => $enabled,
       ),
@@ -967,6 +967,8 @@ function paragraphs_bundle_save($bundle) {
   $fields = array(
     'bundle' => (string) $bundle->bundle,
     'name' => (string) $bundle->name,
+    'label' => (string) $bundle->label,
+    'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
   );
 
@@ -1250,6 +1252,10 @@ function paragraphs_theme() {
       'template' => 'paragraphs-item',
       'path' => drupal_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
+    ),
+    'paragraphs_admin_overview' => array(
+      'variables' => array('bundle' => NULL),
+      'file' => 'paragraphs.admin.inc',
     ),
   );
 }

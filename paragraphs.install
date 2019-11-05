@@ -27,6 +27,21 @@ function paragraphs_schema() {
         'default' => '',
         'translatable' => TRUE,
       ),
+      'label' => array(
+        'description' => 'A user-facing label for this bundle.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'A brief description of this bundle.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'medium',
+        'translatable' => TRUE,
+      ),
       'locked' => array(
         'description' => 'A boolean indicating whether the administrator can change the machine name of this bundle.',
         'type' => 'int',
@@ -164,4 +179,37 @@ function paragraphs_update_7101() { }
 function paragraphs_update_7102() {
   module_load_include('module', 'paragraphs');
   paragraphs_ensure_entitycache_table();
+}
+
+/**
+ * Update {paragraphs_bundle} schema to include label and description fields.
+ */
+function paragraphs_update_7103() {
+  $fields = array(
+    'label' => array(
+      'description' => 'A user-facing label for this bundle.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'description' => array(
+      'description' => 'A brief description of this bundle.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'size' => 'medium',
+      'default' => NULL,
+    ),
+  );
+
+  foreach ($fields as $key => $field)  {
+    if (!db_field_exists('paragraphs_bundle', $key)) {
+      db_add_field('paragraphs_bundle', $key, $field);
+    }
+  }
+
+  // Set initial label value equal to name.
+  $query = db_update('paragraphs_bundle')
+    ->expression('label', 'name')
+    ->execute();
 }

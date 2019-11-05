@@ -48,6 +48,8 @@ function paragraphs_features_export_render($module, $data, $export = NULL) {
   $elements = array(
     'name' => FALSE,
     'bundle' => FALSE,
+    'label' => FALSE,
+    'description' => FALSE,
     'locked' => FALSE,
   );
   $output = array();
@@ -90,6 +92,8 @@ function paragraphs_features_revert($module = NULL) {
       $bundle->bundle = $type_info['bundle'];
       $bundle->locked = $type_info['locked'];
       $bundle->name = $type_info['name'];
+      $bundle->label = $type_info['label'];
+      $bundle->description = $type_info['description'];
       paragraphs_bundle_save($bundle);
     }
     paragraphs_bundle_load(NULL, TRUE);

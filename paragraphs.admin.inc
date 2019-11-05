@@ -26,13 +26,11 @@ function paragraphs_admin_bundle_overview() {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
 
-    $row = array(
-      array(
-        'data' => format_string('@bundle_name (@bundle_machine_name)', array(
-          '@bundle_name' => $bundle->name,
-          '@bundle_machine_name' => $bundle->bundle,
-        )),
-      )
+    $row = array(theme('paragraphs_admin_overview', array('bundle' => $bundle)));
+
+    // Edit bundle.
+    $row[] = array(
+      'data' => l(t('edit'), 'admin/structure/paragraphs/' . $type_url_str . '/edit')
     );
 
     if ($field_ui) {
@@ -48,13 +46,9 @@ function paragraphs_admin_bundle_overview() {
       );
     }
 
-    // Manage bundle.
-    $row[] = array(
-      'data' => l(t('edit bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/edit')
-    );
     // Delete bundle.
     $row[] = array(
-      'data' => l(t('delete bundle'), 'admin/structure/paragraphs/' . $type_url_str . '/delete')
+      'data' => l(t('delete'), 'admin/structure/paragraphs/' . $type_url_str . '/delete')
     );
 
     $rows[$bundle->bundle] = $row;
@@ -75,6 +69,32 @@ function paragraphs_admin_bundle_overview() {
 }
 
 /**
+ * Returns HTML for a paragraphs bundle description for the paragraphs admin
+ * overview page.
+ *
+ * @param array $variables
+ *   An array with one item, containing the paragraphs bundle object.
+ *   $variables['bundle'] is an object with the following properties:
+ *   - name: The human-readable name of the bundle.
+ *   - bundle: The machine name of the bundle.
+ *   - label: The bundle's label when displayed in edit forms.
+ *   - description: A text description of the bundle.
+ *
+ * @see paragraphs_admin_bundle_overview()
+ * @ingroup themeable
+ */
+function theme_paragraphs_admin_overview($variables) {
+  $bundle = $variables['bundle'];
+
+  $output = check_plain($bundle->name);
+  $output .= ($bundle->name != $bundle->label) ? ' [<em>' . check_plain($bundle->label) . '</em>]' : '';
+  $output .= ' <small>' . t('(Machine name: @bundle)', array('@bundle' => $bundle->bundle)) . '</small>';
+  $output .= !empty($bundle->description) ? '<div class="description">' . filter_xss_admin($bundle->description) . '</div>' : '';
+
+  return $output;
+}
+
+/**
  * Form to create or edit an paragraph bundle.
  */
 function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
@@ -84,6 +104,8 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     $bundle = new stdClass();
     $bundle->name = '';
     $bundle->bundle = '';
+    $bundle->label = '';
+    $bundle->description = '';
     $bundle->locked = 0;
   }
   else {
@@ -104,19 +126,31 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     '#size' => 30,
   );
 
-  if (!$bundle->locked) {
+  $form['bundle'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => $bundle->bundle,
+    '#maxlength' => 32,
+    '#disabled' => $bundle->locked,
+    '#machine_name' => array(
+      'exists' => 'paragraphs_bundle_load',
+    ),
+    '#description' => t('A unique machine-readable name for this paragraph bundle. It must only contain lowercase letters, numbers, and underscores.'),
+  );
 
-    $form['bundle'] = array(
-      '#type' => 'machine_name',
-      '#default_value' => $bundle->bundle,
-      '#maxlength' => 32,
-      '#disabled' => $bundle->locked,
-      '#machine_name' => array(
-        'exists' => 'paragraphs_bundle_load',
-      ),
-      '#description' => t('A unique machine-readable name for this paragraph bundle. It must only contain lowercase letters, numbers, and underscores.'),
-    );
-  }
+  $form['label'] = array(
+    '#title' => t('Label'),
+    '#type' => 'textfield',
+    '#default_value' => $bundle->label,
+    '#description' => t('The label for this bundle as it will appear to users on edit forms. Defaults to bundle name if left empty.'),
+    '#size' => 30,
+  );
+
+  $form['description'] = array(
+    '#title' => t('Description'),
+    '#type' => 'textarea',
+    '#default_value' => $bundle->description,
+    '#description' => t('Describe this bundle. The text will be displayed on the Paragraphs admin overview page.'),
+  );
 
   $form['locked'] = array(
     '#type' => 'value',
@@ -172,6 +206,11 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
+
+  // Set bundle label equal to name if empty.
+  $bundle->label = empty($form_state['values']['label']) ? $bundle->name : trim($form_state['values']['label']);
+
+  $bundle->description = trim($form_state['values']['description']);
 
   $variables = $form_state['values'];
 
