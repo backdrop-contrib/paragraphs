@@ -366,56 +366,6 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
-  $items['paragraphs/edit/ajax'] = array(
-    'title' => 'Edit item callback',
-    'page callback' => 'paragraphs_edit_js',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'theme callback' => 'ajax_base_page_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'paragraphs.ajax.inc',
-  );
-
-  $items['paragraphs/collapse/ajax'] = array(
-    'title' => 'Close item callback',
-    'page callback' => 'paragraphs_collapse_js',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'theme callback' => 'ajax_base_page_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'paragraphs.ajax.inc',
-  );
-
-  $items['paragraphs/remove/ajax'] = array(
-    'title' => 'Remove item callback',
-    'page callback' => 'paragraphs_remove_js',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'theme callback' => 'ajax_base_page_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'paragraphs.ajax.inc',
-  );
-
-  $items['paragraphs/deleteconfirm/ajax'] = array(
-    'title' => 'Remove item callback',
-    'page callback' => 'paragraphs_deleteconfirm_js',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'theme callback' => 'ajax_base_page_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'paragraphs.ajax.inc',
-  );
-
-  $items['paragraphs/restore/ajax'] = array(
-    'title' => 'Restore item callback',
-    'page callback' => 'paragraphs_restore_js',
-    'delivery callback' => 'ajax_deliver',
-    'access callback' => TRUE,
-    'theme callback' => 'ajax_base_page_theme',
-    'type' => MENU_CALLBACK,
-    'file' => 'paragraphs.ajax.inc',
-  );
-
   return $items;
 }
 

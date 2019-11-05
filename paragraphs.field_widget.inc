@@ -87,6 +87,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
         '#description' => $multiple ? '' : $description,
         '#delta' => $delta,
         '#weight' => $delta,
+        '#wrapper_id' => $wrapper_id,
       );
       if ($element = $function($form, $form_state, $field, $instance, $langcode, $items, $delta, $element)) {
         // Input field for the delta (drag-n-drop reordering).
@@ -499,8 +500,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
             '#submit' => array('paragraphs_collapse_submit'),
             '#limit_validation_errors' => array($parents),
             '#ajax' => array(
-              'path' => 'paragraphs/collapse/ajax',
+              'callback' => '_paragraphs_ajax_update_callback',
               'effect' => 'fade',
+              'wrapper' => $element['#wrapper_id'],
             ),
             '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
             '#weight' => 999,
@@ -542,8 +544,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           '#submit' => array('paragraphs_edit_submit'),
           '#limit_validation_errors' => array(),
           '#ajax' => array(
-            'path' => 'paragraphs/edit/ajax',
+            'callback' => '_paragraphs_ajax_update_callback',
             'effect' => 'fade',
+            'wrapper' => $element['#wrapper_id'],
           ),
           '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
           '#weight' => 999,
@@ -561,8 +564,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
           '#submit' => array('paragraphs_remove_submit'),
           '#limit_validation_errors' => array(),
           '#ajax' => array(
-            'path' => 'paragraphs/remove/ajax',
+            'callback' => '_paragraphs_ajax_update_callback',
             'effect' => 'fade',
+            'wrapper' => $element['#wrapper_id'],
           ),
           '#access' => entity_access('delete', 'paragraphs_item', $paragraph_item),
           '#weight' => 1000,
@@ -619,8 +623,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         '#submit' => array('paragraphs_restore_submit'),
         '#limit_validation_errors' => array(),
         '#ajax' => array(
-          'path' => 'paragraphs/restore/ajax',
+          'callback' => '_paragraphs_ajax_update_callback',
           'effect' => 'fade',
+          'wrapper' => $element['#wrapper_id'],
         ),
         '#weight' => 1000,
       );
@@ -633,8 +638,9 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
         '#submit' => array('paragraphs_deleteconfirm_submit'),
         '#limit_validation_errors' => array(),
         '#ajax' => array(
-          'path' => 'paragraphs/deleteconfirm/ajax',
+          'callback' => '_paragraphs_ajax_update_callback',
           'effect' => 'fade',
+          'wrapper' => $element['#wrapper_id'],
         ),
         '#weight' => 1001,
       );
@@ -650,6 +656,19 @@ function paragraphs_field_widget_form_build(&$form, &$form_state, $field, $insta
   return $element;
 }
 
+/**
+ * FAPI #ajax callback to update a paragraphs item.
+ */
+function _paragraphs_ajax_update_callback($form, $form_state) {
+  // Get the information on what we're updating.
+  $button = $form_state['triggering_element'];
+
+  // Go three levels up in the form, to the whole widget.
+  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+
+  // Send back the rendered element and let Drupal wrap it in an AJAX command.
+  return drupal_render($element);
+}
 
 /**
  * FAPI #after_build of an individual paragraph element to delay the validation of #required.
