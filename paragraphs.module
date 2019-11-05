@@ -1027,10 +1027,13 @@ function paragraphs_item_set_host_entity($item, $property_name, $wrapper) {
 
 /**
  * Entity property info getter callback for the host entity property.
+ *
+ * As the property is of type 'entity', we have to return a wrapped entity.
  */
 function paragraphs_item_get_host_entity($item) {
-  // As the property is defined as 'entity', we have to return a wrapped entity.
-  return entity_metadata_wrapper($item->hostEntityType(), $item->hostEntity());
+  // We need to call hostEntity() first, because it sets the hostEntityType.
+  $entity = $item->hostEntity();
+  return entity_metadata_wrapper($item->hostEntityType(), $entity);
 }
 
 /**
