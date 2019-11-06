@@ -1065,6 +1065,7 @@ function paragraphs_entity_metadata_property_callback(&$info, $entity_type, $fie
 
   $property['field_name'] = $field['field_name'];
   $property['getter callback'] = 'paragraphs_field_property_get';
+  $property['setter callback'] = 'paragraphs_field_property_set';
 }
 
 /**
@@ -1092,6 +1093,42 @@ function paragraphs_field_property_get($entity, array $options, $name, $entity_t
   }
   // For an empty single-valued field, we have to return NULL.
   return $field['cardinality'] == 1 ? ($values ? reset($values) : NULL) : $values;
+}
+
+/**
+ * Entity property info setter callback for the paragraph items.
+ *
+ * Like entity_metadata_field_property_set(), but supports setting items with
+ * revision identifiers.
+ */
+function paragraphs_field_property_set($entity, $name, $value, $langcode, $entity_type) {
+  $field = field_info_field($name);
+  $columns = array_keys($field['columns']);
+  $langcode = entity_metadata_field_get_language($entity_type, $entity, $field, $langcode);
+  $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
+
+  $items = array();
+  foreach ($values as $delta => $value) {
+    if (isset($value)) {
+      if ($value instanceof ParagraphsItemEntity) {
+        $items[$delta][$columns[0]] = $value->item_id;
+        $items[$delta][$columns[1]] = $value->revision_id;
+      }
+      elseif (is_array($value) && isset($value['value']) && isset($value['revision_id'])) {
+        $items[$delta][$columns[0]] = $value['value'];
+        $items[$delta][$columns[1]] = $value['revision_id'];
+      }
+      else {
+        $item = paragraphs_item_load($value);
+        $items[$delta][$columns[0]] = $item->item_id;
+        $items[$delta][$columns[1]] = $item->revision_id;
+      }
+    }
+  }
+  $entity->{$name}[$langcode] = $items;
+  // Empty the static field language cache, so the field system picks up any
+  // possible new languages.
+  drupal_static_reset('field_language');
 }
 
 /**
