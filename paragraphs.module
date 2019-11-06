@@ -285,13 +285,32 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
       return $parent_permissions[$account->uid][$parent_cid][$check_parent_op];
     }
 
-    if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
-      $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
-    } else {
-      // Deny access as parent entity access failed.
-      $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
-      $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+    // We need to use node_access over node's entity_access permission check
+    // because entity_access will fallback to checking revision permissions when
+    // trying to update paragraph items in a node revision.
+    if ($entity->hostEntityType() == 'node') {
+      // We assume that any node without a nid is being created and check
+      // permissions against the node bundle.
+      if (!isset($host_entity->nid) && node_access($check_parent_op, $entity->hostEntityBundle())) {
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+      }
+      elseif (isset($host_entity->nid) && node_access($check_parent_op, $host_entity)) {
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+      }
+      else {
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+      }
+    }
+    else {
+      if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+        $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
+      }
+      else {
+        // Deny access as parent entity access failed.
+        $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+        $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_DENY;
+      }
     }
   } else {
     // Ignore access when we don't have a host entity.
