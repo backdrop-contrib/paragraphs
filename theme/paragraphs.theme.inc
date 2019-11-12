@@ -1,11 +1,12 @@
 <?php
+
 /**
  * @file
  * Default theme functions for paragraphs.
  */
 
 /**
- * Process variables for paragraphs-items.tpl.php
+ * Process variables for paragraphs-items.tpl.php.
  */
 function template_preprocess_paragraphs_items(&$variables, $hook) {
   $variables['view_mode'] = $variables['element']['#paragraphs_items_view_mode'];

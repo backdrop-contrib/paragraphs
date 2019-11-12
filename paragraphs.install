@@ -171,7 +171,8 @@ function paragraphs_update_7100() {
 /**
  * Deprecated. Functionality is now in 7102.
  */
-function paragraphs_update_7101() { }
+function paragraphs_update_7101() {
+}
 
 /**
  * Make sure the entitycache table exists.
@@ -202,14 +203,14 @@ function paragraphs_update_7103() {
     ),
   );
 
-  foreach ($fields as $key => $field)  {
+  foreach ($fields as $key => $field) {
     if (!db_field_exists('paragraphs_bundle', $key)) {
       db_add_field('paragraphs_bundle', $key, $field);
     }
   }
 
   // Set initial label value equal to name.
-  $query = db_update('paragraphs_bundle')
+  db_update('paragraphs_bundle')
     ->expression('label', 'name')
     ->execute();
 }

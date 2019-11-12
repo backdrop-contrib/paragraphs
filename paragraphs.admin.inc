@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Admin functions for the paragraphs module.
@@ -19,7 +20,7 @@ function paragraphs_admin_bundle_overview() {
 
   $header = array(
     t('Bundle name'),
-    array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2')
+    array('data' => t('Operations'), 'colspan' => $field_ui ? '4' : '2'),
   );
   $rows = array();
   foreach ($bundles as $bundle) {
@@ -30,25 +31,25 @@ function paragraphs_admin_bundle_overview() {
 
     // Edit bundle.
     $row[] = array(
-      'data' => l(t('edit'), 'admin/structure/paragraphs/' . $type_url_str . '/edit')
+      'data' => l(t('edit'), 'admin/structure/paragraphs/' . $type_url_str . '/edit'),
     );
 
     if ($field_ui) {
 
       // Manage fields.
       $row[] = array(
-        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields')
+        'data' => l(t('manage fields'), 'admin/structure/paragraphs/' . $type_url_str . '/fields'),
       );
 
       // Display fields.
       $row[] = array(
-        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display')
+        'data' => l(t('manage display'), 'admin/structure/paragraphs/' . $type_url_str . '/display'),
       );
     }
 
     // Delete bundle.
     $row[] = array(
-      'data' => l(t('delete'), 'admin/structure/paragraphs/' . $type_url_str . '/delete')
+      'data' => l(t('delete'), 'admin/structure/paragraphs/' . $type_url_str . '/delete'),
     );
 
     $rows[$bundle->bundle] = $row;
@@ -69,8 +70,7 @@ function paragraphs_admin_bundle_overview() {
 }
 
 /**
- * Returns HTML for a paragraphs bundle description for the paragraphs admin
- * overview page.
+ * Returns HTML for a paragraphs bundle description.
  *
  * @param array $variables
  *   An array with one item, containing the paragraphs bundle object.
@@ -83,7 +83,7 @@ function paragraphs_admin_bundle_overview() {
  * @see paragraphs_admin_bundle_overview()
  * @ingroup themeable
  */
-function theme_paragraphs_admin_overview($variables) {
+function theme_paragraphs_admin_overview(array $variables) {
   $bundle = $variables['bundle'];
 
   $output = check_plain($bundle->name);
@@ -95,12 +95,22 @@ function theme_paragraphs_admin_overview($variables) {
 }
 
 /**
- * Form to create or edit an paragraph bundle.
+ * Form to create or edit an paragraphs bundle.
+ *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ * @param object $bundle
+ *   The bundle.
+ *
+ * @return array
+ *   The form structure array.
  */
-function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
+function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle = NULL) {
 
   if (!isset($bundle) && !$bundle) {
-    // This is a new bundle
+    // This is a new bundle.
     $bundle = new stdClass();
     $bundle->name = '';
     $bundle->bundle = '';
@@ -170,9 +180,14 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
 /**
  * Form validation handler for paragraphs_admin_bundle_form().
  *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ *
  * @see paragraphs_admin_bundle_form_submit()
  */
-function paragraphs_admin_bundle_form_validate($form, &$form_state) {
+function paragraphs_admin_bundle_form_validate(array $form, array &$form_state) {
   $bundle = new stdClass();
   $bundle->name = trim($form_state['values']['name']);
 
@@ -190,9 +205,14 @@ function paragraphs_admin_bundle_form_validate($form, &$form_state) {
 /**
  * Submit handler for paragraphs_admin_bundle_form().
  *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ *
  * @see paragraphs_admin_bundle_form()
  */
-function paragraphs_admin_bundle_form_submit($form, &$form_state) {
+function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
 
   $bundle = new stdClass();
 
@@ -224,7 +244,6 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
 
   unset($variables['form_token'], $variables['op'], $variables['submit'], $variables['delete'], $variables['reset'], $variables['form_id'], $variables['form_build_id']);
 
-
   $status = paragraphs_bundle_save($bundle);
 
   $t_args = array('%name' => $bundle->name);
@@ -238,15 +257,21 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   }
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
-  return;
 }
 
 /**
- * Menu callback; delete a single paragraph bundle
+ * Menu callback to delete a single paragraph bundle.
+ *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ * @param object $bundle
+ *   The bundle.
  *
  * @ingroup forms
  */
-function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
+function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $bundle) {
   if (!$bundle) {
     drupal_set_message(t('Could not load bundle'), 'error');
     drupal_goto('admin/structure/paragraphs');
@@ -262,11 +287,16 @@ function paragraphs_admin_bundle_delete_form($form, &$form_state, $bundle) {
 }
 
 /**
- * Process paragraph bundle delete confirm submissions.
+ * Process and confirm paragraphs bundle deletion.
+ *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
  *
  * @see paragraphs_admin_bundle_delete_form()
  */
-function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
+function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_state) {
   paragraphs_bundle_delete($form_state['values']['type']);
 
   $t_args = array('%name' => $form_state['values']['name']);
@@ -274,16 +304,16 @@ function paragraphs_admin_bundle_delete_form_submit($form, &$form_state) {
   watchdog('paragraphs', 'Deleted paragraph bundle %name.', $t_args, WATCHDOG_NOTICE);
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
-  return;
 }
 
 /**
  * Helper to get the title of a bundle.
  *
- * @param $bundle
+ * @param object $bundle
  *   The bundle.
  *
  * @return string
+ *   A paragraphs bundle title.
  */
 function paragraphs_bundle_title_callback($bundle) {
   return t('Edit Paragraph Bundle !name', array('!name' => $bundle->name));

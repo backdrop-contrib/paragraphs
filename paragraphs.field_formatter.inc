@@ -13,7 +13,7 @@ function paragraphs_field_formatter_info() {
     'paragraphs_view' => array(
       'label' => t('Paragraphs items'),
       'field types' => array('paragraphs'),
-      'settings' =>  array(
+      'settings' => array(
         'view_mode' => 'full',
       ),
     ),
@@ -56,11 +56,10 @@ function paragraphs_field_formatter_settings_summary($field, $instance, $view_mo
   $settings = $display['settings'];
   $output = array();
 
-
   if ($display['type'] == 'paragraphs_view') {
     $entity_type = entity_get_info('paragraphs_item');
     if (!empty($entity_type['view modes'][$settings['view_mode']]['label'])) {
-      $output[] =  t('View mode: @mode', array('@mode' => $entity_type['view modes'][$settings['view_mode']]['label']));
+      $output[] = t('View mode: @mode', array('@mode' => $entity_type['view modes'][$settings['view_mode']]['label']));
     }
     else {
       $output[] = ' ';
@@ -75,7 +74,6 @@ function paragraphs_field_formatter_settings_summary($field, $instance, $view_mo
  */
 function paragraphs_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
-  $settings = $display['settings'];
 
   switch ($display['type']) {
     case 'paragraphs_view':

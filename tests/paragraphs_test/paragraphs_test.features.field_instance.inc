@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * paragraphs_test.features.field_instance.inc
@@ -10,7 +11,7 @@
 function paragraphs_test_field_default_field_instances() {
   $field_instances = array();
 
-  // Exported field_instance: 'node-paragraph_test-field_paragraphs'
+  // Exported field_instance: 'node-paragraph_test-field_paragraphs'.
   $field_instances['node-paragraph_test-field_paragraphs'] = array(
     'bundle' => 'paragraph_test',
     'default_value' => NULL,
@@ -59,7 +60,7 @@ function paragraphs_test_field_default_field_instances() {
     ),
   );
 
-  // Exported field_instance: 'paragraphs_item-ptest-field_ptest_text'
+  // Exported field_instance: 'paragraphs_item-ptest-field_ptest_text'.
   $field_instances['paragraphs_item-ptest-field_ptest_text'] = array(
     'bundle' => 'ptest',
     'default_value' => NULL,

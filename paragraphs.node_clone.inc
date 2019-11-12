@@ -19,7 +19,7 @@ function paragraphs_clone_node_alter(&$node, $context) {
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_BASE_FORM_ID_alter().
  */
 function paragraphs_form_node_form_alter(&$form, &$form_state, $form_id) {
   // Alter the node edit forms for cloned nodes.
@@ -62,14 +62,14 @@ function paragraphs_clone_items($entity_type, &$entity, $field_name, $language =
   if (!is_array($old_items)) {
     $old_items = array($old_items);
   }
-  $old_items = array_map(function($item) {
+  $old_items = array_map(function ($item) {
     return paragraphs_item_load($item['value']);
   }, $old_items);
 
   unset($entity->{$field_name}[$language]);
 
   foreach ($old_items as $old_item) {
-    list( , , $bundle) = entity_extract_ids('paragraphs_item', $old_item);
+    list(, , $bundle) = entity_extract_ids('paragraphs_item', $old_item);
 
     /* @var $new_item ParagraphsItemEntity */
     $new_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));

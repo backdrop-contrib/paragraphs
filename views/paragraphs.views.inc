@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Views implementations for paragraphs.
@@ -34,14 +35,18 @@ function paragraphs_field_views_data($field) {
     $entity_info = entity_get_info($entity_type);
     $pseudo_field_name = $field['field_name'] . '_' . $entity_type;
 
-    list($label, $all_labels) = field_views_field_label($field['field_name']);
+    list($label) = field_views_field_label($field['field_name']);
     $entity = $entity_info['label'];
     if ($entity == t('Node')) {
       $entity = t('Content');
     }
 
     $data['paragraphs_item'][$pseudo_field_name]['relationship'] = array(
-      'title' => t('Entity with the @field (@field_name)', array('@entity' => $entity, '@field' => $label, '@field_name' => $field['field_name'])),
+      'title' => t('Entity with the @field (@field_name)', array(
+        '@entity' => $entity,
+        '@field' => $label,
+        '@field_name' => $field['field_name'],
+      )),
       'help' => t('Relate each @entity using @field.', array('@entity' => $entity, '@field' => $label)),
       'handler' => 'views_handler_relationship_entity_reverse',
       'field_name' => $field['field_name'],
