@@ -1009,8 +1009,6 @@ function paragraphs_bundle_save($bundle) {
   $fields = array(
     'bundle' => (string) $bundle->bundle,
     'name' => (string) $bundle->name,
-    'icon' => $bundle->icon,
-    'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
   );
 

@@ -11,7 +11,13 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
   $variables['view_mode'] = $variables['element']['#view_mode'];
   $variables['field_name'] = $variables['element']['#field_name'];
 
-  $variables['content'] = $variables['element']['#children'];
+  foreach (element_children($variables['element']) as $key) {
+    foreach (element_children($variables['element'][$key]['entity']['paragraphs_item']) as $key2) {
+      foreach (element_children($variables['element'][$key]['entity']['paragraphs_item'][$key2]) as $field_name) {
+        $variables['content'][$key2][$field_name] = $variables['element'][$key]['entity']['paragraphs_item'][$key2][$field_name];
+      }
+    }
+  }
 
   $variables['classes_array'][] = backdrop_html_class('paragraphs-items-' . $variables['element']['#field_name']);
   $variables['classes_array'][] = backdrop_html_class('paragraphs-items-' . $variables['element']['#field_name'] . '-' . $variables['view_mode']);
@@ -29,7 +35,11 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['view_mode'] = $variables['elements']['entity']['paragraphs_item'][$key]['#view_mode'];
   $variables['bundle'] = $variables['elements']['entity']['paragraphs_item'][$key]['#bundle'];
 
-  $variables['content'] = $variables['elements']['#children'];
+  foreach (element_children($variables['elements']['entity']['paragraphs_item']) as $key) {
+    foreach (element_children($variables['elements']['entity']['paragraphs_item'][$key]) as $field_name) {
+      $variables['content'][$field_name] = $variables['elements']['entity']['paragraphs_item'][$key][$field_name];
+    }
+  }
 
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $variables['bundle']);
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $variables['bundle'] . '-' . $variables['view_mode']);

@@ -27,6 +27,6 @@
 
 <div class="<?php print implode(' ', $classes); ?>"<?php print backdrop_attributes($attributes); ?>>
   <?php
-    print $content;
+    print render($content);
   ?>
 </div>

@@ -18,9 +18,8 @@ function paragraphs_admin_bundle_overview() {
   $field_ui = module_exists('field_ui');
 
   $header = array(
-    t('Icon'),
     t('Label'),
-    t('Description'),
+    t('Machine Name'),
     t('Operations'),
   );
   $rows = array();
@@ -28,25 +27,12 @@ function paragraphs_admin_bundle_overview() {
   foreach ($bundles as $bundle) {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
-    $label = '<div class="paragraphs-label">' . $bundle->name .
-      '</div><div class="paragraphs-machine-name">(' . $bundle->bundle . ')</div>';
-    $iconfile = file_load($bundle->icon);
-    $iconrender = theme('image_style', array(
-      'style_name' => 'thumbnail',
-      'uri' => $iconfile->uri,
-      'attributes' => array(
-        'class' => 'paragraphs-icon',
-        ),
-      ));
     $row = array(
       array(
-        'data' => $iconrender,
+        'data' => $bundle->name,
       ),
       array(
-        'data' => $label,
-      ),
-      array(
-        'data' => $bundle->description,
+        'data' => $bundle->bundle,
       ),
     );
 
@@ -130,25 +116,6 @@ function paragraphs_admin_bundle_form($form, &$form_state, $bundle = NULL) {
     '#size' => 30,
   );
 
-  $form['icon'] = array(
-    '#title' => t('Icon'),
-    '#type' => 'managed_file',
-    '#default_value' => $bundle->icon,
-    '#upload_location' => 'public://paragraph_icons/',
-    '#description' => t('Paragraph type icon.'),
-    '#required' => FALSE,
-    '#size' => 40,
-  );
-
-  $form['description'] = array(
-    '#title' => t('Description'),
-    '#type' => 'textarea',
-    '#default_value' => $bundle->description,
-    '#description' => t('This text will be displayed on the <em>Add new paragraph</em> page.'),
-    '#required' => FALSE,
-    '#size' => 30,
-  );
-
   if (!$bundle->locked) {
 
     $form['bundle'] = array(
@@ -217,14 +184,6 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
-  $bundle->description = trim($form_state['values']['description']);
-  $bundle->icon = trim($form_state['values']['icon']);
-
-  // Make file permanent
-  $file = file_load($form_state['values']['icon']);
-  $file->status = FILE_STATUS_PERMANENT;
-  file_save($file);
-  file_usage_add($file, 'paragraphs', 'paragraphs_type_icon', $form_state['values']['icon']);
 
   $variables = $form_state['values'];
 
@@ -237,7 +196,6 @@ function paragraphs_admin_bundle_form_submit($form, &$form_state) {
   }
 
   unset($variables['form_token'], $variables['op'], $variables['submit'], $variables['delete'], $variables['reset'], $variables['form_id'], $variables['form_build_id']);
-
 
   $status = paragraphs_bundle_save($bundle);
 
