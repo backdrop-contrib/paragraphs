@@ -715,7 +715,7 @@ function paragraphs_field_widget_embed_validate($element, &$form_state, $complet
 
           // Copied from _form_validate().
           if (isset($elements['#needs_validation'])) {
-            $is_empty_multiple = (!count($elements['#value']));
+            $is_empty_multiple = (is_array($elements['#value']) && !count($elements['#value']));
             $is_empty_string = (is_string($elements['#value']) && backdrop_strlen(trim($elements['#value'])) == 0);
             $is_empty_value = ($elements['#value'] === 0);
             if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
