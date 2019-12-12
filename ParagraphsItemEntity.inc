@@ -210,7 +210,7 @@ class ParagraphsItemEntity extends Entity {
     }
     // We are create a new paragraphs for a non-default entity, thus
     // set archived to TRUE.
-    if (!paragraphs_entity_revision_is_default($entity_type, $entity)) {
+    if (!entity_plus_revision_is_default($entity_type, $entity)) {
       $this->hostEntityId = FALSE;
       $this->archived = TRUE;
     }
@@ -311,7 +311,7 @@ class ParagraphsItemEntity extends Entity {
             $this->hostEntity = entity_load($this->hostEntityType, $this->hostEntityId);
           }
           elseif ($this->hostEntityRevisionId) {
-            $this->hostEntity = entity_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
+            $this->hostEntity = entity_plus_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
           }
 
           $this->fetchedHostEntityDetails = TRUE;
@@ -414,7 +414,7 @@ class ParagraphsItemEntity extends Entity {
       if (!empty($this->revision) || !empty($this->is_new_revision)) {
         $host_entity->revision = TRUE;
         if (!empty($this->default_revision)) {
-          entity_revision_set_default($this->hostEntityType, $host_entity);
+          entity_plus_revision_set_default($this->hostEntityType, $host_entity);
         }
       }
       // Set the host entity reference, so the item will be saved with the host.
@@ -462,7 +462,7 @@ class ParagraphsItemEntity extends Entity {
     }
 
     if (!empty($this->default_revision)) {
-      paragraphs_entity_revision_delete('paragraphs_item', $this->revision_id);
+      entity_plus_revision_delete('paragraphs_item', $this->revision_id);
     }
     // If deleting the default revision, take care!
     else {
@@ -483,7 +483,7 @@ class ParagraphsItemEntity extends Entity {
           ->condition('item_id', $this->item_id)
           ->execute();
         entity_get_controller('paragraphs_item')->resetCache(array($this->item_id));
-        paragraphs_entity_revision_delete('paragraphs_item', $this->revision_id);
+        entity_plus_revision_delete('paragraphs_item', $this->revision_id);
       }
     }
   }

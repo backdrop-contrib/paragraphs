@@ -49,26 +49,6 @@ function paragraphs_item_load($item_id, $reset = FALSE) {
 }
 
 /**
- * Loads a paragraphs revision.
- *
- * @param $revision_id
- *   The paragraphs revision ID.
- * @return ParagraphsItemEntity
- *   The paragraphs item entity or FALSE.
- */
-function paragraphs_item_revision_load($revision_id) {
-  //Note: [Temporarily?] duplicating entity_revision_load functionality. If this
-  //gets into core (https://github.com/backdrop/backdrop-issues/issues/3777)
-  //or we make a dependency on Entity Plus we could revert.
-  $info = entity_get_info('paragraphs_item');
-  if (!empty($info['entity keys']['revision'])) {
-    $entity_revisions = entity_load('paragraphs_item', FALSE, array($info['entity keys']['revision'] => $revision_id));
-    return reset($entity_revisions);
-  }
-  return FALSE;
-}
-
-/**
  * Loads paragraphs items.
  *
  * @param $ids
@@ -102,7 +82,7 @@ function paragraphs_entity_info() {
     'label callback' => 'entity_class_label',
     'uri callback' => 'entity_class_uri',
     'entity class' => 'ParagraphsItemEntity',
-    'controller class' => 'ParagraphsItemController',
+    'controller class' => 'EntityPlusController',
     'base table' => 'paragraphs_item',
     'revision table' => 'paragraphs_item_revision',
     'fieldable' => TRUE,
@@ -130,6 +110,7 @@ function paragraphs_entity_info() {
       'bundle' => 'bundle',
     ),
     'access callback' => 'paragraphs_item_access',
+    'metadata controller class' => 'ParagraphsItemMetadataController',
   );
 
   $bundles = paragraphs_bundle_load();
@@ -293,7 +274,7 @@ function paragraphs_paragraphs_item_access($entity, $op, $account) {
       return $parent_permissions[$account->uid][$parent_cid][$check_parent_op];
     }
 
-    if (paragraphs_entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
+    if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
       $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
       $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
     }
@@ -745,7 +726,7 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
       // If the host entity supports revisions and is saved as new revision, do the same for the item.
       if (!empty($host_entity->revision)) {
         $entity->revision = TRUE;
-        $is_default = paragraphs_entity_revision_is_default($host_entity_type, $host_entity);
+        $is_default = entity_plus_revision_is_default($host_entity_type, $host_entity);
         // If an entity type does not support saving non-default entities,
         // assume it will be saved as default.
         if (!isset($is_default) || $is_default) {
@@ -1426,122 +1407,10 @@ function paragraphs_modules_uninstalled($modules) {
 function paragraphs_autoload_info() {
   return array(
     'ParagraphsItemEntity' => 'ParagraphsItemEntity.inc',
-    'ParagraphsItemController' => 'ParagraphsItemController.inc',
+    'ParagraphsItemMetadataController' => 'ParagraphsItemMetadataController.inc',
     'MigrateDestinationParagraphsItem' => 'migrate/destinations/MigrateDestinationParagraphsItem.inc',
     'ParagraphsMigrateParagraphsFieldHandler' => 'migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc',
     'PanelizerEntityParagraphsItem' => 'plugins/panelizer/entity/PanelizerEntityParagraphsItem.class.php',
     'paragraphs_handler_relationship' => 'views/paragraphs_handler_relationship.inc',
   );
-}
-
-function paragraphs_entity_revision_is_default($entity_type, $entity) {
-  $info = entity_get_info($entity_type);
-  if (empty($info['entity keys']['revision'])) {
-    return TRUE;
-  }
-  // Newly created entities will always be created in default revision.
-  if (!empty($entity->is_new) || empty($entity->{$info['entity keys']['id']})) {
-    return TRUE;
-  }
-  $default = entity_load($entity_type, $entity->{$info['entity keys']['id']});
-  return $default->{$info['entity keys']['revision']} == $entity->{$info['entity keys']['revision']};
-}
-
-/**
- * Deletes an entity revision.
- *
- * @param $entity_type
- *   The type of the entity.
- * @param $revision_id
- *   The revision ID to delete.
- *
- * @return
- *   TRUE if the entity revision could be deleted, FALSE otherwise.
- */
-function paragraphs_entity_revision_delete($entity_type, $revision_id) {
-  $info = entity_get_info($entity_type);
-  if (isset($info['revision deletion callback'])) {
-    return $info['revision deletion callback']($revision_id, $entity_type);
-  }
-  else {
-    return entity_get_controller($entity_type)->deleteRevision($revision_id);
-  }
-}
-
-
-/**
- * This recreates D7 Entity API entity_access and will need to go once that
- * function is in core.
- */
-function paragraphs_entity_access($op, $entity_type, $entity = NULL, $account = NULL) {
-  if (($info = entity_get_info()) && isset($info[$entity_type]['access callback'])) {
-    return $info[$entity_type]['access callback']($op, $entity, $account, $entity_type);
-  }
-  else {
-    switch ($entity_type) {
-      case 'node':
-        if (isset($entity)) {
-          return node_access($op, $entity, $account);
-        }
-        // Is access to all nodes allowed?
-        if (!user_access('access content', $account)) {
-          return FALSE;
-        }
-        if (user_access('bypass node access', $account) || (!isset($account) && $op == 'view' && node_access_view_all_nodes())) {
-          return TRUE;
-        }
-        return FALSE;
-        break;
-      case 'user':
-        $account = isset($account) ? $account : $GLOBALS['user'];
-        // Grant access to the users own user account and to the anonymous one.
-        if (isset($entity) && $op != 'delete' && (($entity->uid == $account->uid && $entity->uid) || (!$entity->uid && $op == 'view'))) {
-          return TRUE;
-        }
-        if (user_access('administer users', $account) || user_access('access user profiles', $account) && $op == 'view' && $entity->status) {
-          return TRUE;
-        }
-        return FALSE;
-        break;
-      case 'comment':
-        // When determining access to a comment, 'comment_access' does not take any
-        // access restrictions to the comment's associated node into account. If a
-        // comment has an associated node, the user must be able to view it in order
-        // to access the comment.
-        if (isset($entity->nid)) {
-          if (!entity_access('view', 'node', node_load($entity->nid), $account)) {
-            return FALSE;
-          }
-        }
-        if (isset($entity) && $op == 'update') {
-          // Because 'comment_access' only checks the current user, we need to do our
-          // own access checking if an account was specified.
-          if (!isset($account)) {
-            return comment_access('edit', $entity);
-          }
-          else {
-            return ($account->uid && $account->uid == $entity->uid && $entity->status == COMMENT_PUBLISHED && user_access('edit own comments', $account)) || user_access('administer comments', $account);
-          }
-        }
-        if (user_access('administer comments', $account) || user_access('access comments', $account) && $op == 'view') {
-          return TRUE;
-        }
-        return FALSE;
-        break;
-      case 'taxonomy_term':
-      case 'taxonomy_vocabulary':
-        if ($entity_type == 'taxonomy_vocabulary') {
-          return user_access('administer taxonomy', $account);
-        }
-        $taxonomy_term_edit_access = user_access("edit terms in $entity->vocabulary") || user_access('administer taxonomy');
-        if (isset($entity) && $op == 'edit' && !isset($account) && $taxonomy_term_edit_access) {
-          return TRUE;
-        }
-        if (user_access('administer taxonomy', $account) || user_access('access content', $account) && $op == 'view') {
-          return TRUE;
-        }
-        return FALSE;
-        break;
-    }
-  }
 }
