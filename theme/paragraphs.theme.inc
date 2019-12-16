@@ -33,7 +33,7 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $bundle = $variables['elements']['entity']['paragraphs_item'][$children[0]]['#bundle'];
 
   $variables['view_mode'] = $view_mode;
-  $variables['field_name'] = $field_name;
+  $variables['bundle'] = $bundle;
   
   $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$children[0]];
 
