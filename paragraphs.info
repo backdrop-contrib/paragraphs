@@ -6,4 +6,4 @@ package = Paragraphs
 
 stylesheets[all][] = css/paragraphs.css
 dependencies[] = entity
-dependencies[] = entity_plus
+dependencies[] = entity_plus (>=1.0.5)
