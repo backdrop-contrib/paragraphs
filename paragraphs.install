@@ -126,6 +126,26 @@ function paragraphs_field_schema($field) {
 }
 
 /**
+ * Implements hook_requirements().
+ */
+function paragraphs_requirements($phase) {
+  $t = get_t();
+  $requirements = array();
+
+  if ($phase == 'runtime') {
+    if (!module_exists('entity_plus')) {
+      $requirements['paragraphs'] = array(
+        'title' => $t('Paragraphs'),
+        'value' => $t('Required module is not installed'),
+        'description' => $t('Paragraphs requires the Entity Plus module to be installed.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}
+
+/**
  * Implements hook_uninstall().
  */
 function paragraphs_uninstall() {
