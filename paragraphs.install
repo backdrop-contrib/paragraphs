@@ -146,6 +146,11 @@ function paragraphs_field_schema($field) {
 function paragraphs_requirements($phase) {
   $t = get_t();
   $requirements = array();
+  
+  // Make sure schema version is appropriate.
+  if (backdrop_get_installed_schema_version('paragraphs') == 7102) {
+    backdrop_set_installed_schema_version('paragraphs', 999);
+  }
 
   if ($phase == 'runtime') {
     if (!module_exists('entity_plus')) {
@@ -174,7 +179,7 @@ function paragraphs_uninstall() {
 /**
  * Update {paragraphs_bundle} schema to include label and description fields.
  */
-function paragraphs_update_1000(&$sandbox) {
+function paragraphs_update_1000() {
   $fields = array(
     'label' => array(
       'description' => 'A user-facing label for this bundle.',
@@ -208,5 +213,5 @@ function paragraphs_update_1000(&$sandbox) {
  * Implements hook_update_last_removed().
  */
 function paragraphs_update_last_removed() {
-  return 7102;
+  return 7103;
 }
