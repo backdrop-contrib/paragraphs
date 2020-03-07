@@ -533,8 +533,8 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     ),
     '#size' => 2,
     '#maxlength' => 2,
-      // Specify width, since size property isn't supported on number fields.
-    '#attributes' => $elements_exists ? array('style' => 'width:3em') : array(),
+    // Specify width, since size property isn't supported on number fields.
+    '#attributes' => array('style' => 'width:3em'),
     '#min' => 1,
     '#max' => 99,
   );
