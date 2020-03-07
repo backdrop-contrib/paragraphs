@@ -380,7 +380,7 @@ class ParagraphsItemEntity extends Entity {
    *   and therefore no link is created between the host and the item or
    *   revision updates might be skipped. Use with care.
    *
-   * @return DrupalEntityControllerInterface
+   * @return BackdropEntityControllerInterface
    *   The entity controller object for the specified entity type
    *
    * @throws Exception

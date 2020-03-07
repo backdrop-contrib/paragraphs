@@ -24,7 +24,7 @@
  *   TRUE if the operation may be performed, FALSE otherwise.
  */
 function hook_paragraphs_item_access(ParagraphsItemEntity $entity, $op, $account) {
-  $permissions = &drupal_static(__FUNCTION__, array());
+  $permissions = &backdrop_static(__FUNCTION__, array());
 
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE) || $entity === NULL) {
     // If there is no bundle to check against, or the $op is not one of the

@@ -680,10 +680,10 @@ function _paragraphs_ajax_update_callback($form, $form_state) {
   $button = $form_state['triggering_element'];
 
   // Go three levels up in the form, to the whole widget.
-  $element = drupal_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
 
-  // Send back the rendered element and let Drupal wrap it in an AJAX command.
-  return drupal_render($element);
+  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
+  return backdrop_render($element);
 }
 
 /**
@@ -871,7 +871,7 @@ function _paragraphs_multiple_field_validate($elements, &$form_state) {
     else {
       // Extract field values.
       $key_exists = NULL;
-      $field_values_found = drupal_array_get_nested_value($form_state['values'], $elements['#parents'], $key_exists);
+      $field_values_found = backdrop_array_get_nested_value($form_state['values'], $elements['#parents'], $key_exists);
       if ($key_exists) {
         $field_values = $field_values_found;
       }
