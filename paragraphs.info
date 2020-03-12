@@ -3,6 +3,7 @@ description = Paragraphs module to control your content flow.
 backdrop = 1.x
 type = module
 package = Paragraphs
+configure = admin/structure/paragraphs
 
 stylesheets[all][] = css/paragraphs.css
 dependencies[] = entity

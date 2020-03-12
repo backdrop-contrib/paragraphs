@@ -27,6 +27,21 @@ function paragraphs_schema() {
         'default' => '',
         'translatable' => TRUE,
       ),
+      'label' => array(
+        'description' => 'A user-facing label for this bundle.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+        'translatable' => TRUE,
+      ),
+      'description' => array(
+        'description' => 'A brief description of this bundle.',
+        'type' => 'text',
+        'not null' => FALSE,
+        'size' => 'medium',
+        'translatable' => TRUE,
+      ),
       'locked' => array(
         'description' => 'A boolean indicating whether the administrator can change the machine name of this Paragraph type.',
         'type' => 'int',
@@ -131,6 +146,11 @@ function paragraphs_field_schema($field) {
 function paragraphs_requirements($phase) {
   $t = get_t();
   $requirements = array();
+  
+  // Make sure schema version is appropriate.
+  if (backdrop_get_installed_schema_version('paragraphs') == 7102) {
+    backdrop_set_installed_schema_version('paragraphs', 999);
+  }
 
   if ($phase == 'runtime') {
     if (!module_exists('entity_plus')) {
@@ -157,8 +177,41 @@ function paragraphs_uninstall() {
 }
 
 /**
+ * Update {paragraphs_bundle} schema to include label and description fields.
+ */
+function paragraphs_update_1000() {
+  $fields = array(
+    'label' => array(
+      'description' => 'A user-facing label for this bundle.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+    ),
+    'description' => array(
+      'description' => 'A brief description of this bundle.',
+      'type' => 'text',
+      'not null' => FALSE,
+      'size' => 'medium',
+      'default' => NULL,
+    ),
+  );
+
+  foreach ($fields as $key => $field) {
+    if (!db_field_exists('paragraphs_bundle', $key)) {
+      db_add_field('paragraphs_bundle', $key, $field);
+    }
+  }
+
+  // Set initial label value equal to name.
+  db_update('paragraphs_bundle')
+    ->expression('label', 'name')
+    ->execute();
+}
+
+/**
  * Implements hook_update_last_removed().
  */
 function paragraphs_update_last_removed() {
-  return 7102;
+  return 7103;
 }
