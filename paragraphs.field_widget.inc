@@ -587,6 +587,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           ),
           '#access' => entity_access('delete', 'paragraphs_item', $paragraph_item),
           '#weight' => 1000,
+          '#attributes' => array(
+            'class' => array('button-danger'),
+          ),
         );
       }
 
