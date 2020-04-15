@@ -26,7 +26,7 @@ class paragraphs_handler_relationship extends views_handler_relationship {
    * @param array $form_state
    *   An associative array containing the current state of the form.
    */
-  public function options_form(array &$form, array &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
 
     $field = field_info_field($this->definition['field_name']);

@@ -415,7 +415,7 @@ class ParagraphsItemEntity extends Entity {
       else {
         $host_entity->{$this->field_name}[$this->langcode][] = array('entity' => $this);
       }
-      return entity_save($this->hostEntityType, $host_entity);
+      return entity_plus_save($this->hostEntityType, $host_entity);
     }
   }
 
@@ -426,7 +426,7 @@ class ParagraphsItemEntity extends Entity {
     $delta = $this->delta();
     if ($this->item_id && isset($delta)) {
       unset($this->hostEntity->{$this->field_name}[$this->langcode][$delta]);
-      entity_save($this->hostEntityType, $this->hostEntity);
+      entity_plus_save($this->hostEntityType, $this->hostEntity);
     }
   }
 
