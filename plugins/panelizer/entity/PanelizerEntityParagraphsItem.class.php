@@ -45,8 +45,8 @@ class PanelizerEntityParagraphsItem extends PanelizerEntityDefault {
   /**
    * {@inheritdoc}
    */
-  public function entity_save($entity) {
-    entity_save($this->entity_type, $entity);
+  public function entity_plus_save($entity) {
+    entity_plus_save($this->entity_type, $entity);
   }
 
   /**
