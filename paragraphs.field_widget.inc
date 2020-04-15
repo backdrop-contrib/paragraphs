@@ -662,6 +662,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           'wrapper' => $element['#wrapper_id'],
         ),
         '#weight' => 1001,
+        '#attributes' => array(
+          'class' => array('button-danger'),
+        ),
       );
     }
   }
