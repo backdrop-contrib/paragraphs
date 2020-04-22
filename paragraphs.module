@@ -408,6 +408,19 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
     $form['#theme'] = array('paragraphs_bundle_settings_form');
     array_unshift($form['#submit'], 'paragraphs_bundle_settings_form_submit');
   }
+  else if ($form['#instance']['entity_type'] == 'paragraphs_item') {
+    $form['actions']['delete']['#submit'][] = 'paragraphs_field_edit_form_submit';
+  }
+}
+
+/**
+ * Submit callback for paragraphs field settings form.
+ *
+ * @see paragraphs_form_field_ui_field_edit_form_alter
+ */
+function paragraphs_field_edit_form_submit($form, &$form_state) {
+  $instance = $form['#instance'];
+  $form_state['redirect'] = array('admin/structure/paragraphs/' . $instance['bundle'] . '/fields/' . $instance['field_name'] . '/delete', array('query' => $destination));
 }
 
 /**
