@@ -95,7 +95,7 @@ function paragraphs_config_info() {
     'paragraphs.type' => array(
       'name_key' => 'bundle',
       'label_key' => 'name',
-      'group' => t('Paragraphs types'),
+      'group' => t('Paragraph types'),
     ),
   );
 }
