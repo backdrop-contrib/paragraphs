@@ -13,6 +13,7 @@ define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE', 'open');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE', 1);
 define('PARAGRAPHS_DEFAULT_ADD_MODE', 'select');
+define('PARAGRAPHS_DEFAULT_SEPARATE_EDIT', TRUE);
 
 // Modules should return this value from hook_paragraphs_item_access() to allow
 // access to a paragraphs item.
@@ -76,15 +77,6 @@ function paragraphs_item_revision_load($revision_id) {
  */
 function paragraphs_item_load_multiple(array $ids = array(), $conditions = array(), $reset = FALSE) {
   return entity_load_multiple('paragraphs_item', $ids, $conditions, $reset);
-}
-
-/**
- * Implements hook_ctools_plugin_directory().
- */
-function paragraphs_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'panelizer' && $plugin == 'entity') {
-    return 'plugins/panelizer/entity';
-  }
 }
 
 /**
@@ -176,7 +168,7 @@ function paragraphs_entity_info() {
  * @return bool
  *   Whether the user has access to a paragraphs item.
  */
-function paragraphs_item_access($op, $entity, $account, $entity_type) {
+function paragraphs_item_access($op, $entity_type, $entity, $account) {
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $GLOBALS['user'];
@@ -388,6 +380,18 @@ function paragraphs_menu() {
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
   );
+  
+  // Tracking paragraph ID, Host entity type, Host entity ID in contextual link.
+  $items['paragraphs/%paragraphs_item/edit'] = array(
+    'title' => t('Edit paragraph'),
+    'type' => MENU_LOCAL_ACTION,
+    'context' => MENU_CONTEXT_INLINE,
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_form_edit', 1),
+    'access callback' => 'paragraphs_separate_edit_access',
+    'access arguments' => array(1),
+    'file' => 'paragraphs.admin.inc',
+  );
 
   return $items;
 }
@@ -576,6 +580,13 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     ),
     '#default_value' => isset($settings['add_mode']) ? $settings['add_mode'] : PARAGRAPHS_DEFAULT_ADD_MODE,
     '#required' => TRUE,
+  );
+
+  $element['separate_edit'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Enable separate edit with contextual links'),
+    '#description' => t('Enables contextual links per paragraph for editing on a separate page.'),
+    '#default_value' => isset($settings['separate_edit']) ? $settings['separate_edit'] : PARAGRAPHS_DEFAULT_SEPARATE_EDIT,
   );
 
   if (!count($bundles)) {
@@ -1545,6 +1556,112 @@ function paragraphs_modules_uninstalled($modules) {
   if (in_array('entitycache', $modules)) {
     paragraphs_remove_entitycache_table();
   }
+}
+
+/**
+ * Access callback for separate form.
+ */
+function paragraphs_separate_edit_access($paragraphs_item) {
+  /** @var ParagraphsItemEntity $paragraphs_item */
+  $paragraphs_item->hostEntity();
+  $host_entity_type = $paragraphs_item->hostEntityType();
+  $instance = $paragraphs_item->instanceInfo();
+
+  // Check separate forms are enabled and that the user has access to update
+  // the host entity as well as the paragraph item itself.
+  return !empty($instance['settings']['separate_edit']) && entity_access('update', $host_entity_type, $paragraphs_item->hostEntity()) && entity_access('update', 'paragraphs_item', $paragraphs_item);
+}
+
+/**
+ * Retrieves contextual links for a path based on registered local tasks.
+ *
+ * @see menu_contextual_links()
+ */
+function paragraphs_contextual_links($args) {
+  $links = array();
+
+  $data = &backdrop_static(__FUNCTION__);
+  if (!isset($data)) {
+    $data = paragraphs_get_router_items('paragraphs/%');
+  }
+
+  array_unshift($args, 'paragraphs');
+  foreach ($data as $item) {
+    // Extract the actual "task" string from the path argument.
+    $key = backdrop_substr($item['path'], 13);
+
+    // Denormalize and translate the contextual link.
+    _menu_translate($item, $args, TRUE);
+    if (!$item['access']) {
+      continue;
+    }
+
+    // All contextual links are keyed by the actual "task" path argument,
+    // prefixed with the name of the implementing module.
+    $links['paragraphs-' . $key] = $item;
+  }
+
+  return $links;
+}
+
+/**
+ * Implements hook_contextual_links_view_alter().
+ *
+ * Since there is no root path for the separate form for editing a paragraph,
+ * contextual links need building in a custom fashion.
+ *
+ * @see contextual_pre_render_links()
+ */
+function paragraphs_contextual_links_view_alter(&$element, $items) {
+  if (isset($element['#contextual_links']['paragraphs'])) {
+    // Retrieve contextual menu links.
+    $items += paragraphs_contextual_links($element['#contextual_links']['paragraphs'][1]);
+
+    // Transform contextual links into parameters suitable for theme_link().
+    $links = array();
+    foreach ($items as $class => $item) {
+      $class = backdrop_html_class($class);
+      $links[$class] = array(
+        'title' => $item['title'],
+        'href' => $item['href'],
+      );
+      // @todo theme_links() should *really* use the same parameters as l().
+      $item['localized_options'] += array('query' => array());
+      $item['localized_options']['query'] += backdrop_get_destination();
+      $links[$class] += $item['localized_options'];
+    }
+    $element['#links'] = $links;
+  }
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function paragraphs_admin_paths() {
+  $paths = array(
+    'paragraphs/*/edit' => TRUE,
+  );
+
+  return $paths;
+}
+
+/**
+ * Get Paragraphs' router items.
+ *
+ * @param $base
+ * @return mixed
+ */
+function paragraphs_get_router_items($base) {
+  // Performance: We only query available tasks once per request.
+  return db_select('menu_router', 'm')
+    ->fields('m')
+    ->condition('tab_root', db_like($base) . '%', 'LIKE')
+    ->condition('context', MENU_CONTEXT_NONE, '<>')
+    ->condition('context', MENU_CONTEXT_PAGE, '<>')
+    ->orderBy('weight')
+    ->orderBy('title')
+    ->execute()
+    ->fetchAllAssoc('path', PDO::FETCH_ASSOC);
 }
 
 /**

@@ -328,3 +328,104 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
 
   $form_state['redirect'] = 'admin/structure/paragraphs';
 }
+
+/**
+ * Separate paragraphs_item edit form
+ */
+function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
+  if (!$paragraphs_item) {
+    backdrop_not_found();
+  }
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
+  backdrop_set_title(t('Edit !title paragraph', array('!title' => $bundle->name)));
+
+  $form['paragraphs_item'] = array(
+    '#type' => 'value',
+    '#value' => $paragraphs_item,
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#weight' => 10000,
+    '#value' => t('Save'),
+  );
+
+  field_attach_form('paragraphs_item', $paragraphs_item, $form, $form_state);
+
+  // Get the top-level host entity.
+  $item = $paragraphs_item;
+  $host = NULL;
+  while (method_exists($item, 'hostEntity')) {
+    $host = $item->hostEntity();
+    $host_entity_type = $item->hostEntityType();
+    $host_entity_id = $item->hostEntityId();
+    $host_entity_bundle = $item->hostEntityBundle();
+    $item = $host;
+  }
+  // Only show revisioning options if our host is definitely revisioned.
+  $show_revision_options = FALSE;
+  $use_revisions = FALSE;
+  if ($host_entity_type == 'node') {
+    $show_revision_options = config_get('node.type.' . $host_entity_bundle, 'settings.revision_enabled');
+    $use_revisions = config_get('node.type.' . $host_entity_bundle, 'settings.revision_default');
+  }
+  if ($show_revision_options) {
+    $form['additional_settings'] = array(
+      '#type' => 'vertical_tabs',
+      '#weight' => 99,
+    );
+    $form['revision_information'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Revision information'),
+      '#collapsible' => TRUE,
+      // Collapsed by default when "Create new revision" is unchecked.
+      '#collapsed' => !$use_revisions,
+      '#group' => 'additional_settings',
+      '#attributes' => array(
+        'class' => array('node-form-revision-information'),
+      ),
+      '#attached' => array(
+        'js' => array(backdrop_get_path('module', 'node') . '/js/node.js'),
+      ),
+      '#weight' => 20,
+      '#access' => user_access('administer nodes'),
+    );
+    $form['revision_information']['revision'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Create new revision'),
+      '#default_value' => $use_revisions,
+      '#access' => user_access('administer nodes'),
+    );
+  }
+
+  return $form;
+}
+
+/**
+ * Validation function for entity form for validating the fields.
+ */
+function paragraphs_form_edit_validate($form, &$form_state) {
+  field_attach_form_validate('paragraphs_item', $form_state['values']['paragraphs_item'], $form, $form_state);
+}
+
+/**
+ * Submit function for edit entity form.
+ */
+function paragraphs_form_edit_submit($form, &$form_state) {
+  $paragraphs_item = $form_state['values']['paragraphs_item'];
+  field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
+
+  // Save a new revision of our host entity?
+  $save_new_revision = !empty($form_state['values']['revision']);
+  if ($save_new_revision) {
+    $paragraphs_item->is_new_revision = TRUE;
+  }
+
+  // You get a new revision when you save a node, even if there are no changes.
+  // Ensure that we do not save the host node if $save_new_revision is FALSE.
+  $paragraphs_item->save(FALSE);
+
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
+  backdrop_set_message(t('Paragraph !title has been saved.', array('!title' => $bundle->name)));
+}

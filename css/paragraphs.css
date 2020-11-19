@@ -8,3 +8,7 @@
 .paragraphs-machine-name {
     font-size: smaller;
 }
+
+.paragraphs-items .contextual-links-trigger {
+  background: rgba(255,255,255,.8) url(../images/paragraphs-gear-select.png) no-repeat 2px 0;
+}

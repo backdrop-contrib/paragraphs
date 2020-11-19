@@ -99,6 +99,15 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
             $element[$delta]['#theme_wrappers'] = array('paragraphs_item');
             $element[$delta]['entity'] = $paragraph->view($view_mode, $langcode);
           }
+          if (!empty($instance['settings']['separate_edit'])) {
+            $contextual_links = array(
+              'paragraphs',
+              array(
+                $paragraph->item_id,
+              ),
+            );
+            $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#contextual_links']['paragraphs'] = $contextual_links;
+          }
         }
       }
       break;
