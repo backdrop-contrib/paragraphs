@@ -13,7 +13,7 @@ define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE', 'open');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE', 1);
 define('PARAGRAPHS_DEFAULT_ADD_MODE', 'select');
-define('PARAGRAPHS_DEFAULT_SEPARATE_EDIT', TRUE);
+define('PARAGRAPHS_DEFAULT_SEPARATE_EDIT', FALSE);
 
 // Modules should return this value from hook_paragraphs_item_access() to allow
 // access to a paragraphs item.
