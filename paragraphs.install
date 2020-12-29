@@ -220,6 +220,7 @@ function paragraphs_update_last_removed() {
  * Updates paragraphs bundle to CMI.
  */
 function paragraphs_update_1001() {
+  $bundles = array();
   $query = db_select('paragraphs_bundle', 'pb')
         ->fields('pb')
         ->orderBy('pb.bundle', 'ASC');
