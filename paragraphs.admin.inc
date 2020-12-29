@@ -20,7 +20,6 @@ function paragraphs_admin_bundle_overview() {
 
   $header = array(
     t('Label'),
-    t('Machine Name'),
     t('Operations'),
   );
   $rows = array();
@@ -28,14 +27,7 @@ function paragraphs_admin_bundle_overview() {
   foreach ($bundles as $bundle) {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
-    $row = array(
-      array(
-        'data' => $bundle->name,
-      ),
-      array(
-        'data' => $bundle->bundle,
-      ),
-    );
+    $row = array(theme('paragraphs_admin_overview', array('bundle' => $bundle)));
 
     if ($field_ui) {
       // Manage fields.
@@ -145,10 +137,10 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
   $form['#paragraphs_bundle'] = $bundle;
 
   $form['name'] = array(
-    '#title' => t('Label'),
+    '#title' => t('Name'),
     '#type' => 'textfield',
     '#default_value' => $bundle->name,
-    '#description' => t('Label for the Paragraph type.'),
+    '#description' => t('The human-readable name of this Paragraph type.'),
     '#required' => TRUE,
     '#size' => 30,
   );
@@ -165,10 +157,10 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
   );
 
   $form['label'] = array(
-    '#title' => t('Label'),
+    '#title' => t('Admin label'),
     '#type' => 'textfield',
     '#default_value' => $bundle->label,
-    '#description' => t('The label for this bundle as it will appear to users on edit forms. Defaults to bundle name if left empty.'),
+    '#description' => t('The label for this Paragraph type as it will appear to users on edit forms. Defaults to the name value if left empty.'),
     '#size' => 30,
   );
 
@@ -176,7 +168,7 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
     '#title' => t('Description'),
     '#type' => 'textarea',
     '#default_value' => $bundle->description,
-    '#description' => t('Describe this bundle. The text will be displayed on the Paragraphs admin overview page.'),
+    '#description' => t('Describe this Paragraph type. The text will be displayed on the Paragraphs admin overview page.'),
   );
 
   $form['locked'] = array(
