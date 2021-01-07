@@ -29,17 +29,40 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
  */
 function template_preprocess_paragraphs_item(&$variables, $hook) {
   $children = element_children($variables['elements']['entity']['paragraphs_item']);
-  $view_mode = $variables['elements']['entity']['paragraphs_item'][$children[0]]['#view_mode'];
-  $bundle = $variables['elements']['entity']['paragraphs_item'][$children[0]]['#bundle'];
+  $paragraph_id = $children[0];
+  $view_mode = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#view_mode'];
+  $bundle = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#bundle'];
 
   $variables['view_mode'] = $view_mode;
   $variables['bundle'] = $bundle;
   
-  $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$children[0]];
+  $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$paragraph_id];
 
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $bundle);
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $view_mode);
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
+  $admin_links = array();
+  if ($variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#separate_edit']) {
+    $admin_links = array(
+      '#type' => 'dropbutton',
+      '#links' => array(
+        'paragraphs_admin_links' => array(
+          'title' => t('P' . $paragraph_id),
+          'href' => 'paragraphs/' . $paragraph_id . '/edit',
+          'attributes' => array(
+            'class' => array('use-ajax'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array(
+              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'maxWidth' => 640,
+            )),
+          ),
+        ),
+      ),
+    );
+    $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
+  }
+  $variables['admin_links'] = $admin_links;
 }

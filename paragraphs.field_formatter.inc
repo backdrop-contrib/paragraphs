@@ -100,6 +100,7 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
             $element[$delta]['entity'] = $paragraph->view($view_mode, $langcode);
           }
           if (!empty($instance['settings']['separate_edit'])) {
+            /*
             $contextual_links = array(
               'paragraphs',
               array(
@@ -107,6 +108,8 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
               ),
             );
             $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#contextual_links']['paragraphs'] = $contextual_links;
+            */
+            $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#separate_edit'] = 1;
           }
         }
       }
