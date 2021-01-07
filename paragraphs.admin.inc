@@ -351,6 +351,9 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
     '#type' => 'submit',
     '#weight' => 10000,
     '#value' => t('Save'),
+    '#ajax' => array(
+      'callback' => 'paragraphs_dialog_close',
+    ),
   );
 
   field_attach_form('paragraphs_item', $paragraphs_item, $form, $form_state);
@@ -402,6 +405,16 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
   }
 
   return $form;
+}
+
+function paragraphs_dialog_close($form, &$form_state) {
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+  //TODO: Add Ajax command to refresh paragraph that was just edited.
+  return $commands;
 }
 
 /**

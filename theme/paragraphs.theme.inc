@@ -50,6 +50,9 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
     //TODO: Investigate adding edit/arrow/delete icons to droplinks?
     $admin_links = array(
       '#type' => 'dropbutton',
+      '#attributes' => array(
+        'class' => array('paragraphs-admin-dropbutton'),
+      ),
       '#links' => array(
         'paragraphs_admin_links' => array(
           'title' => t('P' . $paragraph_id),
