@@ -344,6 +344,8 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
     '#value' => $paragraphs_item,
   );
 
+  // TODO: Make action buttons work with dialog (so it closes and refreshes to the original page;
+  // TODO: Add a remove button?
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',

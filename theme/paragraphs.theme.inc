@@ -45,6 +45,7 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
   $admin_links = array();
   if ($variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#separate_edit']) {
+    //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
     $admin_links = array(
       '#type' => 'dropbutton',
       '#links' => array(
@@ -56,7 +57,8 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
-              'maxWidth' => 640,
+              'width' => 700,
+              'draggable' => TRUE,
             )),
           ),
         ),
