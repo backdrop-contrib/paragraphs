@@ -46,6 +46,8 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $admin_links = array();
   if ($variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#separate_edit']) {
     //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
+    //TODO: Add styling/classes to float right and hide/show on hover like contextual links
+    //TODO: Investigate adding edit/arrow/delete icons to droplinks?
     $admin_links = array(
       '#type' => 'dropbutton',
       '#links' => array(
