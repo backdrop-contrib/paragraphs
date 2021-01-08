@@ -1573,6 +1573,41 @@ function paragraphs_separate_edit_access($paragraphs_item) {
 }
 
 /**
+  * Generate dropbuttons for separate edit.
+  */
+function paragraphs_separate_edit_links($paragraph_id) {
+  //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
+  //TODO: Add styling/classes to float right and hide/show on hover like contextual links
+  //TODO: Investigate adding edit/arrow/delete icons to droplinks?
+  $admin_links = array();
+  if (is_numeric($paragraph_id)) {
+    $admin_links = array(
+      '#type' => 'dropbutton',
+      '#attributes' => array(
+        'class' => array('paragraphs-admin-dropbutton'),
+      ),
+      '#links' => array(
+        'paragraphs_admin_links' => array(
+          'title' => t('Edit'),
+          'href' => 'paragraphs/' . $paragraph_id . '/edit',
+          'attributes' => array(
+            'class' => array('use-ajax', 'paragraphs-edit'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array(
+              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'width' => 700,
+              'draggable' => TRUE,
+            )),
+          ),
+        ),
+      ),
+    );
+    $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
+  }
+  return $admin_links;
+}
+
+/**
  * Retrieves contextual links for a path based on registered local tasks.
  *
  * @see menu_contextual_links()

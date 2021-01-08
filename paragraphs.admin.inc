@@ -453,11 +453,10 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
-    $fresh_paragraph['paragraphs_item']['#printed'] = TRUE;
-    $fresh_paragraph['paragraphs_item'][$item_id]['#separate_edit'] = 1;
-    $fresh_paragraph['paragraphs_item'][$item_id]['#printed'] = TRUE;
-    //dpm($fresh_paragraph);
-    $new_element = backdrop_render($fresh_paragraph['paragraphs_item']);
+    $new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
+    $new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
+    $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
+    $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, $new_element);
   }
   return $commands;

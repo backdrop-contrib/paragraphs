@@ -28,7 +28,6 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
  * Process variables for paragraphs-item.tpl.php.
  */
 function template_preprocess_paragraphs_item(&$variables, $hook) {
-  dpm($variables['elements']['entity']['paragraphs_item']);
   $children = element_children($variables['elements']['entity']['paragraphs_item']);
   $paragraph_id = reset($children);
   $view_mode = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#view_mode'];
@@ -47,31 +46,7 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
   $admin_links = array();
   if ($variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#separate_edit']) {
-    //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
-    //TODO: Add styling/classes to float right and hide/show on hover like contextual links
-    //TODO: Investigate adding edit/arrow/delete icons to droplinks?
-    $admin_links = array(
-      '#type' => 'dropbutton',
-      '#attributes' => array(
-        'class' => array('paragraphs-admin-dropbutton'),
-      ),
-      '#links' => array(
-        'paragraphs_admin_links' => array(
-          'title' => t('Edit'),
-          'href' => 'paragraphs/' . $paragraph_id . '/edit',
-          'attributes' => array(
-            'class' => array('use-ajax', 'paragraphs-edit'),
-            'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array(
-              'dialogClass' => 'paragraphs-admin-links-dialog',
-              'width' => 700,
-              'draggable' => TRUE,
-            )),
-          ),
-        ),
-      ),
-    );
-    $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
+    $admin_links = paragraphs_separate_edit_links($paragraph_id);
   }
   $variables['admin_links'] = $admin_links;
 }
