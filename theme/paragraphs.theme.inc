@@ -28,8 +28,9 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
  * Process variables for paragraphs-item.tpl.php.
  */
 function template_preprocess_paragraphs_item(&$variables, $hook) {
+  dpm($variables['elements']['entity']['paragraphs_item']);
   $children = element_children($variables['elements']['entity']['paragraphs_item']);
-  $paragraph_id = $children[0];
+  $paragraph_id = reset($children);
   $view_mode = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#view_mode'];
   $bundle = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#bundle'];
 
@@ -40,6 +41,7 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
 
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $bundle);
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $view_mode);
+  $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $paragraph_id);
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
@@ -55,10 +57,10 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
       ),
       '#links' => array(
         'paragraphs_admin_links' => array(
-          'title' => t('P' . $paragraph_id),
+          'title' => t('Edit'),
           'href' => 'paragraphs/' . $paragraph_id . '/edit',
           'attributes' => array(
-            'class' => array('use-ajax'),
+            'class' => array('use-ajax', 'paragraphs-edit'),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',

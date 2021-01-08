@@ -352,10 +352,25 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
     '#weight' => 10000,
     '#value' => t('Save'),
     '#ajax' => array(
-      'callback' => 'paragraphs_dialog_close',
+      'callback' => 'paragraphs_dialog_save_close',
+      'effect' => 'fade',
+      //'wrapper' => $element['#wrapper_id'],
     ),
   );
-
+  $form['actions']['remove_button'] = array(
+    '#type' => 'submit',
+    '#weight' => 10000,
+    '#value' => t('Remove'),
+    '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
+    '#ajax' => array(
+      'callback' => '_paragraphs_ajax_update_callback',
+      'callback' => 'paragraphs_dialog_close',
+      //'wrapper' => $element['#wrapper_id'],
+    ),
+    '#attributes' => array(
+      'class' => array('button-danger'),
+    ),
+  );
   field_attach_form('paragraphs_item', $paragraphs_item, $form, $form_state);
 
   // Get the top-level host entity.
@@ -407,13 +422,44 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
   return $form;
 }
 
-function paragraphs_dialog_close($form, &$form_state) {
+function paragraphs_dialog_save_close($form, &$form_state) {
+  //dpm($form_state);
+  /*
+    //TODO: Remove the paragraph if the Remove button was clicked... (separate function/callback?)
+    $form_state['clicked_button']['#value'] == 'Remove';
+    $form_state['triggering_element']['#value'] == 'Remove';
+    $form_state['values']['paragraph_item']->item_id;
+    
+    */
+  // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
     '#commands' => array(),
   );
   $commands['#commands'][] = ajax_command_close_modal_dialog();
-  //TODO: Add Ajax command to refresh paragraph that was just edited.
+  
+  // Refresh display of Paragraph that was edited.
+  /*
+  // First, get the information on what we're updating.
+  $button = $form_state['triggering_element'];
+
+  // Go three levels up in the form, to the whole widget.
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+
+  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
+  $new_element = backdrop_render($element);
+  */
+  if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
+    $item_id = $form_state['build_info']['args'][0]->item_id;
+    $revision_id = $form_state['build_info']['args'][0]->revision_id;
+    $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
+    $fresh_paragraph['paragraphs_item']['#printed'] = TRUE;
+    $fresh_paragraph['paragraphs_item'][$item_id]['#separate_edit'] = 1;
+    $fresh_paragraph['paragraphs_item'][$item_id]['#printed'] = TRUE;
+    //dpm($fresh_paragraph);
+    $new_element = backdrop_render($fresh_paragraph['paragraphs_item']);
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, $new_element);
+  }
   return $commands;
 }
 
