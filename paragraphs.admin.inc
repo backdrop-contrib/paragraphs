@@ -489,3 +489,12 @@ function paragraphs_form_edit_submit($form, &$form_state) {
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   backdrop_set_message(t('Paragraph !title has been saved.', array('!title' => $bundle->name)));
 }
+
+function paragraphs_separate_edit_placeholder() {
+  $form['placeholder'] = array(
+    '#type' => 'item',
+    '#title' => t('Placeholder'),
+    '#markup' => 'This functionality has not been developed yet.',
+  );
+  return $form;
+}

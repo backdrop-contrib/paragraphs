@@ -392,6 +392,15 @@ function paragraphs_menu() {
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
   );
+  
+  // Temporary placeholder page.
+  $items['paragraphs_separate_edit_placeholder'] = array(
+    'title' => 'TBD',
+    'description' => 'This feature is still under development',
+    'page callback' => 'paragraphs_separate_edit_placeholder',
+    'access arguments' => array('administer paragraphs bundles'),
+    'file' => 'paragraphs.admin.inc',
+  );
 
   return $items;
 }
@@ -1587,11 +1596,24 @@ function paragraphs_separate_edit_links($paragraph_id) {
         'class' => array('paragraphs-admin-dropbutton'),
       ),
       '#links' => array(
-        'paragraphs_admin_links' => array(
+        'paragraphs_admin_edit' => array(
           'title' => t('Edit'),
           'href' => 'paragraphs/' . $paragraph_id . '/edit',
           'attributes' => array(
             'class' => array('use-ajax', 'paragraphs-edit'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array(
+              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'width' => 700,
+              'draggable' => TRUE,
+            )),
+          ),
+        ),
+        'paragraphs_admin_delete' => array(
+          'title' => t('Delete'),
+          'href' => 'paragraphs_separate_edit_placeholder',
+          'attributes' => array(
+            'class' => array('use-ajax', 'paragraphs-delete'),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
