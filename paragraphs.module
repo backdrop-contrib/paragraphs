@@ -1621,7 +1621,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
           ),
         ),
         'paragraphs_admin_delete' => array(
-          'title' => t('Delete'),
+          'title' => t('Delete x'),
           'href' => 'paragraphs/' . $paragraph_id . '/delete',
           'attributes' => array(
             'class' => array('use-ajax', 'paragraphs-delete'),
@@ -1634,10 +1634,23 @@ function paragraphs_separate_edit_links($paragraph_id) {
           ),
         ),
         'paragraphs_admin_add' => array(
-          'title' => t('Add Paragraph above'),
+          'title' => t('Add new +'),
           'href' => 'paragraphs_separate_edit_placeholder',
           'attributes' => array(
             'class' => array('use-ajax', 'paragraphs-delete'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array(
+              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'width' => 700,
+              'draggable' => TRUE,
+            )),
+          ),
+        ),
+        'paragraphs_admin_movedown' => array(
+          'title' => t('Move down v'),
+          'href' => 'paragraphs_separate_edit_placeholder',
+          'attributes' => array(
+            'class' => array('use-ajax', 'paragraphs-movedown'),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
@@ -1661,19 +1674,24 @@ function paragraphs_separate_edit_links($paragraph_id) {
 /**
  * Implements hook_preprocess().
  *
- * @see contextual_pre_render_links()
  */
 function paragraphs_preprocess(&$variables, $hook) {
-  // Nothing to do here if the user is not permitted to access contextual links.
-  if (!user_access('access contextual links') || !$variables['content']['#separate_edit']) {
-    return;
-  }
   if ($hook == 'paragraphs_item') {
-    $paragraph_id = $variables['id'];
-    $variables['classes'][] = backdrop_html_class('paragraphs-item-separate-edit');
+    $paragraph_ids = element_children($variables['elements']['entity']['paragraphs_item']);
+    $paragraph_id = $paragraph_ids[0];
+    //dpm($variables);
     $paragraph = paragraphs_item_load($paragraph_id);
+    // Nothing to do here if the user does not have admin access to this item or
+    // separate editing is not activated on this item.
+    if (!paragraphs_item_access('delete', 'paragraphs_item', $paragraph)
+      || !paragraphs_item_access('create', 'paragraphs_item', $paragraph)
+      || !paragraphs_item_access('update', 'paragraphs_item', $paragraph)
+      || !$variables['content']['#separate_edit']) {
+      return;
+    }
+    $variables['classes'][] = backdrop_html_class('paragraphs-item-separate-edit');
     if (paragraphs_item_access('delete', 'paragraphs_item', $paragraph)) {
-      $variables['admin_links'] = paragraphs_separate_edit_links($paragraph_id);
+      $variables['admin_links'][$paragraph_id] = paragraphs_separate_edit_links($paragraph_id);
     }
   }
 }
