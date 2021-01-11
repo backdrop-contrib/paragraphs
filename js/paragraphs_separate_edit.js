@@ -1,6 +1,6 @@
 (function($, Backdrop) {
     Backdrop.ajax.prototype.commands.paragraphs_separate_edit_message_hide = function(ajax, response, status) {
-        $('.paragraphs-separate-edit-message').delay(1000).fadeOut();
+        $('.paragraphs-separate-edit-message').delay(1000).fadeOut(800);
         //alert(response.value1);
     }
 })(jQuery, Backdrop);

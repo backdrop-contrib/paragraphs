@@ -168,7 +168,7 @@ function paragraphs_entity_info() {
  * @return bool
  *   Whether the user has access to a paragraphs item.
  */
-function paragraphs_item_access($op, $entity_type, $entity, $account) {
+function paragraphs_item_access($op, $entity_type, $entity = NULL, $account = NULL) {
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $GLOBALS['user'];
@@ -602,8 +602,8 @@ function paragraphs_field_instance_settings_form($field, $instance) {
 
   $element['separate_edit'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable separate edit with contextual links'),
-    '#description' => t('Enables contextual links per paragraph for editing on a separate page.'),
+    '#title' => t('Enable separate editing'),
+    '#description' => t('Enables a dropbutton per paragraph for editing separately in a modal dialog.'),
     '#default_value' => isset($settings['separate_edit']) ? $settings['separate_edit'] : PARAGRAPHS_DEFAULT_SEPARATE_EDIT,
   );
 
@@ -1597,8 +1597,10 @@ function paragraphs_separate_edit_links($paragraph_id) {
   //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
   //TODO: Add styling/classes to float right and hide/show on hover like contextual links
   //TODO: Investigate adding edit/arrow/delete icons to droplinks?
+  $paragraph = paragraphs_item_load($paragraph_id);
+  $access = paragraphs_separate_edit_access($paragraph);
   $admin_links = array();
-  if (is_numeric($paragraph_id)) {
+  if (is_numeric($paragraph_id) && $access) {
     $admin_links = array(
       '#type' => 'dropbutton',
       '#attributes' => array(
@@ -1654,6 +1656,26 @@ function paragraphs_separate_edit_links($paragraph_id) {
     $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
   }
   return $admin_links;
+}
+
+/**
+ * Implements hook_preprocess().
+ *
+ * @see contextual_pre_render_links()
+ */
+function paragraphs_preprocess(&$variables, $hook) {
+  // Nothing to do here if the user is not permitted to access contextual links.
+  if (!user_access('access contextual links') || !$variables['content']['#separate_edit']) {
+    return;
+  }
+  if ($hook == 'paragraphs_item') {
+    $paragraph_id = $variables['id'];
+    $variables['classes'][] = backdrop_html_class('paragraphs-item-separate-edit');
+    $paragraph = paragraphs_item_load($paragraph_id);
+    if (paragraphs_item_access('delete', 'paragraphs_item', $paragraph)) {
+      $variables['admin_links'] = paragraphs_separate_edit_links($paragraph_id);
+    }
+  }
 }
 
 /**

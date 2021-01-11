@@ -9,23 +9,23 @@
     font-size: smaller;
 }
 
-.paragraphs-items .contextual-links-trigger {
-  background: rgba(255,255,255,.8) url(../images/paragraphs-gear-select.png) no-repeat 2px 0;
-}
-
-.paragraphs-item .dropbutton-wrapper {
+.paragraphs-item-separate-edit .dropbutton-wrapper {
   float: right;
   margin: 2px 2px 10px 10px;
   display: none;
 }
 
-.paragraphs-item:hover {
+.paragraphs-item-separate-edit {
+  border: 1px solid transparent;
+}
+
+.paragraphs-item-separate-edit:hover {
   border: 1px dashed #333;
   background-color: rgba(0,0,0,.05);
   position: relative;
 }
 
-.paragraphs-item:hover .dropbutton-wrapper {
+.paragraphs-item-separate-edit:hover .dropbutton-wrapper {
   display: inherit;
   position: absolute;
   top: 0;
@@ -34,7 +34,7 @@
   z-index: 1000;
 }
 
-.paragraphs-item:hover .dropbutton-widget {
+.paragraphs-item-separate-edit:hover .dropbutton-widget {
   left: auto;
   right: 0;
 }

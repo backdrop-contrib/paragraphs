@@ -44,9 +44,5 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
-  $admin_links = array();
-  if ($variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#separate_edit']) {
-    $admin_links = paragraphs_separate_edit_links($paragraph_id);
-  }
-  $variables['admin_links'] = $admin_links;
+  
 }
