@@ -441,12 +441,11 @@ function paragraphs_dialog_edit_submit($form, &$form_state) {
   // You get a new revision when you save a node, even if there are no changes.
   // Ensure that we do not save the host node if $save_new_revision is FALSE.
   $paragraphs_item->save(FALSE);
-
-  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
-  backdrop_set_message(t('Paragraph !type has been saved.', array('!type' => $bundle->name)));
 }
 
 function paragraphs_dialog_save_close($form, &$form_state) {
+  $paragraphs_item = $form_state['values']['paragraphs_item'];
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -461,12 +460,13 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
     //$new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
     //$new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
-    $new_element = '<div class=\'messages info paragraphs-separate-edit-message\'>Paragraph updated.</div>';
+    $new_element = '<div class=\'messages info paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
     $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
-        'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
+        'command' => 'paragraphs_separate_edit_message_hide',
+        //'value1'  => 'My first value',
     );
   }
   return $commands;
