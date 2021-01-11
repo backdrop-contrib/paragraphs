@@ -332,7 +332,7 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
 /**
  * Separate paragraphs_item edit form
  */
-function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
+function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
     backdrop_not_found();
   }
@@ -344,8 +344,6 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
     '#value' => $paragraphs_item,
   );
 
-  // TODO: Make action buttons work with dialog (so it closes and refreshes to the original page;
-  // TODO: Add a remove button?
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -357,20 +355,18 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
       //'wrapper' => $element['#wrapper_id'],
     ),
   );
+  /*
   $form['actions']['remove_button'] = array(
     '#type' => 'submit',
     '#weight' => 10000,
     '#value' => t('Remove'),
+    '#submit' => array('paragraphs_dialog_delete_confirm'),
     '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
-    '#ajax' => array(
-      'callback' => '_paragraphs_ajax_update_callback',
-      'callback' => 'paragraphs_dialog_close',
-      //'wrapper' => $element['#wrapper_id'],
-    ),
     '#attributes' => array(
       'class' => array('button-danger'),
     ),
   );
+  */
   field_attach_form('paragraphs_item', $paragraphs_item, $form, $form_state);
 
   // Get the top-level host entity.
@@ -422,57 +418,17 @@ function paragraphs_form_edit($form, &$form_state, $paragraphs_item) {
   return $form;
 }
 
-function paragraphs_dialog_save_close($form, &$form_state) {
-  //dpm($form_state);
-  /*
-    //TODO: Remove the paragraph if the Remove button was clicked... (separate function/callback?)
-    $form_state['clicked_button']['#value'] == 'Remove';
-    $form_state['triggering_element']['#value'] == 'Remove';
-    $form_state['values']['paragraph_item']->item_id;
-    
-    */
-  // Close modal dialog upon submit.
-  $commands = array(
-    '#type' => 'ajax',
-    '#commands' => array(),
-  );
-  $commands['#commands'][] = ajax_command_close_modal_dialog();
-  
-  // Refresh display of Paragraph that was edited.
-  /*
-  // First, get the information on what we're updating.
-  $button = $form_state['triggering_element'];
-
-  // Go three levels up in the form, to the whole widget.
-  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
-
-  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
-  $new_element = backdrop_render($element);
-  */
-  if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
-    $item_id = $form_state['build_info']['args'][0]->item_id;
-    $revision_id = $form_state['build_info']['args'][0]->revision_id;
-    $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
-    $new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
-    $new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
-    $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
-    $new_element .= "</div>";
-    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, $new_element);
-  }
-  return $commands;
-}
-
 /**
  * Validation function for entity form for validating the fields.
  */
-function paragraphs_form_edit_validate($form, &$form_state) {
+function paragraphs_dialog_edit_validate($form, &$form_state) {
   field_attach_form_validate('paragraphs_item', $form_state['values']['paragraphs_item'], $form, $form_state);
 }
 
 /**
  * Submit function for edit entity form.
  */
-function paragraphs_form_edit_submit($form, &$form_state) {
+function paragraphs_dialog_edit_submit($form, &$form_state) {
   $paragraphs_item = $form_state['values']['paragraphs_item'];
   field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
 
@@ -487,7 +443,105 @@ function paragraphs_form_edit_submit($form, &$form_state) {
   $paragraphs_item->save(FALSE);
 
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
-  backdrop_set_message(t('Paragraph !title has been saved.', array('!title' => $bundle->name)));
+  backdrop_set_message(t('Paragraph !type has been saved.', array('!type' => $bundle->name)));
+}
+
+function paragraphs_dialog_save_close($form, &$form_state) {
+  // Close modal dialog upon submit.
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+  
+  // Refresh display of Paragraph that was edited.
+  if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
+    $item_id = $form_state['build_info']['args'][0]->item_id;
+    $revision_id = $form_state['build_info']['args'][0]->revision_id;
+    $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
+    //$new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
+    //$new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
+    $new_element = '<div class=\'messages info paragraphs-separate-edit-message\'>Paragraph updated.</div>';
+    $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
+    $new_element .= "</div>";
+    $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
+    $commands['#commands'][] = array(
+        'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
+    );
+  }
+  return $commands;
+}
+
+/**
+ * Page callback: Form constructor for paragraph deletion confirmation form.
+ *
+ * @see paragraphs_menu()
+ * @see paragraphs_dialog_delete_confirm_submit()
+ */
+function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item = NULL) {
+  if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
+    $paragraphs_item = $form['paragraphs_item'];
+  }
+  $form['item_id'] = array(
+    '#type' => 'value',
+    '#value' => $paragraphs_item->item_id,
+  );
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
+  $form['description'] = array(
+    '#markup' => t('Are you sure you want to delete this !type? (This action cannot be undone.)', array('!type' => $bundle->name)),
+  );
+  $form['actions'] = array(
+    '#type' => 'actions',
+  );
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Delete'),
+    '#attributes' => array('class' => array('button-danger')),
+    '#ajax' => array(
+      'callback' => 'paragraphs_dialog_delete_confirm_submit',
+      'effect' => 'fade',
+      //'wrapper' => $element['#wrapper_id'],
+    ),
+  );
+  return $form;
+}
+
+/**
+ * Form submission handler for aragraphs_dialog_delete_confirm().
+ *
+ * @see aragraphs_dialog_delete_confirm()
+ */
+function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
+  /*
+    //TODO: Remove the paragraph if the Remove button was clicked... (separate function/callback?)
+    $form_state['triggering_element']['#value'] == 'Remove';
+    $form_state['values']['paragraph_item']->item_id;
+
+  if ($form_state['values']['confirm']) {
+    $node = node_load($form_state['values']['nid']);
+    node_delete($form_state['values']['nid']);
+    watchdog('content', '@type: deleted %title.', array('@type' => $node->type, '%title' => $node->title));
+    backdrop_set_message(t('@type %title has been deleted.', array('@type' => node_type_get_name($node), '%title' => $node->title)));
+  }
+
+
+    
+    */
+  // Close modal dialog upon submit.
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+  // Refresh display of Paragraph that was edited.
+  if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
+    $item_id = $form_state['build_info']['args'][0]->item_id;
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages info paragraphs-separate-edit-message\'>DELETION SHOULD OCCUR (TBD).</div>');
+    $commands['#commands'][] = array(
+        'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
+    );
+  }
+  return $commands;
 }
 
 function paragraphs_separate_edit_placeholder() {

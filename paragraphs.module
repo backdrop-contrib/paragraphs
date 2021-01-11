@@ -385,9 +385,18 @@ function paragraphs_menu() {
   $items['paragraphs/%paragraphs_item/edit'] = array(
     'title' => t('Edit paragraph'),
     'type' => MENU_LOCAL_ACTION,
-    'context' => MENU_CONTEXT_INLINE,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_form_edit', 1),
+    'page arguments' => array('paragraphs_dialog_edit', 1),
+    'access callback' => 'paragraphs_separate_edit_access',
+    'access arguments' => array(1),
+    'file' => 'paragraphs.admin.inc',
+  );
+  
+  $items['paragraphs/%paragraphs_item/delete'] = array(
+    'title' => t('Remove paragraph'),
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_dialog_delete_confirm', 1),
     'access callback' => 'paragraphs_separate_edit_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -1611,6 +1620,19 @@ function paragraphs_separate_edit_links($paragraph_id) {
         ),
         'paragraphs_admin_delete' => array(
           'title' => t('Delete'),
+          'href' => 'paragraphs/' . $paragraph_id . '/delete',
+          'attributes' => array(
+            'class' => array('use-ajax', 'paragraphs-delete'),
+            'data-dialog' => TRUE,
+            'data-dialog-options' => json_encode(array(
+              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'width' => 700,
+              'draggable' => TRUE,
+            )),
+          ),
+        ),
+        'paragraphs_admin_add' => array(
+          'title' => t('Add Paragraph above'),
           'href' => 'paragraphs_separate_edit_placeholder',
           'attributes' => array(
             'class' => array('use-ajax', 'paragraphs-delete'),
@@ -1623,6 +1645,11 @@ function paragraphs_separate_edit_links($paragraph_id) {
           ),
         ),
       ),
+    );
+    $admin_links['#attached']['js'][] = array(
+      'data' => backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_separate_edit.js',
+      'type' => 'file',
+      'scope' => 'footer',
     );
     $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
   }
