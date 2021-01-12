@@ -479,6 +479,9 @@ function paragraphs_dialog_save_close($form, &$form_state) {
  * @see paragraphs_dialog_delete_confirm_submit()
  */
 function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item = NULL) {
+  //dpm($paragraphs_item);
+  //dpm($form);
+  //dpm($form_state);
   if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
     $paragraphs_item = $form['paragraphs_item'];
   }
@@ -536,8 +539,9 @@ function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
   // Delete paragraph item and refresh display.
   if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
-    entity_delete_multiple('paragraphs_item', array($item_id));
-    //$paragraph = paragraphs_item_load($item_id);
+    $paragraph = paragraphs_item_load($item_id);
+    $paragraph->deleteRevision();
+    //entity_delete_multiple('paragraphs_item', array($item_id));
     //dpm($paragraph);
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages info paragraphs-separate-edit-message\'>Paragraph has been deleted.</div>');
     $commands['#commands'][] = array(

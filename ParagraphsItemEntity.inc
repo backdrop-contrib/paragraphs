@@ -460,13 +460,12 @@ class ParagraphsItemEntity extends Entity {
     if (!$this->revision_id) {
       return;
     }
-
     if (!$skip_host_update) {
       // Just remove the item from the host, which cares about deleting the
       // item (depending on whether the update creates a new revision).
       $this->deleteHostEntityReference();
+      entity_get_controller($this->hostEntityType)->resetCache(array($this->hostEntityId));
     }
-
     if (!empty($this->default_revision)) {
       entity_plus_revision_delete('paragraphs_item', $this->revision_id);
     }
