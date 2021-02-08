@@ -507,9 +507,21 @@ function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
     $rows = array();
 
     //usort($items, '_field_sort_items_value_helper');
+    $show_display_mode_notice = FALSE;
     // Add the items as table rows.
     foreach ($items[$langcode] as $key => $item) {
-      $item['#markup'] = 'Paragraph ' . $item['value'];
+      $item['entity'] = paragraphs_item_load($item['value']);
+      //dpm($item);
+      $item_render_array = $item['entity']->view('paragraphs_editor_preview', $langcode);
+      $item_markup = backdrop_render($item_render_array);
+      if (empty($item_markup) || empty(trim(strip_tags($item_markup)))) {
+        $bundle = paragraphs_bundle_load($item['entity']->bundle);
+        $item['#markup'] = $bundle->name;
+        $show_display_mode_notice = TRUE;
+      }
+      else {
+        $item['#markup'] = $item_markup;
+      }
       $item['_weight']['#value'] = $key;
       $item['_weight']['#attributes']['class'] = array($order_class);
       //$delta_element = backdrop_render($item['_weight']);
@@ -524,13 +536,13 @@ function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
           'class' => array('delta-order'),
         ),
       );
-      $class = !empty($paragraphs_item->bundle) ? array('draggable', backdrop_html_class('paragraphs_item_type_' . $paragraphs_item->bundle)) : array();
+      $class = array('draggable', backdrop_html_class('paragraphs_item_type_' . $paragraphs_item->bundle));
       $rows[] = array(
         'data' => $cells,
         'class' => $class,
       );
     }
-
+dpm($rows);
     $field_content = theme('table', array(
       'header' => $header,
       'rows' => $rows,
@@ -540,7 +552,7 @@ function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
       ),
     ));
 
-    //backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+    backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
   }
 
   if (count($items[$langcode])) {
@@ -549,6 +561,9 @@ function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
     $output .= $field_content;
     $output .= $element['#instance']['description'] ? '<div class="description">' . $element['#instance']['description'] . '</div>' : '';
     $output .= '</div>';
+  }
+  if ($show_display_mode_notice) {
+    $output .= t('<em>Note: The display of Paragraphs on this form can be customized in the Paragraphs Editor Preview display mode</em>.');
   }
 
   return array(
