@@ -402,6 +402,16 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
   
+  $items['paragraphs/%paragraphs_item/sort'] = array(
+    'title' => t('Sort paragraph'),
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_dialog_sort', 1),
+    'access callback' => 'paragraphs_separate_edit_access',
+    'access arguments' => array(1),
+    'file' => 'paragraphs.admin.inc',
+  );
+  
   // Temporary placeholder page.
   $items['paragraphs_separate_edit_placeholder'] = array(
     'title' => 'TBD',
@@ -1597,8 +1607,9 @@ function paragraphs_separate_edit_links($paragraph_id) {
   //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
   //TODO: Add styling/classes to float right and hide/show on hover like contextual links
   //TODO: Investigate adding edit/arrow/delete icons to droplinks?
-  $paragraph = paragraphs_item_load($paragraph_id);
-  $access = paragraphs_separate_edit_access($paragraph);
+  $paragraphs_item = paragraphs_item_load($paragraph_id);
+  $field_info = $paragraphs_item->fieldInfo();
+  $access = paragraphs_separate_edit_access($paragraphs_item);
   $admin_links = array();
   if (is_numeric($paragraph_id) && $access) {
     $admin_links = array(
@@ -1646,21 +1657,23 @@ function paragraphs_separate_edit_links($paragraph_id) {
             )),
           ),
         ),
-        'paragraphs_admin_movedown' => array(
-          'title' => t('Move down v'),
-          'href' => 'paragraphs_separate_edit_placeholder',
-          'attributes' => array(
-            'class' => array('use-ajax', 'paragraphs-movedown'),
-            'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array(
-              'dialogClass' => 'paragraphs-admin-links-dialog',
-              'width' => 700,
-              'draggable' => TRUE,
-            )),
-          ),
-        ),
       ),
     );
+    if ($field_info['cardinality'] != '1') {
+      $admin_links['#links']['paragraphs_admin_sort'] = array(
+        'title' => t('Sort'),
+        'href' => 'paragraphs/' . $paragraph_id . '/sort',
+        'attributes' => array(
+          'class' => array('use-ajax', 'paragraphs-sort'),
+          'data-dialog' => TRUE,
+          'data-dialog-options' => json_encode(array(
+            'dialogClass' => 'paragraphs-admin-links-dialog',
+            'width' => 700,
+            'draggable' => TRUE,
+          )),
+        ),
+      );
+    }
     $admin_links['#attached']['js'][] = array(
       'data' => backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_separate_edit.js',
       'type' => 'file',
@@ -1686,7 +1699,7 @@ function paragraphs_preprocess(&$variables, $hook) {
     if (!paragraphs_item_access('delete', 'paragraphs_item', $paragraph)
       || !paragraphs_item_access('create', 'paragraphs_item', $paragraph)
       || !paragraphs_item_access('update', 'paragraphs_item', $paragraph)
-      || !$variables['content']['#separate_edit']) {
+      || (!empty($variables['content']['#separate_edit']) && !$variables['content']['#separate_edit'])) {
       return;
     }
     $variables['classes'][] = backdrop_html_class('paragraphs-item-separate-edit');

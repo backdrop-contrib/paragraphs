@@ -460,7 +460,7 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
     //$new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
     //$new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
-    $new_element = '<div class=\'messages info paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
+    $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
     $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
@@ -471,6 +471,93 @@ function paragraphs_dialog_save_close($form, &$form_state) {
   }
   return $commands;
 }
+
+/**
+ * Paragraphs sort dialog popup.
+ */
+function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
+  if (!$paragraphs_item) {
+    backdrop_not_found();
+  }
+  dpm($paragraphs_item);
+  $langcode = $paragraphs_item->langcode;
+  $host_entity = $paragraphs_item->hostEntity();
+  $field_name = $paragraphs_item->field_name;
+  $element = $paragraphs_item->fieldInfo();
+  $element['#instance'] = $paragraphs_item->instanceInfo();
+  $items = $host_entity->{$field_name};
+  dpm($element);
+
+  $output = '';
+  $instance = $element['#instance'];
+
+  // If the field can hold more than one item, display it as a draggable table.
+  if ($element['cardinality'] != 1) {
+    $table_id = backdrop_html_id($element['field_name'] . '_values');
+    $order_class = $element['field_name'] . '-' . $table_id . '-delta-order';
+
+    $header = array(
+      array(
+        'data' => '<label>' . t('!title', array('!title' => $element['#instance']['settings']['title'])) . '</label>',
+        'colspan' => 2,
+        'class' => array('field-label'),
+      ),
+      t('Order'),
+    );
+    $rows = array();
+
+    //usort($items, '_field_sort_items_value_helper');
+    // Add the items as table rows.
+    foreach ($items[$langcode] as $key => $item) {
+      $item['#markup'] = 'Paragraph ' . $item['value'];
+      $item['_weight']['#value'] = $key;
+      $item['_weight']['#attributes']['class'] = array($order_class);
+      //$delta_element = backdrop_render($item['_weight']);
+      $cells = array(
+        array(
+          'data' => '',
+          'class' => array('field-multiple-drag'),
+        ),
+        $item['#markup'],
+        array(
+          'data' => $key,
+          'class' => array('delta-order'),
+        ),
+      );
+      $class = !empty($paragraphs_item->bundle) ? array('draggable', backdrop_html_class('paragraphs_item_type_' . $paragraphs_item->bundle)) : array();
+      $rows[] = array(
+        'data' => $cells,
+        'class' => $class,
+      );
+    }
+
+    $field_content = theme('table', array(
+      'header' => $header,
+      'rows' => $rows,
+      'attributes' => array(
+        'id' => $table_id,
+        'class' => array('field-multiple-table'),
+      ),
+    ));
+
+    //backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+  }
+
+  if (count($items[$langcode])) {
+    $output .= '<div class="form-item">';
+    //$output .= print_r($items[$langcode], TRUE);
+    $output .= $field_content;
+    $output .= $element['#instance']['description'] ? '<div class="description">' . $element['#instance']['description'] . '</div>' : '';
+    $output .= '</div>';
+  }
+
+  return array(
+    array(
+      '#markup' => $output,
+    ),
+  );
+}
+
 
 /**
  * Page callback: Form constructor for paragraph deletion confirmation form.
@@ -543,7 +630,7 @@ function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
     $paragraph->deleteRevision();
     //entity_delete_multiple('paragraphs_item', array($item_id));
     //dpm($paragraph);
-    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages info paragraphs-separate-edit-message\'>Paragraph has been deleted.</div>');
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been deleted.</div>');
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
     );
