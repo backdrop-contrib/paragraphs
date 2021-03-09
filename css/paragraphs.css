@@ -25,6 +25,13 @@
   position: relative;
 }
 
+.ui-dialog .paragraphs-item-separate-edit:hover {
+  border: 1px solid transparent;
+  background-color: inherit;
+  position: inherit;
+}
+
+
 .paragraphs-item-separate-edit:hover .dropbutton-wrapper {
   display: inherit;
   position: absolute;

@@ -452,7 +452,7 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     '#commands' => array(),
   );
   $commands['#commands'][] = ajax_command_close_modal_dialog();
-  
+
   // Refresh display of Paragraph that was edited.
   if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
@@ -462,7 +462,7 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     //$new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
     $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
-    $new_element .= "</div>";
+    //$new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide',
@@ -473,106 +473,202 @@ function paragraphs_dialog_save_close($form, &$form_state) {
 }
 
 /**
- * Paragraphs sort dialog popup.
+ * Paragraphs sort dialog popup form.
  */
-function paragraphs_dialog_sort($form, &$form_state, $paragraphs_item) {
+function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
     backdrop_not_found();
   }
-  dpm($paragraphs_item);
   $langcode = $paragraphs_item->langcode;
   $host_entity = $paragraphs_item->hostEntity();
   $field_name = $paragraphs_item->field_name;
   $element = $paragraphs_item->fieldInfo();
-  $element['#instance'] = $paragraphs_item->instanceInfo();
   $items = $host_entity->{$field_name};
-  dpm($element);
-
-  $output = '';
-  $instance = $element['#instance'];
 
   // If the field can hold more than one item, display it as a draggable table.
   if ($element['cardinality'] != 1) {
-    $table_id = backdrop_html_id($element['field_name'] . '_values');
-    $order_class = $element['field_name'] . '-' . $table_id . '-delta-order';
+    $form['paragraphs_items']['#tree'] = TRUE;
+    $form['host_entity']['#tree'] = TRUE;
+    $table_id = backdrop_html_id($field_name . '_values');
 
-    $header = array(
-      array(
-        'data' => '<label>' . t('!title', array('!title' => $element['#instance']['settings']['title'])) . '</label>',
-        'colspan' => 2,
-        'class' => array('field-label'),
-      ),
-      t('Order'),
-    );
     $rows = array();
 
-    //usort($items, '_field_sort_items_value_helper');
-    $show_display_mode_notice = FALSE;
-    // Add the items as table rows.
-    foreach ($items[$langcode] as $key => $item) {
+    $form['host_entity'][] = array(
+      'entity_type' => array(
+        '#type' => 'hidden',
+        '#value' => $paragraphs_item->hostEntityType(),
+      ),
+      'entity_id' => array(
+        '#type' => 'hidden',
+        '#value' =>  $paragraphs_item->hostEntityId(),
+      ),
+      'revision_id' => array(
+        '#type' => 'hidden',
+        '#value' =>  $paragraphs_item->hostEntityRevisionId(),
+      ),
+      'bundle' => array(
+        '#type' => 'hidden',
+        '#value' =>  $paragraphs_item->hostEntityBundle(),
+      ),
+      'field_name' => array(
+        '#type' => 'hidden',
+        '#value' =>  $field_name,
+      ),
+    );
+    foreach ($items[$langcode] as $delta => $item) {
       $item['entity'] = paragraphs_item_load($item['value']);
-      //dpm($item);
       $item_render_array = $item['entity']->view('paragraphs_editor_preview', $langcode);
       $item_markup = backdrop_render($item_render_array);
       if (empty($item_markup) || empty(trim(strip_tags($item_markup)))) {
         $bundle = paragraphs_bundle_load($item['entity']->bundle);
-        $item['#markup'] = $bundle->name;
-        $show_display_mode_notice = TRUE;
+        $item_markup = $bundle->name;
       }
-      else {
-        $item['#markup'] = $item_markup;
-      }
-      $item['_weight']['#value'] = $key;
-      $item['_weight']['#attributes']['class'] = array($order_class);
-      //$delta_element = backdrop_render($item['_weight']);
-      $cells = array(
+      $form['paragraphs_items'][$item['value']] = array(
+        'preview' => array(
+          '#markup' => $item_markup,
+        ),
+        'item_id' => array(
+          '#type' => 'hidden',
+          '#value' => $item['value'],
+        ),
+        'weight' => array(
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#default_value' => $delta,
+          '#delta' => 10,
+          '#title_display' => 'invisible',
+        ),
+      );
+    }
+    $form['actions'] = array(
+      '#type' => 'actions',
+    );
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Save Order'),
+      '#ajax' => array(
+        'callback' => 'paragraphs_dialog_sort_form_close',
+        'effect' => 'fade',
+      ),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Paragraphs sort dialog popup form submit.
+ */
+function paragraphs_dialog_sort_form_submit($form, &$form_state) {
+  // Load host entity.
+  $entity_type = $form_state['values']['host_entity'][0]['entity_type'];
+  $entity_id = $form_state['values']['host_entity'][0]['entity_id'];
+  $field_name = $form_state['values']['host_entity'][0]['field_name'];
+  $entity = entity_load($entity_type, $entity_id);
+
+  $unsorted_items = $entity->{$field_name}[$entity->langcode];
+  unset($entity->{$field_name}[$entity->langcode]);
+
+  foreach ($unsorted_items as $key => $entity_item) {
+    $item_id = $entity_item['value'];
+    $unsorted_items[$key]['weight'] = $form_state['values']['paragraphs_items'][$item_id]['weight'];
+  }
+  backdrop_sort($unsorted_items, array('weight'));
+  $sorted_items = array_values($unsorted_items);
+  $entity->{$field_name}[$entity->langcode] = $sorted_items;
+  $entity->save();
+/*
+  $paragraph_weights = array();
+  if (isset($form_state['values']['instance']['settings']['paragraphs_items'])) {
+    $paragraphs_items_table = $form_state['values']['instance']['settings']['paragraphs_items'];
+    backdrop_sort($paragraphs_items_table, array('#weight'));
+    foreach ($paragraphs_items_table as $paragraphs_item => $value) {
+      $bundle_weights[$machine_name] = $value['weight'];
+    }
+  }
+
+  $form_state['values']['instance']['settings']['bundle_weights'] = $bundle_weights;
+
+  unset($form_state['values']['instance']['settings']['allowed_bundles_table']);
+
+*/
+}
+
+
+/**
+ * Close Ajax modal popup.
+ */
+function paragraphs_dialog_sort_form_close($form, &$form_state) {
+  // Close modal dialog upon submit.
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+
+  // Refresh display of field that was sorted.
+  if (!empty($form_state['values']['host_entity'][0]['entity_id']) && !empty($form_state['values']['host_entity'][0]['entity_type'])) {
+    $entity_id = $form_state['values']['host_entity'][0]['entity_id'];
+    $entity_type = $form_state['values']['host_entity'][0]['entity_type'];
+    $revision_id = $form_state['values']['host_entity'][0]['revision_id'];
+    $field_name = $form_state['values']['host_entity'][0]['field_name'];
+    $entity = entity_load($entity_type, $entity_id);
+    $fresh_field = field_view_field($entity_type, $entity, $field_name);
+    $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraphs have been reordered.') . '</div>';
+    $new_element .= backdrop_render($fresh_field);
+    $commands['#commands'][] = ajax_command_html('.field-name-' . strtr($field_name, '_', '-') . ' .field-items', $new_element);
+    $commands['#commands'][] = array(
+        'command' => 'paragraphs_separate_edit_message_hide',
+    );
+  }
+  return $commands;
+}
+
+/**
+ * Paragraphs sort dialog popup form.
+ */
+function theme_paragraphs_dialog_sort_form($variables) {
+  $form = $variables['form'];
+
+  // Initialize the variable which will store our table rows.
+  $rows = array();
+
+  // Iterate over each element in our $form['example_items'] array.
+  foreach (element_children($form['paragraphs_items']) as $id) {
+    $form['paragraphs_items'][$id]['weight']['#attributes']['class'] = array('paragraphs-item-weight');
+    $rows[] = array(
+      'data' => array(
         array(
           'data' => '',
           'class' => array('field-multiple-drag'),
         ),
-        $item['#markup'],
-        array(
-          'data' => $key,
-          'class' => array('delta-order'),
-        ),
-      );
-      $class = array('draggable', backdrop_html_class('paragraphs_item_type_' . $paragraphs_item->bundle));
-      $rows[] = array(
-        'data' => $cells,
-        'class' => $class,
-      );
-    }
-dpm($rows);
-    $field_content = theme('table', array(
-      'header' => $header,
-      'rows' => $rows,
-      'attributes' => array(
-        'id' => $table_id,
-        'class' => array('field-multiple-table'),
+        backdrop_render($form['paragraphs_items'][$id]['preview']),
+        backdrop_render($form['paragraphs_items'][$id]['weight']),
       ),
-    ));
-
-    backdrop_add_tabledrag($table_id, 'order', 'sibling', $order_class);
+      'class' => array('draggable'),
+    );
   }
-
-  if (count($items[$langcode])) {
-    $output .= '<div class="form-item">';
-    //$output .= print_r($items[$langcode], TRUE);
-    $output .= $field_content;
-    $output .= $element['#instance']['description'] ? '<div class="description">' . $element['#instance']['description'] . '</div>' : '';
-    $output .= '</div>';
-  }
-  if ($show_display_mode_notice) {
-    $output .= t('<em>Note: The display of Paragraphs on this form can be customized in the Paragraphs Editor Preview display mode</em>.');
-  }
-
-  return array(
+  $header = array(
     array(
-      '#markup' => $output,
+      'data' => t('Preview'),
+      'colspan' => 2,
+      'class' => array('field-label'),
     ),
+    t('Weight'),
   );
-}
+  $table_id = backdrop_html_id('paragraph-items-sort');
+  $output = theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'attributes' => array(
+      'id' => $table_id,
+    ),
+  ));
+  $form['#children'] = $output;
+  $output .= backdrop_render_children($form);
 
+  backdrop_add_tabledrag($table_id, 'order', 'sibling', 'paragraphs-item-weight');
+  return $output;
+}
 
 /**
  * Page callback: Form constructor for paragraph deletion confirmation form.
@@ -581,9 +677,6 @@ dpm($rows);
  * @see paragraphs_dialog_delete_confirm_submit()
  */
 function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item = NULL) {
-  //dpm($paragraphs_item);
-  //dpm($form);
-  //dpm($form_state);
   if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
     $paragraphs_item = $form['paragraphs_item'];
   }
@@ -617,21 +710,6 @@ function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item 
  * @see aragraphs_dialog_delete_confirm()
  */
 function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
-  /*
-    //TODO: Remove the paragraph if the Remove button was clicked... (separate function/callback?)
-    $form_state['triggering_element']['#value'] == 'Remove';
-    $form_state['values']['paragraph_item']->item_id;
-
-  if ($form_state['values']['confirm']) {
-    $node = node_load($form_state['values']['nid']);
-    node_delete($form_state['values']['nid']);
-    watchdog('content', '@type: deleted %title.', array('@type' => $node->type, '%title' => $node->title));
-    backdrop_set_message(t('@type %title has been deleted.', array('@type' => node_type_get_name($node), '%title' => $node->title)));
-  }
-
-
-    
-    */
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -644,7 +722,6 @@ function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
     $paragraph = paragraphs_item_load($item_id);
     $paragraph->deleteRevision();
     //entity_delete_multiple('paragraphs_item', array($item_id));
-    //dpm($paragraph);
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been deleted.</div>');
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback

@@ -381,7 +381,6 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
   
-  // Tracking paragraph ID, Host entity type, Host entity ID in contextual link.
   $items['paragraphs/%paragraphs_item/edit'] = array(
     'title' => t('Edit paragraph'),
     'type' => MENU_LOCAL_ACTION,
@@ -406,7 +405,7 @@ function paragraphs_menu() {
     'title' => t('Sort paragraph'),
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_sort', 1),
+    'page arguments' => array('paragraphs_dialog_sort_form', 1),
     'access callback' => 'paragraphs_separate_edit_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -1379,6 +1378,9 @@ function paragraphs_theme() {
     'paragraphs_bundle_settings_form' => array(
       'render element' => 'form',
     ),
+    'paragraphs_dialog_sort_form' => array(
+      'render element' => 'form',
+    ),
     'paragraphs_items' => array(
       'render element' => 'element',
       'template' => 'paragraphs-items',
@@ -1692,7 +1694,6 @@ function paragraphs_preprocess(&$variables, $hook) {
   if ($hook == 'paragraphs_item') {
     $paragraph_ids = element_children($variables['elements']['entity']['paragraphs_item']);
     $paragraph_id = $paragraph_ids[0];
-    //dpm($variables);
     $paragraph = paragraphs_item_load($paragraph_id);
     // Nothing to do here if the user does not have admin access to this item or
     // separate editing is not activated on this item.
