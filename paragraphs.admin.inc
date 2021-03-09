@@ -519,7 +519,7 @@ function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
       $item['entity'] = paragraphs_item_load($item['value']);
       $item_render_array = $item['entity']->view('paragraphs_editor_preview', $langcode);
       $item_markup = backdrop_render($item_render_array);
-      if (empty($item_markup) || empty(trim(strip_tags($item_markup)))) {
+      if (empty($item_markup) || empty(trim(strip_tags($item_markup, '<img><a>')))) {
         $bundle = paragraphs_bundle_load($item['entity']->bundle);
         $item_markup = $bundle->name;
       }

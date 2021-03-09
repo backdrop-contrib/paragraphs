@@ -1606,9 +1606,18 @@ function paragraphs_separate_edit_access($paragraphs_item) {
   * Generate dropbuttons for separate edit.
   */
 function paragraphs_separate_edit_links($paragraph_id) {
-  //TODO: Add a "Remove" dropbutton? Add "Move Up/Down" buttons if more than one paragraph?
-  //TODO: Add styling/classes to float right and hide/show on hover like contextual links
-  //TODO: Investigate adding edit/arrow/delete icons to droplinks?
+  $titles = array(
+    'sort' => t('Sort'),
+    'edit' => t('Edit'),
+    'delete' => t('Delete'),
+    'add' => t('Add new'),
+  );
+  $classes = array(
+    'use-ajax',
+  );
+  if (module_exists('font_awesome')) {
+    $classes[] = 'font-awesome';
+  }
   $paragraphs_item = paragraphs_item_load($paragraph_id);
   $field_info = $paragraphs_item->fieldInfo();
   $access = paragraphs_separate_edit_access($paragraphs_item);
@@ -1621,10 +1630,10 @@ function paragraphs_separate_edit_links($paragraph_id) {
       ),
       '#links' => array(
         'paragraphs_admin_edit' => array(
-          'title' => t('Edit'),
+          'title' => $titles['edit'],
           'href' => 'paragraphs/' . $paragraph_id . '/edit',
           'attributes' => array(
-            'class' => array('use-ajax', 'paragraphs-edit'),
+            'class' => array_merge(array('paragraphs-edit'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
@@ -1634,10 +1643,10 @@ function paragraphs_separate_edit_links($paragraph_id) {
           ),
         ),
         'paragraphs_admin_delete' => array(
-          'title' => t('Delete x'),
+          'title' => $titles['delete'],
           'href' => 'paragraphs/' . $paragraph_id . '/delete',
           'attributes' => array(
-            'class' => array('use-ajax', 'paragraphs-delete'),
+            'class' => array_merge(array('paragraphs-delete'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
@@ -1647,10 +1656,10 @@ function paragraphs_separate_edit_links($paragraph_id) {
           ),
         ),
         'paragraphs_admin_add' => array(
-          'title' => t('Add new +'),
+          'title' => $titles['add'],
           'href' => 'paragraphs_separate_edit_placeholder',
           'attributes' => array(
-            'class' => array('use-ajax', 'paragraphs-delete'),
+            'class' => array_merge(array('paragraphs-add'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',
@@ -1663,10 +1672,10 @@ function paragraphs_separate_edit_links($paragraph_id) {
     );
     if ($field_info['cardinality'] != '1') {
       $admin_links['#links']['paragraphs_admin_sort'] = array(
-        'title' => t('Sort'),
+        'title' => $titles['sort'],
         'href' => 'paragraphs/' . $paragraph_id . '/sort',
         'attributes' => array(
-          'class' => array('use-ajax', 'paragraphs-sort'),
+          'class' => array_merge(array('paragraphs-sort'), $classes),
           'data-dialog' => TRUE,
           'data-dialog-options' => json_encode(array(
             'dialogClass' => 'paragraphs-admin-links-dialog',
