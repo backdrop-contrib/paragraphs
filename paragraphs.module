@@ -380,7 +380,7 @@ function paragraphs_menu() {
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
   );
-  
+
   $items['paragraphs/%paragraphs_item/edit'] = array(
     'title' => t('Edit paragraph'),
     'type' => MENU_LOCAL_ACTION,
@@ -390,7 +390,7 @@ function paragraphs_menu() {
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
   );
-  
+
   $items['paragraphs/%paragraphs_item/delete'] = array(
     'title' => t('Remove paragraph'),
     'type' => MENU_LOCAL_ACTION,
@@ -400,7 +400,7 @@ function paragraphs_menu() {
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
   );
-  
+
   $items['paragraphs/%paragraphs_item/sort'] = array(
     'title' => t('Sort paragraph'),
     'type' => MENU_LOCAL_ACTION,
@@ -410,7 +410,7 @@ function paragraphs_menu() {
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
   );
-  
+
   // Temporary placeholder page.
   $items['paragraphs_separate_edit_placeholder'] = array(
     'title' => 'TBD',
@@ -1670,7 +1670,8 @@ function paragraphs_separate_edit_links($paragraph_id) {
         ),
       ),
     );
-    if ($field_info['cardinality'] != '1') {
+    $hostEntity = $paragraphs_item->hostEntity();
+    if ($field_info['cardinality'] != '1' && count($hostEntity->{$field_info['field_name']}[$hostEntity->langcode]) > 1) {
       $admin_links['#links']['paragraphs_admin_sort'] = array(
         'title' => $titles['sort'],
         'href' => 'paragraphs/' . $paragraph_id . '/sort',

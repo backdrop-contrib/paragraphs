@@ -486,7 +486,7 @@ function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
   $items = $host_entity->{$field_name};
 
   // If the field can hold more than one item, display it as a draggable table.
-  if ($element['cardinality'] != 1) {
+  if ($element['cardinality'] != 1 || count($form_state['build_info']['args']) > 1) {
     $form['paragraphs_items']['#tree'] = TRUE;
     $form['host_entity']['#tree'] = TRUE;
     $table_id = backdrop_html_id($field_name . '_values');
