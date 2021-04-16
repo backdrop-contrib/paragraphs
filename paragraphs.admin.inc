@@ -355,18 +355,7 @@ function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
       //'wrapper' => $element['#wrapper_id'],
     ),
   );
-  /*
-  $form['actions']['remove_button'] = array(
-    '#type' => 'submit',
-    '#weight' => 10000,
-    '#value' => t('Remove'),
-    '#submit' => array('paragraphs_dialog_delete_confirm'),
-    '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
-    '#attributes' => array(
-      'class' => array('button-danger'),
-    ),
-  );
-  */
+
   field_attach_form('paragraphs_item', $paragraphs_item, $form, $form_state);
 
   // Get the top-level host entity.
@@ -730,11 +719,166 @@ function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
   return $commands;
 }
 
-function paragraphs_separate_edit_placeholder() {
-  $form['placeholder'] = array(
-    '#type' => 'item',
-    '#title' => t('Placeholder'),
-    '#markup' => 'This functionality has not been developed yet.',
-  );
+/**
+ * Separate paragraphs_item add form.
+ *
+ * Add a new paragraph above the submitted paragraph.
+ */
+function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
+  if (!$paragraphs_item) {
+    backdrop_not_found();
+  }
+  if (empty($form['#parents'])) {
+    $form['#parents'] = array();
+  }
+  backdrop_set_title(t('Add paragraph'));
+
+  $variables = array();
+  // Get the top-level host entity.
+  $item = $paragraphs_item;
+  $host = NULL;
+  while (method_exists($item, 'hostEntity')) {
+    $host = $item->hostEntity();
+    $host_entity_type = $item->hostEntityType();
+    $host_entity_id = $item->hostEntityId();
+    $host_entity_bundle = $item->hostEntityBundle();
+    $original_element = array(
+      '#entity' => $host,
+      '#entity_type' => $host_entity_type,
+      '#bundle' => $host_entity_bundle,
+    );
+    $field_name = $item->field_name;
+    $field = field_info_field($field_name);
+    $field_state = array(
+      'field' => $field,
+      'real_items_count' => 0,
+    );
+    $id_prefix = 'paragraphs_dialog_add';
+    $wrapper_id = 'paragraphs_dialog_add_wrapper';
+    $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
+    $variables['element']['#instance'] = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
+    $field_items = paragraphs_field_multiple_value_form($field, $instance, $item->langcode, array(), $form, $form_state, 0, $original_element);
+    $form += _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_state, $original_element, $id_prefix, $wrapper_id);
+    $item = $host;
+  }
   return $form;
 }
+
+
+
+/**
+ * Separate paragraphs_item add form.
+ *
+ * Add a new paragraph above the submitted paragraph.
+ */
+function paragraphs_dialog_add_form_wip($form, &$form_state, $paragraphs_item) {
+  if (!$paragraphs_item) {
+    backdrop_not_found();
+  }
+  if (empty($form['#parents'])) {
+    $form['#parents'] = array();
+  }
+  backdrop_set_title(t('Add paragraph'));
+
+  $variables = array();
+  // Get the top-level host entity.
+  $item = $paragraphs_item;
+  $host = NULL;
+  while (method_exists($item, 'hostEntity')) {
+    $host = $item->hostEntity();
+    $host_entity_type = $item->hostEntityType();
+    $host_entity_id = $item->hostEntityId();
+    $host_entity_bundle = $item->hostEntityBundle();
+    $original_element = array(
+      '#entity' => $host,
+      '#entity_type' => $host_entity_type,
+      '#bundle' => $host_entity_bundle,
+    );
+    $field_name = $item->field_name;
+    $field = field_info_field($field_name);
+    $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
+    $variables['element']['#instance'] = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
+    $field_items = paragraphs_field_multiple_value_form($field, $instance, $item->langcode, array(), $form, $form_state, 0, $original_element);
+    /*
+    $empty_item  = entity_create('paragraphs_item', array(
+      'bundle' => $item->bundle,
+    ));
+    field_attach_form('paragraphs_item', $empty_item, $form, $form_state);
+    */
+    //$form += $field_items;
+    // Only show revisioning options if our host is definitely revisioned.
+    $show_revision_options = FALSE;
+    $use_revisions = FALSE;
+    if ($host_entity_type == 'node') {
+      $show_revision_options = config_get('node.type.' . $host_entity_bundle, 'settings.revision_enabled');
+      $use_revisions = config_get('node.type.' . $host_entity_bundle, 'settings.revision_default');
+      if ($show_revision_options) {
+        $form['additional_settings'] = array(
+          '#type' => 'vertical_tabs',
+          '#weight' => 99,
+        );
+        $form['revision_information'] = array(
+          '#type' => 'fieldset',
+          '#title' => t('Revision information'),
+          '#collapsible' => TRUE,
+          // Collapsed by default when "Create new revision" is unchecked.
+          '#collapsed' => !$use_revisions,
+          '#group' => 'additional_settings',
+          '#attributes' => array(
+            'class' => array('node-form-revision-information'),
+          ),
+          '#attached' => array(
+            'js' => array(backdrop_get_path('module', 'node') . '/js/node.js'),
+          ),
+          '#weight' => 20,
+          '#access' => user_access('administer nodes'),
+        );
+        $form['revision_information']['revision'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Create new revision'),
+          '#default_value' => $use_revisions,
+          '#access' => user_access('administer nodes'),
+        );
+      }
+      $form['actions'] = array('#type' => 'actions');
+      $form['actions']['submit'] = array(
+        '#type' => 'submit',
+        '#weight' => 10000,
+        '#value' => t('Save'),
+        '#ajax' => array(
+          'callback' => 'paragraphs_dialog_save_close',
+          'effect' => 'fade',
+          //'wrapper' => $element['#wrapper_id'],
+        ),
+      );
+    }
+    $item = $host;
+  }
+  return $form;
+}
+
+/**
+ * Validation function for entity form for validating the fields.
+ */
+function paragraphs_dialog_add_validate($form, &$form_state) {
+  field_attach_form_validate('paragraphs_item', $form_state['values']['paragraphs_item'], $form, $form_state);
+}
+
+/**
+ * Submit function for add entity form.
+ */
+function paragraphs_dialog_add_submit($form, &$form_state) {
+  $paragraphs_item = $form_state['values']['paragraphs_item'];
+  field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
+
+  // Save a new revision of our host entity?
+  $save_new_revision = !empty($form_state['values']['revision']);
+  if ($save_new_revision) {
+    $paragraphs_item->is_new_revision = TRUE;
+  }
+
+  // You get a new revision when you save a node, even if there are no changes.
+  // Ensure that we do not save the host node if $save_new_revision is FALSE.
+  $paragraphs_item->save(FALSE);
+}
+

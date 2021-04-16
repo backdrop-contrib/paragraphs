@@ -411,12 +411,13 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
-  // Temporary placeholder page.
-  $items['paragraphs_separate_edit_placeholder'] = array(
-    'title' => 'TBD',
-    'description' => 'This feature is still under development',
-    'page callback' => 'paragraphs_separate_edit_placeholder',
-    'access arguments' => array('administer paragraphs bundles'),
+  $items['paragraphs/%paragraphs_item/add'] = array(
+    'title' => t('Add paragraph'),
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_dialog_add_form', 1),
+    'access callback' => 'paragraphs_separate_edit_access',
+    'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
   );
 
@@ -1657,7 +1658,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
         ),
         'paragraphs_admin_add' => array(
           'title' => $titles['add'],
-          'href' => 'paragraphs_separate_edit_placeholder',
+          'href' => 'paragraphs/' . $paragraph_id . '/add',
           'attributes' => array(
             'class' => array_merge(array('paragraphs-add'), $classes),
             'data-dialog' => TRUE,
