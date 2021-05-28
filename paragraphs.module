@@ -118,6 +118,7 @@ function paragraphs_entity_info() {
     'redirect' => FALSE,
     'entity keys' => array(
       'id' => 'item_id',
+      'label' => 'label',
       'revision' => 'revision_id',
       'bundle' => 'bundle',
       'field_name' => 'field_name',
