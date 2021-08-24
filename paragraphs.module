@@ -79,15 +79,6 @@ function paragraphs_item_load_multiple(array $ids = array(), $conditions = array
 }
 
 /**
- * Implements hook_ctools_plugin_directory().
- */
-function paragraphs_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'panelizer' && $plugin == 'entity') {
-    return 'plugins/panelizer/entity';
-  }
-}
-
-/**
  * Implements hook_config_info().
  */
 function paragraphs_config_info() {
@@ -975,15 +966,6 @@ function paragraphs_bundle_load($name = NULL, $rebuild = FALSE) {
 }
 
 /**
- * Menu load callback to scrub a paragraphs bundle from the URL safe equivalent.
- */
-function paragraphs_panelizer_bundle_name_load($name) {
-  if (($bundle = paragraphs_bundle_load($name))) {
-    return $bundle->bundle;
-  }
-}
-
-/**
  * Function to create or update an paragraphs bundle.
  *
  * @param object $bundle
@@ -1056,7 +1038,6 @@ function paragraphs_bundle_title_callback($bundle) {
 
 /**
  * Entity property info setter callback for the host entity property.
- *
  *
  * As the property is of type entity, the value will be passed as a wrapped
  * entity.
@@ -1476,20 +1457,6 @@ function paragraphs_field_prepare_translation($entity_type, $entity, $field, $in
 }
 
 /**
- * Implements hook_features_api().
- */
-function paragraphs_features_api() {
-  return array(
-    'paragraphs' => array(
-      'name' => t('Paragraphs Types'),
-      'feature_source' => TRUE,
-      'default_hook' => 'paragraphs_info',
-      'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.features.inc',
-    ),
-  );
-}
-
-/**
  * Implements hook_bundle_copy_info().
  */
 function paragraphs_bundle_copy_info() {
@@ -1518,7 +1485,6 @@ function paragraphs_autoload_info() {
     'ParagraphsItemMetadataController' => 'ParagraphsItemMetadataController.inc',
     'MigrateDestinationParagraphsItem' => 'migrate/destinations/MigrateDestinationParagraphsItem.inc',
     'ParagraphsMigrateParagraphsFieldHandler' => 'migrate/fields/ParagraphsMigrateParagraphsFieldHandler.inc',
-    'PanelizerEntityParagraphsItem' => 'plugins/panelizer/entity/PanelizerEntityParagraphsItem.class.php',
     'paragraphs_handler_relationship' => 'views/paragraphs_handler_relationship.inc',
   );
 }

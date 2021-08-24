@@ -4,6 +4,7 @@
  * @file
  * Entity implementation for the paragraphs entity.
  */
+
 class ParagraphsItemEntity extends Entity {
 
   /**

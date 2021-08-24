@@ -632,9 +632,14 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#type' => 'actions',
         '#weight' => 9999,
       );
+      $remove_button = '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => $instance_title)) . ' </p>';
+      $remove_button .= '<p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array(
+        '@title' => $instance_title,
+        '!confirm' => t('Confirm Deletion'),
+        '!save' => t('Save'),
+        )) . '</em></p>';
       $element['actions']['remove_button'] = array(
-        '#markup' => '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => $instance_title)) . ' </p>' .
-          '<p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array('@title' => $instance_title, '!confirm' => t('Confirm Deletion'), '!save' => t('Save'))) . '</em></p>',
+        '#markup' => $remove_button,
       );
       $element['actions']['restore_button'] = array(
         '#delta' => $delta,

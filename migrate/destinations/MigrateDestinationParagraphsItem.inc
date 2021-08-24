@@ -4,6 +4,7 @@
  * @file
  * Provides basic class for importing Paragraphs via Migrate API.
  */
+
 class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
 
   /**

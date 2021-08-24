@@ -4,6 +4,7 @@
  * @file
  * Provides migrate field handler for paragraphs field.
  */
+
 class ParagraphsMigrateParagraphsFieldHandler extends MigrateSimpleFieldHandler {
 
   /**
