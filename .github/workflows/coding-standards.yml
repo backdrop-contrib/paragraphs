@@ -33,5 +33,5 @@ jobs:
         run: >
           vendor/bin/phpcs -n
           --standard=vendor/backdrop/coder/coder_sniffer/Backdrop
-          --ignore="vendor/*,views/paragraphs_handler_relationship.inc"
+          --ignore="vendor/*,views/paragraphs_handler_relationship.inc,migrate/destinations/MigrateDestinationParagraphsItem.inc,ParagraphsItemEntity.inc"
           --extensions=install,module,php,inc .
