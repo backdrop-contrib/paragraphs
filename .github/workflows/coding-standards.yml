@@ -1,0 +1,37 @@
+name: Coding Standards
+on: [push, pull_request]
+jobs:
+  phpcs:
+    name: Run phpcs
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.2'
+          coverage: none
+
+      - uses: actions/checkout@v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: |
+          echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+      - name: Cache composer directory
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('./composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Composer install coder_sniffer
+        run: composer install --ansi --prefer-dist --no-interaction --no-progress
+
+      - name: Backdrop coding standards
+        run: >
+          vendor/bin/phpcs -n
+          --standard=vendor/backdrop/coder/coder_sniffer/Backdrop
+          --ignore="vendor/*"
+          --extensions=install,module,php,inc .
