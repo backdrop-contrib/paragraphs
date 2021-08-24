@@ -159,10 +159,8 @@ function paragraphs_entity_info() {
     );
   }
 
-  if (module_exists('entitycache')) {
-    $return['paragraphs_item']['field cache'] = FALSE;
-    $return['paragraphs_item']['entity cache'] = TRUE;
-  }
+  $return['paragraphs_item']['field cache'] = FALSE;
+  $return['paragraphs_item']['entity cache'] = TRUE;
 
   return $return;
 }
@@ -1507,45 +1505,6 @@ function paragraphs_bundle_copy_info() {
       ),
     ),
   );
-}
-
-/**
- * Helper to ensure entitycache table.
- */
-function paragraphs_ensure_entitycache_table() {
-  if (module_exists('entitycache') && !db_table_exists('cache_entity_paragraphs_item')) {
-    backdrop_load('module', 'entitycache');
-    $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
-    $cache_schema['description'] = 'Cache table used to store paragraphs_item entity records.';
-    db_create_table('cache_entity_paragraphs_item', $cache_schema);
-  }
-}
-
-/**
- * Helper to remove entitycache table.
- */
-function paragraphs_remove_entitycache_table() {
-  if (db_table_exists('cache_entity_paragraphs_item')) {
-    db_drop_table('cache_entity_paragraphs_item');
-  }
-}
-
-/**
- * Implements hook_modules_installed().
- */
-function paragraphs_modules_installed($modules) {
-  if (in_array('entitycache', $modules)) {
-    paragraphs_ensure_entitycache_table();
-  }
-}
-
-/**
- * Implements hook_modules_uninstalled().
- */
-function paragraphs_modules_uninstalled($modules) {
-  if (in_array('entitycache', $modules)) {
-    paragraphs_remove_entitycache_table();
-  }
 }
 
 /**
