@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @file
  * Entity metadata implementation for the paragraphs entity.
  */
 class ParagraphsItemMetadataController extends EntityDefaultMetadataController {

@@ -270,7 +270,9 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
               '#title' => t('!title type', array('!title' => $instance_title)),
               '#options' => $select_list,
               '#attributes' => array('class' => array('field-add-more-type')),
-              '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
+              '#limit_validation_errors' => array(
+                array_merge($parents, array($field_name, $langcode)),
+              ),
             );
 
             // Hide the bundle selection if only one bundle is allowed.
@@ -631,7 +633,8 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#weight' => 9999,
       );
       $element['actions']['remove_button'] = array(
-        '#markup' => '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => $instance_title)) . ' </p><p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array('@title' => $instance_title, '!confirm' => t('Confirm Deletion'), '!save' => t('Save'))) . '</em></p>',
+        '#markup' => '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => $instance_title)) . ' </p>' .
+          '<p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array('@title' => $instance_title, '!confirm' => t('Confirm Deletion'), '!save' => t('Save'))) . '</em></p>',
       );
       $element['actions']['restore_button'] = array(
         '#delta' => $delta,

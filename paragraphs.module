@@ -420,7 +420,7 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
     $form['#theme'] = array('paragraphs_bundle_settings_form');
     array_unshift($form['#submit'], 'paragraphs_bundle_settings_form_submit');
   }
-  else if ($form['#instance']['entity_type'] == 'paragraphs_item') {
+  elseif ($form['#instance']['entity_type'] == 'paragraphs_item') {
     $form['actions']['delete']['#submit'][] = 'paragraphs_field_edit_form_submit';
   }
 }
@@ -1030,7 +1030,7 @@ function paragraphs_bundle_save($bundle) {
 function paragraphs_bundle_delete($bundle_machine_name) {
   $bundle = paragraphs_bundle_load($bundle_machine_name);
   if (is_object($bundle)) {
-    // delete config files
+    // Delete config files.
     $config = config('paragraphs.type.' . $bundle->bundle);
     $config->delete();
     $sub_names = config_get_names_with_prefix('field.instance.paragraphs_item.' . $bundle->bundle . '.');
@@ -1047,8 +1047,8 @@ function paragraphs_bundle_delete($bundle_machine_name) {
 /**
  * Helper to get the title of a bundle.
  *
- * @param $bundle
- *   The bundle.
+ * @param object $bundle
+ *   The object of the bundle to get the title for.
  */
 function paragraphs_bundle_title_callback($bundle) {
   return t('Edit Paragraph type !name', array('!name' => $bundle->name));
@@ -1217,7 +1217,7 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
   $required = !empty($element['#required']) ? theme('form_required_marker', $variables) : '';
 
   // Sort items according to '_weight' (needed when the form comes back after
-  // preview or failed validation)
+  // preview or failed validation).
   $items = array();
   foreach (element_children($element) as $key) {
     if ($key === 'add_more') {
@@ -1461,9 +1461,11 @@ function paragraphs_field_prepare_translation($entity_type, $entity, $field, $in
   if (!module_exists("paragraphs_i18n")) {
     list($id, ,) = entity_extract_ids($entity_type, $entity);
 
-    // field_attach_prepare_translation() copied the entity ids from the source,
-    // as we need a new entity for a new translation, we cannot reuse that.
-    // @todo clone existing paragraphs to new translation
+    // The field_attach_prepare_translation() function copied the entity ids
+    // from the source, but as we need a new entity for a new translation, we
+    // cannot reuse that.
+    // To clone existing paragraphs to the new translation, see the Replicate
+    // and Replicate Paragraphs modules.
     if (empty($id)) {
       $items = array();
     }
