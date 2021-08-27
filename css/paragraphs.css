@@ -70,6 +70,15 @@
   font-weight: 900;
 }
 
+.paragraphs-admin-edit a {
+  text-decoration: none;
+}
+
+.ui-dialog-content .paragraphs-dialog-edit img {
+  max-width: 100%;
+  width: auto;
+}
+
 .font-awesome.paragraphs-edit:before {
   content: '\f304';
 }
