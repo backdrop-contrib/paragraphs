@@ -1788,7 +1788,7 @@ function paragraphs_contextual_links_view_alter(&$element, $items) {
  */
 function paragraphs_admin_paths() {
   $paths = array(
-    'paragraphs/*/edit' => TRUE,
+    'paragraphs/*' => FALSE,
   );
 
   return $paths;

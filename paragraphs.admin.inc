@@ -626,6 +626,10 @@ function theme_paragraphs_dialog_sort_form($variables) {
     $form['paragraphs_items'][$id]['weight']['#attributes']['class'] = array('paragraphs-item-weight');
     $rows[] = array(
       'data' => array(
+        array(
+          'data' => '',
+          'class' => array('field-multiple-drag'),
+        ),
         backdrop_render($form['paragraphs_items'][$id]['preview']),
         backdrop_render($form['paragraphs_items'][$id]['weight']),
       ),
@@ -635,6 +639,7 @@ function theme_paragraphs_dialog_sort_form($variables) {
   $header = array(
     array(
       'data' => t('Preview'),
+      'colspan' => 2,
       'class' => array('field-label'),
     ),
     t('Weight'),
