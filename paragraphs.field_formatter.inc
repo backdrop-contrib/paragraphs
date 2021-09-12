@@ -96,7 +96,6 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
         if ($paragraph = paragraphs_field_get_entity($item)) {
           $paragraph->setHostEntity($entity_type, $entity, $langcode);
           if (entity_access('view', 'paragraphs_item', $paragraph)) {
-            $element[$delta]['#theme_wrappers'] = array('paragraphs_item');
             $element[$delta]['entity'] = $paragraph->view($view_mode, $langcode);
           }
         }
