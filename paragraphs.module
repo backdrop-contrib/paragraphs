@@ -612,7 +612,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
 
   $element['separate_edit'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enable separate editing'),
+    '#title' => t('Enable separate editing (experimental)'),
     '#description' => t('Enables a dropbutton per paragraph for editing separately in a modal dialog.'),
     '#default_value' => isset($settings['separate_edit']) ? $settings['separate_edit'] : PARAGRAPHS_DEFAULT_SEPARATE_EDIT,
   );

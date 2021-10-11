@@ -267,7 +267,6 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             /* @var $entity_shell ParagraphsItemEntity */
             $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
             $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
-
             $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
               '#type' => 'submit',
               '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
@@ -942,10 +941,8 @@ function _paragraphs_multiple_field_validate($elements, &$form_state) {
  */
 function paragraphs_add_more_js(array $form, array $form_state) {
   $button = $form_state['triggering_element'];
-
   // Go one level up in the form, to the widgets container.
   $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -2));
-
   // Add a DIV around the delta receiving the Ajax effect.
   $delta = $element['#max_delta'];
   $element[$delta]['#prefix'] = '<div class="ajax-new-content">' . (isset($element[$delta]['#prefix']) ? $element[$delta]['#prefix'] : '');

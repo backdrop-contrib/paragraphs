@@ -722,7 +722,7 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
 /**
  * Separate paragraphs_item add form.
  *
- * Add a new paragraph above the submitted paragraph.
+ * Add a new paragraphs item above the submitted paragraphs item.
  */
 function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
@@ -753,60 +753,16 @@ function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
       'field' => $field,
       'real_items_count' => 0,
     );
-    $id_prefix = 'paragraphs_dialog_add';
-    $wrapper_id = 'paragraphs_dialog_add_wrapper';
+    // $id_prefix = 'edit-add-more';
+    $id_prefix = str_replace('_','-',$field_name);
+    // $wrapper_id = backdrop_html_id($id_prefix . '-add-more-wrapper');
+    // $wrapper_id = 'edit-add-more';
+    $wrapper_id = backdrop_html_id('edit-add-more');
     $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
     $variables['element']['#instance'] = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
     $field_items = paragraphs_field_multiple_value_form($field, $instance, $item->langcode, array(), $form, $form_state, 0, $original_element);
     $form += _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_state, $original_element, $id_prefix, $wrapper_id);
-    $item = $host;
-  }
-  return $form;
-}
 
-
-
-/**
- * Separate paragraphs_item add form.
- *
- * Add a new paragraph above the submitted paragraph.
- */
-function paragraphs_dialog_add_form_wip($form, &$form_state, $paragraphs_item) {
-  if (!$paragraphs_item) {
-    backdrop_not_found();
-  }
-  if (empty($form['#parents'])) {
-    $form['#parents'] = array();
-  }
-  backdrop_set_title(t('Add paragraph'));
-
-  $variables = array();
-  // Get the top-level host entity.
-  $item = $paragraphs_item;
-  $host = NULL;
-  while (method_exists($item, 'hostEntity')) {
-    $host = $item->hostEntity();
-    $host_entity_type = $item->hostEntityType();
-    $host_entity_id = $item->hostEntityId();
-    $host_entity_bundle = $item->hostEntityBundle();
-    $original_element = array(
-      '#entity' => $host,
-      '#entity_type' => $host_entity_type,
-      '#bundle' => $host_entity_bundle,
-    );
-    $field_name = $item->field_name;
-    $field = field_info_field($field_name);
-    $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
-    $variables['element']['#instance'] = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
-    $field_items = paragraphs_field_multiple_value_form($field, $instance, $item->langcode, array(), $form, $form_state, 0, $original_element);
-    /*
-    $empty_item  = entity_create('paragraphs_item', array(
-      'bundle' => $item->bundle,
-    ));
-    field_attach_form('paragraphs_item', $empty_item, $form, $form_state);
-    */
-    //$form += $field_items;
-    // Only show revisioning options if our host is definitely revisioned.
     $show_revision_options = FALSE;
     $use_revisions = FALSE;
     if ($host_entity_type == 'node') {
