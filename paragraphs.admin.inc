@@ -604,7 +604,7 @@ function paragraphs_dialog_sort_form_close($form, &$form_state) {
     $fresh_field = field_view_field($entity_type, $entity, $field_name);
     $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraphs have been reordered.') . '</div>';
     $new_element .= backdrop_render($fresh_field);
-    $commands['#commands'][] = ajax_command_html('.field-name-' . strtr($field_name, '_', '-') . ' .field-items', $new_element);
+    $commands['#commands'][] = ajax_command_html('.paragraphs-items-' . strtr($field_name, '_', '-'), $new_element);
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide',
     );
@@ -663,9 +663,9 @@ function theme_paragraphs_dialog_sort_form($variables) {
  * Page callback: Form constructor for paragraph deletion confirmation form.
  *
  * @see paragraphs_menu()
- * @see paragraphs_dialog_delete_confirm_submit()
+ * @see paragraphs_dialog_remove_confirm_submit()
  */
-function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item = NULL) {
+function paragraphs_dialog_remove_confirm($form, &$form_state, $paragraphs_item = NULL) {
   if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
     $paragraphs_item = $form['paragraphs_item'];
   }
@@ -675,17 +675,17 @@ function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item 
   );
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   $form['description'] = array(
-    '#markup' => t('Are you sure you want to delete this !type? (This action cannot be undone.)', array('!type' => $bundle->name)),
+    '#markup' => t('Are you sure you want to remove this !type? (This action cannot be undone.)', array('!type' => $bundle->name)),
   );
   $form['actions'] = array(
     '#type' => 'actions',
   );
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Delete'),
+    '#value' => t('Remove'),
     '#attributes' => array('class' => array('button-danger')),
     '#ajax' => array(
-      'callback' => 'paragraphs_dialog_delete_confirm_submit',
+      'callback' => 'paragraphs_dialog_remove_confirm_submit',
       'effect' => 'fade',
       //'wrapper' => $element['#wrapper_id'],
     ),
@@ -694,11 +694,11 @@ function paragraphs_dialog_delete_confirm($form, &$form_state, $paragraphs_item 
 }
 
 /**
- * Form submission handler for aragraphs_dialog_delete_confirm().
+ * Form submission handler for paragraphs_dialog_remove_confirm().
  *
- * @see aragraphs_dialog_delete_confirm()
+ * @see paragraphs_dialog_remove_confirm()
  */
-function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
+function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -711,7 +711,7 @@ function paragraphs_dialog_delete_confirm_submit($form, &$form_state) {
     $paragraph = paragraphs_item_load($item_id);
     $paragraph->deleteRevision();
     //entity_delete_multiple('paragraphs_item', array($item_id));
-    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been deleted.</div>');
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been removed.</div>');
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
     );

@@ -391,11 +391,11 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
-  $items['paragraphs/%paragraphs_item/delete'] = array(
+  $items['paragraphs/%paragraphs_item/remove'] = array(
     'title' => t('Remove paragraph'),
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_delete_confirm', 1),
+    'page arguments' => array('paragraphs_dialog_remove_confirm', 1),
     'access callback' => 'paragraphs_separate_edit_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -1610,7 +1610,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
   $titles = array(
     'sort' => t('Sort'),
     'edit' => t('Edit'),
-    'delete' => t('Delete'),
+    'remove' => t('Remove'),
     'add' => t('Add new'),
   );
   $classes = array(
@@ -1643,11 +1643,11 @@ function paragraphs_separate_edit_links($paragraph_id) {
             )),
           ),
         ),
-        'paragraphs_admin_delete' => array(
-          'title' => $titles['delete'],
-          'href' => 'paragraphs/' . $paragraph_id . '/delete',
+        'paragraphs_admin_remove' => array(
+          'title' => $titles['remove'],
+          'href' => 'paragraphs/' . $paragraph_id . '/remove',
           'attributes' => array(
-            'class' => array_merge(array('paragraphs-delete'), $classes),
+            'class' => array_merge(array('paragraphs-remove'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
               'dialogClass' => 'paragraphs-admin-links-dialog',

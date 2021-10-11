@@ -555,6 +555,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             $element[$key]['#access'] = FALSE;
           }
         }
+        // Make as dropbutton?
         $element['actions'] = array(
           '#type' => 'actions',
           '#weight' => 9999,

@@ -1,3 +1,7 @@
+html.dialog-open {
+  position: inherit;
+}
+
 .paragraphs-icon {
     max-height: 50px;
 }
@@ -82,7 +86,7 @@
 .font-awesome.paragraphs-edit:before {
   content: '\f304';
 }
-.font-awesome.paragraphs-delete:before {
+.font-awesome.paragraphs-remove:before {
   content: '\f2ed';
 }
 .font-awesome.paragraphs-add:before {
