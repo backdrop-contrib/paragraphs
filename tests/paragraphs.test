@@ -38,17 +38,17 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     parent::setUp($modules);
 
     // Make sure the base configuration is set up.
-    features_revert_module('paragraphs_test');
+    // @todo: Do this without Features
+    // features_revert_module('paragraphs_test');
 
     // Create with a user rolegiven by the feature.
     $this->privilegedUser = $this->backdropCreateUserWithRole('ptest creator');
   }
 
   /**
-   * Tests creating and updating a node with panelizer enabled paragraphs.
+   * Tests required field validation on paragraph bundle.
    */
-  public function testPanelizer() {
-
+  public function testRequiredFieldInBundle() {
     $this->backdropLogin($this->privilegedUser);
 
     $this->backdropGet('node/add/paragraph-test');
@@ -57,59 +57,19 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
 
     $title = $this->randomString(20);
-    $value1 = $this->randomString(20);
-    $create_edit = array(
-      'title' => $title,
-      'field_paragraphs[und][0][field_ptest_text][und][0][value]' => $value1,
-    );
-    $this->backdropPost(NULL, $create_edit, t('Save'));
-
-    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
-    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
-
-    // Update the created node.
-    $node_url = $this->getUrl();
-    $this->backdropGet($node_url . '/edit');
-
-    $this->backdropPost(NULL, array(), t('Add another Paragraph'));
-
-    $value2 = $this->randomString(20);
-    $update_edit = array(
-      'field_paragraphs[und][1][field_ptest_text][und][0][value]' => $value2,
-    );
-    $this->backdropPost(NULL, $update_edit, t('Save'));
-
-    $this->assertRaw(t('!post %title has been updated.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node updated.');
-    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
-    $this->assertText(check_plain($value2), 'Second value of paragraph was rendered.');
-
-  }
-
-  /**
-   * Tests required field validation on paragraph bundle.
-   */
-  public function testRequiredFieldInBundle() {
-    $this->drupalLogin($this->privilegedUser);
-
-    $this->drupalGet('node/add/paragraph-test');
-
-    // Add a new paragraph before saving node.
-    $this->drupalPost(NULL, array(), t('Add new Paragraph'));
-
-    $title = $this->randomString(20);
 
     $create_edit = array(
       'title' => $title,
     );
 
     // Click the Save button to test whole-form validation.
-    $this->drupalPost(NULL, $create_edit, t('Save'));
+    $this->backdropPost(NULL, $create_edit, t('Save'));
 
     // Empty field should fail validation.
     $this->assertRaw(t('!field field is required.', array('!field' => 'PTest Text')), 'Field failed whole-form validation');
 
     // Click the Collapse button to test per-paragraph validation.
-    $this->drupalPost(NULL, $create_edit, t('Collapse'));
+    $this->backdropPost(NULL, $create_edit, t('Collapse'));
 
     // Empty field should fail validation.
     $this->assertRaw(t('!field field is required.', array('!field' => 'PTest Text')), 'Field failed per-paragraph validation');
@@ -121,7 +81,7 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     );
 
     // Click Collapse button to close paragraph (should now pass).
-    $this->drupalPost(NULL, $create_edit, t('Collapse'));
+    $this->backdropPost(NULL, $create_edit, t('Collapse'));
 
     // Paragraph item should collapse after passing validation.
     $this->assertRaw(t('Warning: this content must be saved to reflect changes on this paragraphs item.'), 'Field passed per-paragraph validation');
@@ -131,7 +91,7 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     );
 
     // Save whole node.
-    $this->drupalPost(NULL, $create_edit, t('Save'));
+    $this->backdropPost(NULL, $create_edit, t('Save'));
 
     // Node should save.
     $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');

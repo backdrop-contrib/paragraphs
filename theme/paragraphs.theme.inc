@@ -35,7 +35,6 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
 
   $variables['view_mode'] = $view_mode;
   $variables['bundle'] = $bundle;
-  
   $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$paragraph_id];
 
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $bundle);
