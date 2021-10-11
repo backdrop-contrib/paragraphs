@@ -1588,7 +1588,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
     'sort' => t('Sort'),
     'edit' => t('Edit'),
     'remove' => t('Remove'),
-    'add' => t('Add new'),
+//    'add' => t('Add new'),
   );
   $classes = array(
     'use-ajax',

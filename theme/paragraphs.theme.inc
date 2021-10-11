@@ -43,5 +43,5 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
-  
+
 }
