@@ -1656,6 +1656,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
             )),
           ),
         ),
+        /*
         'paragraphs_admin_add' => array(
           'title' => $titles['add'],
           'href' => 'paragraphs/' . $paragraph_id . '/add',
@@ -1669,6 +1670,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
             )),
           ),
         ),
+        */
       ),
     );
     $hostEntity = $paragraphs_item->hostEntity();
