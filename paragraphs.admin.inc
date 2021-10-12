@@ -449,8 +449,8 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     // $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
-        'command' => 'paragraphs_separate_edit_message_hide',
-        // 'value1'  => 'My first value',
+      'command' => 'paragraphs_separate_edit_message_hide',
+      // 'value1'  => 'My first value',
     );
   }
   return $commands;
@@ -563,11 +563,11 @@ function paragraphs_dialog_sort_form_submit($form, &$form_state) {
   /*
   $paragraph_weights = array();
   if (isset($form_state['values']['instance']['settings']['paragraphs_items'])) {
-    $paragraphs_items_table = $form_state['values']['instance']['settings']['paragraphs_items'];
-    backdrop_sort($paragraphs_items_table, array('#weight'));
-    foreach ($paragraphs_items_table as $paragraphs_item => $value) {
-      $bundle_weights[$machine_name] = $value['weight'];
-    }
+  $paragraphs_items_table = $form_state['values']['instance']['settings']['paragraphs_items'];
+  backdrop_sort($paragraphs_items_table, array('#weight'));
+  foreach ($paragraphs_items_table as $paragraphs_item => $value) {
+  $bundle_weights[$machine_name] = $value['weight'];
+  }
   }
 
   $form_state['values']['instance']['settings']['bundle_weights'] = $bundle_weights;
@@ -705,10 +705,10 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
     $paragraph = paragraphs_item_load($item_id);
     $paragraph->deleteRevision();
-    // @todo: Check entity_delete_multiple('paragraphs_item', array($item_id)).
+    // Check entity_delete_multiple('paragraphs_item', array($item_id)).
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been removed.</div>');
     $commands['#commands'][] = array(
-        'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
+        'command' => 'paragraphs_separate_edit_message_hide',
     );
   }
   return $commands;
@@ -749,7 +749,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
       'real_items_count' => 0,
     );
     // $id_prefix = 'edit-add-more';
-    $id_prefix = str_replace('_','-',$field_name);
+    $id_prefix = str_replace('_', '-', $field_name);
     // $wrapper_id = backdrop_html_id($id_prefix . '-add-more-wrapper');
     // $wrapper_id = 'edit-add-more';
     $wrapper_id = backdrop_html_id('edit-add-more');

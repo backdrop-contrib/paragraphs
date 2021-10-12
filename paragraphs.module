@@ -1570,7 +1570,6 @@ function paragraphs_modules_uninstalled($modules) {
  * Access callback for separate form.
  *
  * @var ParagraphsItemEntity $paragraphs_item
- *
  */
 function paragraphs_separate_edit_access($paragraphs_item) {
   $paragraphs_item->hostEntity();
@@ -1590,7 +1589,7 @@ function paragraphs_separate_edit_links($paragraph_id) {
     'sort' => t('Sort'),
     'edit' => t('Edit'),
     'remove' => t('Remove'),
-    //  'add' => t('Add new'),
+    // 'add' => t('Add new'),
   );
   $classes = array(
     'use-ajax',
@@ -1778,6 +1777,7 @@ function paragraphs_admin_paths() {
  * Get Paragraphs' router items.
  *
  * @param $base
+ *
  * @return mixed
  *
  */

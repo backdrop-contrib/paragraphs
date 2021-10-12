@@ -173,7 +173,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
  * Helper function to generate "Add more" buttons for a form.
  *
  * @return array
- * Array of field elements to add to your form.
+ *   Array of field elements to add to your form.
  */
 function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_state, $original_element, $id_prefix, $wrapper_id) {
   $field = $field_state['field'];
@@ -298,7 +298,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             '#title' => t('!title type', array('!title' => $instance_title)),
             '#options' => $select_list,
             '#attributes' => array('class' => array('field-add-more-type')),
-            '#limit_validation_errors' => array(array_merge($parents, array($field_name, $langcode))),
+            '#limit_validation_errors' => array(
+              array_merge($parents, array($field_name, $langcode)),
+            ),
           );
 
           // Hide the bundle selection if only one bundle is allowed.
