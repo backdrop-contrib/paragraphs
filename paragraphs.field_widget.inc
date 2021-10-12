@@ -172,8 +172,8 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 /**
  * Helper function to generate "Add more" buttons for a form.
  *
- * @return array of field elements to add to your form.
- *
+ * @return array
+ * Array of field elements to add to your form.
  */
 function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_state, $original_element, $id_prefix, $wrapper_id) {
   $field = $field_state['field'];

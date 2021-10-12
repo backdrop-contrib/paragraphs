@@ -322,7 +322,7 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
 }
 
 /**
- * Separate paragraphs_item edit form
+ * Separate paragraphs_item edit form.
  */
 function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
@@ -344,7 +344,7 @@ function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
     '#ajax' => array(
       'callback' => 'paragraphs_dialog_save_close',
       'effect' => 'fade',
-      //'wrapper' => $element['#wrapper_id'],
+      // 'wrapper' => $element['#wrapper_id'],
     ),
   );
 
@@ -424,6 +424,9 @@ function paragraphs_dialog_edit_submit($form, &$form_state) {
   $paragraphs_item->save(FALSE);
 }
 
+/**
+ * Save and close Ajax modal popup.
+ */
 function paragraphs_dialog_save_close($form, &$form_state) {
   $paragraphs_item = $form_state['values']['paragraphs_item'];
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
@@ -439,15 +442,15 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
-    //$new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
-    //$new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
+    // $new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
+    // $new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
     $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
-    //$new_element .= "</div>";
+    // $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide',
-        //'value1'  => 'My first value',
+        // 'value1'  => 'My first value',
     );
   }
   return $commands;
@@ -481,19 +484,19 @@ function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
       ),
       'entity_id' => array(
         '#type' => 'hidden',
-        '#value' =>  $paragraphs_item->hostEntityId(),
+        '#value' => $paragraphs_item->hostEntityId(),
       ),
       'revision_id' => array(
         '#type' => 'hidden',
-        '#value' =>  $paragraphs_item->hostEntityRevisionId(),
+        '#value' => $paragraphs_item->hostEntityRevisionId(),
       ),
       'bundle' => array(
         '#type' => 'hidden',
-        '#value' =>  $paragraphs_item->hostEntityBundle(),
+        '#value' => $paragraphs_item->hostEntityBundle(),
       ),
       'field_name' => array(
         '#type' => 'hidden',
-        '#value' =>  $field_name,
+        '#value' => $field_name,
       ),
     );
     foreach ($items[$langcode] as $delta => $item) {
@@ -557,7 +560,7 @@ function paragraphs_dialog_sort_form_submit($form, &$form_state) {
   $sorted_items = array_values($unsorted_items);
   $entity->{$field_name}[$entity->langcode] = $sorted_items;
   $entity->save();
-/*
+  /*
   $paragraph_weights = array();
   if (isset($form_state['values']['instance']['settings']['paragraphs_items'])) {
     $paragraphs_items_table = $form_state['values']['instance']['settings']['paragraphs_items'];
@@ -571,7 +574,7 @@ function paragraphs_dialog_sort_form_submit($form, &$form_state) {
 
   unset($form_state['values']['instance']['settings']['allowed_bundles_table']);
 
-*/
+  */
 }
 
 
@@ -679,7 +682,7 @@ function paragraphs_dialog_remove_confirm($form, &$form_state, $paragraphs_item 
     '#ajax' => array(
       'callback' => 'paragraphs_dialog_remove_confirm_submit',
       'effect' => 'fade',
-      //'wrapper' => $element['#wrapper_id'],
+      // 'wrapper' => $element['#wrapper_id'],
     ),
   );
   return $form;
@@ -702,7 +705,7 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
     $paragraph = paragraphs_item_load($item_id);
     $paragraph->deleteRevision();
-    //entity_delete_multiple('paragraphs_item', array($item_id));
+    // @todo: Check entity_delete_multiple('paragraphs_item', array($item_id)).
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been removed.</div>');
     $commands['#commands'][] = array(
         'command' => 'paragraphs_separate_edit_message_hide', // the name of your javascript callback
@@ -796,7 +799,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
         '#ajax' => array(
           'callback' => 'paragraphs_dialog_save_close',
           'effect' => 'fade',
-          //'wrapper' => $element['#wrapper_id'],
+          // 'wrapper' => $element['#wrapper_id'],
         ),
       );
     }
@@ -829,4 +832,3 @@ function paragraphs_dialog_add_submit($form, &$form_state) {
   // Ensure that we do not save the host node if $save_new_revision is FALSE.
   $paragraphs_item->save(FALSE);
 }
-

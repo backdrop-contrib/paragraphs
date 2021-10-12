@@ -381,7 +381,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/edit'] = array(
-    'title' => t('Edit paragraph'),
+    'title' => 'Edit paragraph',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_edit', 1),
@@ -391,7 +391,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/remove'] = array(
-    'title' => t('Remove paragraph'),
+    'title' => 'Remove paragraph',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_remove_confirm', 1),
@@ -401,7 +401,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/sort'] = array(
-    'title' => t('Sort paragraph'),
+    'title' => 'Sort paragraph',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_sort_form', 1),
@@ -411,7 +411,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/add'] = array(
-    'title' => t('Add paragraph'),
+    'title' => 'Add paragraph',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_add_form', 1),
@@ -1568,9 +1568,11 @@ function paragraphs_modules_uninstalled($modules) {
 
 /**
  * Access callback for separate form.
+ *
+ * @var ParagraphsItemEntity $paragraphs_item
+ *
  */
 function paragraphs_separate_edit_access($paragraphs_item) {
-  /** @var ParagraphsItemEntity $paragraphs_item */
   $paragraphs_item->hostEntity();
   $host_entity_type = $paragraphs_item->hostEntityType();
   $instance = $paragraphs_item->instanceInfo();
@@ -1581,14 +1583,14 @@ function paragraphs_separate_edit_access($paragraphs_item) {
 }
 
 /**
-  * Generate dropbuttons for separate edit.
-  */
+ * Generate dropbuttons for separate edit.
+ */
 function paragraphs_separate_edit_links($paragraph_id) {
   $titles = array(
     'sort' => t('Sort'),
     'edit' => t('Edit'),
     'remove' => t('Remove'),
-//    'add' => t('Add new'),
+    //  'add' => t('Add new'),
   );
   $classes = array(
     'use-ajax',
@@ -1650,8 +1652,8 @@ function paragraphs_separate_edit_links($paragraph_id) {
         */
       ),
     );
-    $hostEntity = $paragraphs_item->hostEntity();
-    if ($field_info['cardinality'] != '1' && count($hostEntity->{$field_info['field_name']}[$hostEntity->langcode]) > 1) {
+    $host_entity = $paragraphs_item->hostEntity();
+    if ($field_info['cardinality'] != '1' && count($host_entity->{$field_info['field_name']}[$host_entity->langcode]) > 1) {
       $admin_links['#links']['paragraphs_admin_sort'] = array(
         'title' => $titles['sort'],
         'href' => 'paragraphs/' . $paragraph_id . '/sort',
@@ -1678,7 +1680,6 @@ function paragraphs_separate_edit_links($paragraph_id) {
 
 /**
  * Implements hook_preprocess().
- *
  */
 function paragraphs_preprocess(&$variables, $hook) {
   if ($hook == 'paragraphs_item') {
@@ -1778,6 +1779,7 @@ function paragraphs_admin_paths() {
  *
  * @param $base
  * @return mixed
+ *
  */
 function paragraphs_get_router_items($base) {
   // Performance: We only query available tasks once per request.
