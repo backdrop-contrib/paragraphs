@@ -20,6 +20,7 @@ function paragraphs_admin_bundle_overview() {
 
   $header = array(
     t('Label'),
+    t('Description'),
     t('Operations'),
   );
   $rows = array();
@@ -31,6 +32,7 @@ function paragraphs_admin_bundle_overview() {
       'label' => $bundle->label,
       'machine_name' => $bundle->bundle,
     )));
+    $row['description'] = $bundle->description;
 
     if ($field_ui) {
       // Manage fields.
