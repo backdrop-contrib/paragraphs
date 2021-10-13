@@ -1332,10 +1332,6 @@ function paragraphs_theme() {
       'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
-    'paragraphs_admin_overview' => array(
-      'variables' => array('bundle' => NULL),
-      'file' => 'paragraphs.admin.inc',
-    ),
   );
 }
 
