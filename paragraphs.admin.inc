@@ -601,7 +601,7 @@ function paragraphs_dialog_sort_form_close($form, &$form_state) {
     $new_element .= backdrop_render($fresh_field);
     $commands['#commands'][] = ajax_command_html('.paragraphs-items-' . strtr($field_name, '_', '-'), $new_element);
     $commands['#commands'][] = array(
-        'command' => 'paragraphs_separate_edit_message_hide',
+      'command' => 'paragraphs_separate_edit_message_hide',
     );
   }
   return $commands;
@@ -708,7 +708,7 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
     // Check entity_delete_multiple('paragraphs_item', array($item_id)).
     $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been removed.</div>');
     $commands['#commands'][] = array(
-        'command' => 'paragraphs_separate_edit_message_hide',
+      'command' => 'paragraphs_separate_edit_message_hide',
     );
   }
   return $commands;

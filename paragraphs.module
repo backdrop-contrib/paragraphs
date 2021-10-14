@@ -1776,10 +1776,11 @@ function paragraphs_admin_paths() {
 /**
  * Get Paragraphs' router items.
  *
- * @param $base
+ * @param string $base
+ *   The base URL of the menu router item.
  *
  * @return mixed
- *
+ *   Returns the result of a db_query on the menu_router table.
  */
 function paragraphs_get_router_items($base) {
   // Performance: We only query available tasks once per request.
