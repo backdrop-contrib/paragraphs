@@ -77,7 +77,7 @@ class ParagraphsItemEntity extends Entity {
    */
   public $status = TRUE;
 
- /**
+  /**
    * The name of the paragraphs field this item is associated with.
    *
    * @var string
