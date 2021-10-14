@@ -159,7 +159,7 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
   $form['status'] = array(
     '#type' => 'checkbox',
     '#title' => t('Show published status'),
-    '#default_value' => $bundle->status,
+    '#default_value' => (isset($bundle->status)) ? $bundle->status : 0,
   );
 
   $form['actions'] = array('#type' => 'actions');
