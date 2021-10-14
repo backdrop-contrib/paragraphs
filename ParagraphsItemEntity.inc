@@ -184,6 +184,26 @@ class ParagraphsItemEntity extends Entity {
   }
 
   /**
+   * Overrides Entity::access().
+   *
+   * @param string $op
+   *   The operation to be performed on the node. Possible values are:
+   *   - create
+   *   - view
+   *   - update
+   *   - delete
+   * @param User|AnonymousUser|object $account
+   *   (optional) The user to check for. Leave it to NULL to check for the
+   *   global user.
+   *
+   * @return bool|NULL
+   *   TRUE if access is granted, FALSE otherwise.
+   */
+  public function access($op, $account = NULL) {
+    return paragraphs_item_access($op, $this, $account);
+  }
+
+  /**
    * Sets the host entity. Only possible during creation of a item.
    *
    * @param string $entity_type

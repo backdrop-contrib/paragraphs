@@ -166,7 +166,7 @@ function paragraphs_entity_info() {
  * @return bool
  *   Whether the user has access to a paragraphs item.
  */
-function paragraphs_item_access($op, $entity, $account, $entity_type) {
+function paragraphs_item_access($op, $entity, $account = NULL) {
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $GLOBALS['user'];
@@ -177,7 +177,6 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
     return FALSE;
   }
-
   // If $op view and Paragraphs item not published, we return access denied.
   if ($op == 'view' && !$entity->status) {
     return FALSE;
