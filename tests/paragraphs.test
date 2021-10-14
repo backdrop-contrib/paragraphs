@@ -140,3 +140,112 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
   }
 
 }
+
+class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
+
+  const HOST_ENTITY_TYPE = 'paragraph-test';
+  const BUNDLE_NAME = 'ptest';
+  protected $privilegedUser;
+  protected $hostEntityEditUrl;
+
+  /**
+   * Test paragraphs item visibility based on status.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => 'Paragraphs item and bundles status visibility',
+      'description' => 'Test for status functionality for bundles and items.',
+      'group' => 'Paragraphs',
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setUp() {
+    $modules = array(
+      'paragraphs_test',
+    );
+
+    parent::setUp($modules);
+
+    // Make sure the base configuration is set up.
+    features_revert_module('paragraphs_test');
+
+    // Create user with administer paragraphs bundles and node edit access.
+    $this->privilegedUser = $this->backdropCreateUser(array(
+      'administer paragraphs bundles',
+      'bypass node access'
+    ));
+
+    $this->backdropLogin($this->privilegedUser);
+  }
+
+  /**
+   * Status visibility for Paragraphs item.
+   */
+  public function testStatusVisibilityParagraphsItem(){
+    // Create host entity with Paragraphs item.
+    $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+
+    $title = $this->randomString(20);
+    $value1 = $this->randomString(20);
+
+    $create_edit = array(
+      'title' => $title,
+      'field_paragraphs[und][0][field_ptest_text][und][0][value]' => $value1,
+    );
+
+    $this->backdropPost(NULL, $create_edit, t('Save'));
+
+    // Ensure creation passed.
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertText(check_plain($value1), 'Value of paragraphs item is visible.');
+
+    // Get host entity edit url.
+    $this->hostEntityEditUrl = $this->url . '/edit';
+
+    // Change visibility of Paragraphs item.
+    $this->backdropGet($this->hostEntityEditUrl);
+
+    $create_edit = array(
+      'field_paragraphs[und][0][status]' => FALSE,
+    );
+
+    $this->backdropPost(NULL, $create_edit, t('Save'));
+    // Ensure paragraphs item not visible.
+    $this->assertNoText(check_plain($value1), 'Value of paragraphs item is not visible.');
+  }
+
+  /**
+   * Status visibility for Paragraphs bundle.
+   */
+  public function testStatusVisibilityParagraphsBundle(){
+    // Ensure status enabled in bundle
+    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
+
+    $create_edit = array(
+      'status' => TRUE,
+    );
+
+    $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
+
+    // Ensure status enabled in paragraphs item form
+    $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    $this->assertFieldChecked('edit-field-paragraphs-und-0-status', 'Status checkbox exist.');
+
+    // Disable status checkbox in bundle
+    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
+    $create_edit = array(
+      'status' => FALSE,
+    );
+    $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
+
+    // Ensure status disabled in paragraphs item form
+    $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    $this->assertNoFieldById('edit-field-paragraphs-und-0-status', 'Status checkbox not showing.');
+  }
+}

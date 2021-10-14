@@ -71,6 +71,13 @@ class ParagraphsItemEntity extends Entity {
   public $revision_id;
 
   /**
+   * Whether the paragraphs item is published.
+   *
+   * @var bool
+   */
+  public $status = TRUE;
+
+ /**
    * The name of the paragraphs field this item is associated with.
    *
    * @var string

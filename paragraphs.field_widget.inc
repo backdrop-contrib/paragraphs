@@ -478,6 +478,16 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $element['paragraph_bundle_title']['info'] = array(
         '#markup' => t('@title type: %bundle', array('@title' => $instance_title, '%bundle' => $bundle_info->label)),
       );
+
+      // Show status in paragraphs item edit form only if enabled in bundle.
+      if ($bundle_info->status) {
+        $element['status'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Published'),
+          '#default_value' => $paragraph_item->status,
+          '#weight' => 9998,
+        );
+      }
     }
 
     if (!$deleted_paragraph) {

@@ -156,6 +156,12 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
     '#value' => $bundle->locked,
   );
 
+  $form['status'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show published status'),
+    '#default_value' => $bundle->status,
+  );
+
   $form['actions'] = array('#type' => 'actions');
   $form['actions']['submit'] = array(
     '#type' => 'submit',
@@ -215,6 +221,8 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
+
+  $bundle->status = $form_state['values']['status'];
 
   // Set bundle label equal to name if empty.
   $bundle->label = empty($form_state['values']['label']) ? $bundle->name : trim($form_state['values']['label']);

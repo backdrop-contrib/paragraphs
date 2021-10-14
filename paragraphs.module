@@ -178,6 +178,11 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
     return FALSE;
   }
 
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
+    return FALSE;
+  }
+
   // When we have no entity, create a generic cid.
   if (empty($entity)) {
     $cid = 'all_entities:' . $op;
@@ -238,6 +243,11 @@ function paragraphs_paragraphs_item_access(ParagraphsItemEntity $entity, $op, $a
   // Update/Delete/Create access requires update access on the parent.
   if (in_array($op, array('update', 'delete', 'create'), TRUE)) {
     $check_parent_op = 'update';
+  }
+
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
+    return FALSE;
   }
 
   // When we have no entity, create a generic cid.
@@ -737,6 +747,11 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
         unset($items[$key]);
       }
       else {
+        // Update status from form item.
+        if (isset($item['status'])) {
+          $entity->status = $item['status'];
+        }
+
         $entity->save(TRUE);
 
         $item = array(
@@ -992,6 +1007,7 @@ function paragraphs_bundle_save($bundle) {
     'label' => (string) $bundle->label,
     'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
+    'status' => (int) $bundle->status,
   );
   foreach ($bundle_data as $key => $value) {
     $config->set($key, $value);
