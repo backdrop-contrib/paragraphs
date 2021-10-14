@@ -480,7 +480,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       );
 
       // Show status in paragraphs item edit form only if enabled in bundle.
-      if ($bundle_info->status) {
+      if (isset($bundle_info->status)) {
         $element['status'] = array(
           '#type' => 'checkbox',
           '#title' => t('Published'),
