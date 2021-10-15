@@ -102,7 +102,6 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
       if ($items[0]['value'] == 'scratch_paragraph') {
         if (!empty($instance['settings']['modal_admin'])) {
           $entity_ids = entity_extract_ids($entity_type, $entity);
-          $element[0]['insert_point'] = paragraphs_create_insert_point($entity_type, $entity_ids[0], 'scratch', $instance['field_name']);
         }
         return $element;
       }
@@ -127,18 +126,10 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
             // It should be removed according to
             // https://github.com/backdrop-contrib/paragraphs/issues/91.
             $element[$delta]['#theme_wrappers'] = array('paragraphs_item');
-            // Enter an insert point before the FIRST paragraph item.
-            if (!empty($instance['settings']['modal_admin']) && $count == 0) {
-              $element[$delta]['insert_point_top'] = paragraphs_create_insert_point($entity_type, $paragraph->item_id, 'before', NULL);
-            }
 
             // Enter the paragraph item itself.
             $element[$delta]['entity'] = $paragraph->view($view_mode, $langcode);
 
-            // Set insert point after every paragraph item.
-            if (!empty($instance['settings']['modal_admin'])) {
-              $element[$delta]['insert_point'] = paragraphs_create_insert_point($entity_type, $paragraph->item_id, 'after', NULL);
-            }
           }
           if (!empty($instance['settings']['modal_admin'])) {
             $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#modal_admin'] = 1;
@@ -150,19 +141,4 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
   }
 
   return $element;
-}
-
-/**
- * Helper function to create an insert point
- */
-function paragraphs_create_insert_point($entity_type, $entity_id, $mode, $field_name) {
-  return array(
-    '#theme' => 'insert_point',
-    '#contextual_links' => array(
-      'paragraphs' => array(
-        'paragraphs_add',
-        array($entity_type, $entity_id, $mode, $field_name),
-      ),
-    ),
-  );
 }

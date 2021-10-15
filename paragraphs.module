@@ -1386,12 +1386,6 @@ function paragraphs_theme() {
       'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
-    'insert_point' => array(
-      'render element' => 'element',
-      'template' => 'paragraphs-item',
-      'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
-      'file' => 'paragraphs.theme.inc',
-    ),
     'paragraphs_item' => array(
       'render element' => 'elements',
       'template' => 'paragraphs-item',
@@ -1605,21 +1599,21 @@ function paragraphs_separate_create_access($mode, $paragraphs_bundle, $host_enti
   }
 
   if ($mode == 'scratch') {
-    // Load host entity to get field instance info
+    // Load host entity to get field instance info.
     $host_entity = entity_load($host_entity_type, array($entity_id));
     $host_entity = reset($host_entity);
     $entity_info = entity_extract_ids($host_entity_type, $host_entity);
     $instance = field_info_instance($host_entity_type, $field_name, $entity_info[2]);
   }
   else {
-    // Load paragraphs item to get field instance info
+    // Load paragraphs item to get field instance info.
     $paragraphs_item = paragraphs_item_load_multiple(array($entity_id));
     $paragraphs_item = reset($paragraphs_item);
     $host_entity = $paragraphs_item->hostEntity();
     $instance = $paragraphs_item->instanceInfo();
   }
 
-  // Check if separate forms are enabled and we can update the host entity
+  // Check if separate forms are enabled and we can update the host entity.
   return !empty($instance['settings']['modal_admin']) && entity_access('update', $host_entity_type, $host_entity);
 }
 
@@ -1699,80 +1693,80 @@ function paragraphs_modal_admin_links($paragraph_id) {
       );
     }
 
-  // Determine which bundles can be added.
-  $available_bundles = paragraphs_bundle_load();
-  $select_bundles = array();
-  $select_bundles_weighted = array();
+    // Determine which bundles can be added.
+    $available_bundles = paragraphs_bundle_load();
+    $select_bundles = array();
+    $select_bundles_weighted = array();
 
-  // By default, consider that no bundle has been explicitly picked.
-  $explicitly_enabled = FALSE;
-  foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
-    if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
-      $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
+    // By default, consider that no bundle has been explicitly picked.
+    $explicitly_enabled = FALSE;
+    foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
+      if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
+        $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
 
-      // If an item has been explicitly selected, raise our flag.
-      $explicitly_enabled = TRUE;
-    }
-    elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
-      $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
-    }
-  }
-
-  // If no bundle has been explicitly selected, give access to all of them.
-  if (!$explicitly_enabled) {
-    $select_bundles = $select_bundles_weighted;
-    foreach ($available_bundles as $bundle) {
-      if (!isset($select_bundles[$bundle->bundle])) {
-        $select_bundles[$bundle->bundle] = $bundle->label;
+        // If an item has been explicitly selected, raise our flag.
+        $explicitly_enabled = TRUE;
+      }
+      elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
+        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
       }
     }
-  }
 
-  $removed_a_bundle = FALSE;
-
-  $weight = 0;
-
-  foreach ($select_bundles as $machine_name => $bundle) {
-    $select_bundles[$machine_name] = array(
-      'name' => $bundle,
-      'weight' => $weight,
-    );
-
-    /* @var $entity_shell ParagraphsItemEntity */
-    $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
-    $entity_shell->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
-
-    if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
-      unset($select_bundles[$machine_name]);
-      $removed_a_bundle = TRUE;
-    }
-    elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
-      $select_bundles[$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
-    }
-    $weight++;
-  }
-
-  if (count($select_bundles)) {
-    backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
-
-    if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
-      foreach ($select_bundles as $key => $bundle) {
-        $admin_links['#links']['paragraphs_admin_add_' . $key] = array(
-          'title' => t('Add new') . ' ' . $bundle['name'],
-          'href' => "paragraphs/add/scratch/$key/$host_entity_type/$host_entity_id/$field_name",
-          'attributes' => array(
-            'class' => array_merge(array('paragraphs-add'), $classes),
-            'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array(
-              'dialogClass' => 'paragraphs-admin-links-dialog',
-              'width' => 700,
-              'draggable' => TRUE,
-            )),
-          ),
-        );
+    // If no bundle has been explicitly selected, give access to all of them.
+    if (!$explicitly_enabled) {
+      $select_bundles = $select_bundles_weighted;
+      foreach ($available_bundles as $bundle) {
+        if (!isset($select_bundles[$bundle->bundle])) {
+          $select_bundles[$bundle->bundle] = $bundle->label;
+        }
       }
     }
-  }
+
+    $removed_a_bundle = FALSE;
+
+    $weight = 0;
+
+    foreach ($select_bundles as $machine_name => $bundle) {
+      $select_bundles[$machine_name] = array(
+        'name' => $bundle,
+        'weight' => $weight,
+      );
+
+      /* @var $entity_shell ParagraphsItemEntity */
+      $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
+      $entity_shell->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
+
+      if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
+        unset($select_bundles[$machine_name]);
+        $removed_a_bundle = TRUE;
+      }
+      elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
+        $select_bundles[$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
+      }
+      $weight++;
+    }
+
+    if (count($select_bundles)) {
+      backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
+
+      if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
+        foreach ($select_bundles as $key => $bundle) {
+          $admin_links['#links']['paragraphs_admin_add_' . $key] = array(
+            'title' => t('Add new') . ' ' . $bundle['name'],
+            'href' => "paragraphs/add/scratch/$key/$host_entity_type/$host_entity_id/$field_name",
+            'attributes' => array(
+              'class' => array_merge(array('paragraphs-add'), $classes),
+              'data-dialog' => TRUE,
+              'data-dialog-options' => json_encode(array(
+                'dialogClass' => 'paragraphs-admin-links-dialog',
+                'width' => 700,
+                'draggable' => TRUE,
+              )),
+            ),
+          );
+        }
+      }
+    }
 
     $admin_links['#attached']['js'][] = array(
       'data' => backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_modal_admin.js',
@@ -1867,64 +1861,6 @@ function paragraphs_contextual_links_view_alter(&$element, $items) {
     }
     $element['#links'] = $links;
   }
-}
- /**
- * Retrieves dropbutton "Add" links for a path based on registered local tasks.
- */
-function paragraphs_dropbutton_links_add($mode, $paragraphs_bundle, $host_entity_type, $entity_id, $field_name) {
-  $links = array();
-
-  $data = &backdrop_static(__FUNCTION__);
-  if (!isset($data)) {
-    $data = paragraphs_get_router_items('paragraphs/add');
-  }
-
-  foreach ($data as $item) {
-    if ($mode == 'scratch') {
-      $host_entity = entity_load($host_entity_type, array($entity_id));
-      $host_entity = reset($host_entity);
-      $field_name = $args[3];
-    }
-    else {
-      $paragraphs_item = paragraphs_item_load($entity_id);
-      $host_entity = $paragraphs_item->hostEntity();
-      $field_name = $paragraphs_item->field_name;
-    }
-
-    $field_info = field_info_instance($host_entity_type, $field_name, $host_entity->type);
-    $selected_bundles = array();
-    // Check the selected paragraph bundles and create an array with them.
-    foreach ($field_info['settings']['allowed_bundles'] as $selected_bundle_key => $selected_bundle_value) {
-      if ($selected_bundle_value == $selected_bundle_key) {
-        $selected_bundles[] = $selected_bundle_value;
-      }
-    }
-
-    // If no bundle is selected, all the bundles will be available.
-    if (empty($selected_bundles)) {
-      $selected_bundles = array_keys($field_info['settings']['allowed_bundles']);
-    }
-
-    foreach ($selected_bundles as $allowed_bundle) {
-      if ($mode == 'scratch') {
-        $params = array('paragraphs', 'add', $mode, $allowed_bundle, $host_entity_type, $entity_id, $field_name);
-      }
-      else {
-        $params = array('paragraphs', 'add', $mode, $allowed_bundle, $host_entity_type, $paragraphs_item->item_id, $field_name);
-      }
-
-      // Denormalize and translate the contextual link.
-      _menu_translate($item, $params, TRUE);
-      if (!$item['access']) {
-        continue;
-      }
-      // All contextual links are keyed by the actual "task" path argument,
-      // prefixed with the name of the implementing module.
-      $links['paragraphs-add-' . $allowed_bundle] = $item;
-    }
-  }
-dpm($links);
-  return $links;
 }
 
 /**
