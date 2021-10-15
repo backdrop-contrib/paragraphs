@@ -45,3 +45,11 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
 
 }
+
+/**
+ * Process variables for insert-point.tpl.php
+ */
+function template_preprocess_insert_point(&$variables, $hook) {
+  // We use a simple non-breaking space to make the insert point visible.
+  $variables['content'] = '&nbsp;';
+}

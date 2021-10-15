@@ -443,13 +443,13 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
     // $new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
-    // $new_element .= backdrop_render(paragraphs_separate_edit_links($item_id));
-    $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
+    // $new_element .= backdrop_render(paragraphs_modal_admin_links($item_id));
+    $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
     // $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
-      'command' => 'paragraphs_separate_edit_message_hide',
+      'command' => 'paragraphs_modal_admin_message_hide',
       // 'value1'  => 'My first value',
     );
   }
@@ -560,23 +560,7 @@ function paragraphs_dialog_sort_form_submit($form, &$form_state) {
   $sorted_items = array_values($unsorted_items);
   $entity->{$field_name}[$entity->langcode] = $sorted_items;
   $entity->save();
-  /*
-  $paragraph_weights = array();
-  if (isset($form_state['values']['instance']['settings']['paragraphs_items'])) {
-  $paragraphs_items_table = $form_state['values']['instance']['settings']['paragraphs_items'];
-  backdrop_sort($paragraphs_items_table, array('#weight'));
-  foreach ($paragraphs_items_table as $paragraphs_item => $value) {
-  $bundle_weights[$machine_name] = $value['weight'];
-  }
-  }
-
-  $form_state['values']['instance']['settings']['bundle_weights'] = $bundle_weights;
-
-  unset($form_state['values']['instance']['settings']['allowed_bundles_table']);
-
-  */
 }
-
 
 /**
  * Close Ajax modal popup.
@@ -597,11 +581,11 @@ function paragraphs_dialog_sort_form_close($form, &$form_state) {
     $field_name = $form_state['values']['host_entity'][0]['field_name'];
     $entity = entity_load($entity_type, $entity_id);
     $fresh_field = field_view_field($entity_type, $entity, $field_name);
-    $new_element = '<div class=\'messages status paragraphs-separate-edit-message\'>' . t('Paragraphs have been reordered.') . '</div>';
+    $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('Paragraphs have been reordered.') . '</div>';
     $new_element .= backdrop_render($fresh_field);
     $commands['#commands'][] = ajax_command_html('.paragraphs-items-' . strtr($field_name, '_', '-'), $new_element);
     $commands['#commands'][] = array(
-      'command' => 'paragraphs_separate_edit_message_hide',
+      'command' => 'paragraphs_modal_admin_message_hide',
     );
   }
   return $commands;
@@ -706,9 +690,9 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
     $paragraph = paragraphs_item_load($item_id);
     $paragraph->deleteRevision();
     // Check entity_delete_multiple('paragraphs_item', array($item_id)).
-    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-separate-edit-message\'>Paragraph has been removed.</div>');
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-modal-admin-message\'>Paragraph has been removed.</div>');
     $commands['#commands'][] = array(
-      'command' => 'paragraphs_separate_edit_message_hide',
+      'command' => 'paragraphs_modal_admin_message_hide',
     );
   }
   return $commands;
@@ -719,116 +703,163 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
  *
  * Add a new paragraphs item above the submitted paragraphs item.
  */
-function paragraphs_dialog_add_form($form, &$form_state, $paragraphs_item) {
-  if (!$paragraphs_item) {
-    backdrop_not_found();
-  }
-  if (empty($form['#parents'])) {
-    $form['#parents'] = array();
-  }
-  backdrop_set_title(t('Add paragraph'));
+function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bundle, $host_entity_type, $entity_id, $field_name) {
+  $new_paragraph_position = 0;
 
-  $variables = array();
-  // Get the top-level host entity.
-  $item = $paragraphs_item;
-  $host = NULL;
-  while (method_exists($item, 'hostEntity')) {
-    $host = $item->hostEntity();
-    $host_entity_type = $item->hostEntityType();
-    $host_entity_id = $item->hostEntityId();
-    $host_entity_bundle = $item->hostEntityBundle();
-    $original_element = array(
-      '#entity' => $host,
-      '#entity_type' => $host_entity_type,
-      '#bundle' => $host_entity_bundle,
-    );
-    $field_name = $item->field_name;
-    $field = field_info_field($field_name);
-    $field_state = array(
-      'field' => $field,
-      'real_items_count' => 0,
-    );
-    // $id_prefix = 'edit-add-more';
-    $id_prefix = str_replace('_', '-', $field_name);
-    // $wrapper_id = backdrop_html_id($id_prefix . '-add-more-wrapper');
-    // $wrapper_id = 'edit-add-more';
-    $wrapper_id = backdrop_html_id('edit-add-more');
-    $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
-    $variables['element']['#instance'] = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
-    $field_items = paragraphs_field_multiple_value_form($field, $instance, $item->langcode, array(), $form, $form_state, 0, $original_element);
-    $form += _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_state, $original_element, $id_prefix, $wrapper_id);
+  // If we start from an empty paragraph field.
+  if ($mode == 'scratch') {
+    // Load the host entity for the new paragraph.
+    $host_entity = entity_load($host_entity_type, array($entity_id));
+    $host_entity = reset($host_entity);
+  }
 
-    $show_revision_options = FALSE;
-    $use_revisions = FALSE;
-    if ($host_entity_type == 'node') {
-      $show_revision_options = config_get('node.type.' . $host_entity_bundle, 'settings.revision_enabled');
-      $use_revisions = config_get('node.type.' . $host_entity_bundle, 'settings.revision_default');
-      if ($show_revision_options) {
-        $form['additional_settings'] = array(
-          '#type' => 'vertical_tabs',
-          '#weight' => 99,
-        );
-        $form['revision_information'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('Revision information'),
-          '#collapsible' => TRUE,
-          // Collapsed by default when "Create new revision" is unchecked.
-          '#collapsed' => !$use_revisions,
-          '#group' => 'additional_settings',
-          '#attributes' => array(
-            'class' => array('node-form-revision-information'),
-          ),
-          '#attached' => array(
-            'js' => array(backdrop_get_path('module', 'node') . '/js/node.js'),
-          ),
-          '#weight' => 20,
-          '#access' => user_access('administer nodes'),
-        );
-        $form['revision_information']['revision'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Create new revision'),
-          '#default_value' => $use_revisions,
-          '#access' => user_access('administer nodes'),
-        );
+  // Inserting a paragraph before or after an existing paragraph.
+  else {
+    // Load the existing paragraphs item
+    $paragraphs_item = paragraphs_item_load_multiple(array($entity_id));
+    $paragraphs_item = reset($paragraphs_item);
+    $host_entity = $paragraphs_item->hostEntity();
+    $field_name = $paragraphs_item->field_name;
+
+    // If we are inserting the new paragraph after an existing one.
+    if ($mode == 'after' && $paragraphs_item) {
+      // Load the paragraphs field
+      $paragraphs = field_get_items($host_entity_type, $host_entity, $paragraphs_item->field_name);
+
+      // Calculate the position of the new paragraph (delta).
+      foreach ($paragraphs as $key => $value) {
+        if ($value['value'] === $paragraphs_item->item_id) {
+          // After the existing one.
+          $new_paragraph_position = $key + 1;
+          break;
+        }
       }
-      $form['actions'] = array('#type' => 'actions');
-      $form['actions']['submit'] = array(
-        '#type' => 'submit',
-        '#weight' => 10000,
-        '#value' => t('Save'),
-        '#ajax' => array(
-          'callback' => 'paragraphs_dialog_save_close',
-          'effect' => 'fade',
-          // 'wrapper' => $element['#wrapper_id'],
-        ),
-      );
     }
-    $item = $host;
   }
-  return $form;
-}
 
-/**
- * Validation function for entity form for validating the fields.
- */
-function paragraphs_dialog_add_validate($form, &$form_state) {
-  field_attach_form_validate('paragraphs_item', $form_state['values']['paragraphs_item'], $form, $form_state);
+  // Create the new paragraph item and set the host entity + position.
+  $new_paragraph = entity_create('paragraphs_item', array(
+    'bundle' => $paragraphs_bundle->bundle,
+    'field_name' => $field_name
+  ));
+  $new_paragraph->setHostEntity($host_entity_type, $host_entity, $host_entity->langcode, FALSE);
+  $new_paragraph->position = $new_paragraph_position;
+
+  // Nice title for the creation page.
+  backdrop_set_title(t('Create !bundle paragraph', array('!bundle' => $paragraphs_bundle->name)));
+
+  // Pass variables in form for usage in submit handler.
+  $form['paragraphs_bundle'] = array(
+    '#type' => 'value',
+    '#value' => $paragraphs_bundle,
+  );
+  $form['paragraphs_item'] = array(
+    '#type' => 'value',
+    '#value' => $new_paragraph,
+  );
+  $form['host_entity'] = array(
+    '#type' => 'value',
+    '#value' => $host_entity,
+  );
+  $form['host_entity_type'] = array(
+    '#type' => 'value',
+    '#value' => $host_entity_type,
+  );
+  $form['mode'] = array(
+    '#type' => 'value',
+    '#value' => $mode,
+  );
+
+  // Attach the form to create the new paragraphs item.
+  field_attach_form('paragraphs_item', $new_paragraph, $form, $form_state);
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#weight' => 10000,
+    '#value' => t('Save'),
+    '#ajax' => array(
+      'callback' => 'paragraphs_dialog_add_form_close',
+      'effect' => 'fade',
+    ),
+  );
+
+  return $form;
 }
 
 /**
  * Submit function for add entity form.
  */
-function paragraphs_dialog_add_submit($form, &$form_state) {
-  $paragraphs_item = $form_state['values']['paragraphs_item'];
-  field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
+function paragraphs_dialog_add_form_submit($form, &$form_state) {
+  // Get data from form object.
+  $paragraphs_item = $form['paragraphs_item']['#value'];
+  $host_entity = $form['host_entity']['#value'];
+  $host_entity_type = $form['host_entity_type']['#value'];
+  $mode = $form['mode']['#value'];
 
-  // Save a new revision of our host entity?
-  $save_new_revision = !empty($form_state['values']['revision']);
-  if ($save_new_revision) {
-    $paragraphs_item->is_new_revision = TRUE;
+  // We have to perform a host save if we are adding the first paragraph in the paragraph field.
+  $skip_host_save = $mode == 'scratch' ? FALSE : TRUE;
+
+  // Set host entity for new paragraph.
+  $paragraphs_item->setHostEntity($host_entity_type, $host_entity, $host_entity->langcode, FALSE);
+
+  // Attach submit handler for paragraph items + save paragraph item.
+  field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
+  $paragraphs_item->save($skip_host_save);
+
+  // If a paragraphs item is passed, we want to add the new paragraph after it.
+  if ($paragraphs_item && $mode != 'scratch') {
+    $new_paragraph = array(
+      array(
+        'value' => $paragraphs_item->item_id,
+        'revision_id' => $paragraphs_item->revision_id
+      )
+    );
+
+    // Load the paragraphs field from the host entity and insert the new paragraph item in the correct position.
+    if ($paragraphs = field_get_items($host_entity_type, $host_entity, $paragraphs_item->field_name)) {
+      array_splice($paragraphs, $paragraphs_item->position, 0, $new_paragraph);
+    }
+
+    // Overwrite the paragraph field + save the host entity.
+    $field_name = $paragraphs_item->field_name;
+    $host_entity->{$field_name}[LANGUAGE_NONE] = $paragraphs;
+    $host_entity->save();
   }
 
-  // You get a new revision when you save a node, even if there are no changes.
-  // Ensure that we do not save the host node if $save_new_revision is FALSE.
-  $paragraphs_item->save(FALSE);
+  // Nice confirmation message.
+  $paragraphs_bundle = paragraphs_bundle_load($paragraphs_item->bundle);
+  backdrop_set_message(t('Paragraph !bundle has been saved.', array('!bundle' => $paragraphs_bundle->name)));
 }
+
+/**
+ * Close Ajax modal popup for adding a Paragraphs item.
+ */
+function paragraphs_dialog_add_form_close($form, &$form_state) {
+  // Close modal dialog upon submit.
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+
+  $paragraphs_item = $form_state['values']['paragraphs_item'];
+  $host_entity_type = $form_state['values']['host_entity_type'];
+  $host_entity_id = $paragraphs_item->hostEntityId();
+  $field_name = $paragraphs_item->hostEntityBundle();
+
+  // Refresh display of field that was added.
+  if (!empty($host_entity_id) && !empty($host_entity_type)) {
+    $field_name = $paragraphs_item->field_name;
+    $host_entity = entity_load($host_entity_type, $host_entity_id);
+    $fresh_field = field_view_field($host_entity_type, $host_entity, $field_name);
+    $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('New paragraph has been added.') . '</div>';
+    $new_element .= backdrop_render($fresh_field);
+    $commands['#commands'][] = ajax_command_html('.paragraphs-items-' . strtr($field_name, '_', '-'), $new_element);
+    $commands['#commands'][] = array(
+      'command' => 'paragraphs_modal_admin_message_hide',
+    );
+  }
+  return $commands;
+}
+

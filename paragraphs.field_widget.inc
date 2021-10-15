@@ -179,6 +179,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
   $field = $field_state['field'];
   $field_name = $field['field_name'];
   $field_elements = array();
+  $parents = (!empty($form_state['field']['#parents'])) ? $form_state['field']['#parents'] : array();
   // Add 'add more' button, if not working with a programmed form.
   if (empty($form_state['programmed'])) {
     $available_bundles = paragraphs_bundle_load();
@@ -315,6 +316,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
           }
 
           $text = t('Add new !title', array('!title' => $instance_title));
+          $max = $field_state['items_count'] - 1;
           if ($max >= 0) {
             $text = t('Add another !title', array('!title' => $instance_title));
           }
