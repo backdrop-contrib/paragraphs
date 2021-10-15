@@ -711,7 +711,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bund
 
   // Inserting a paragraph before or after an existing paragraph.
   else {
-    // Load the existing paragraphs item
+    // Load the existing paragraphs item.
     $paragraphs_item = paragraphs_item_load_multiple(array($entity_id));
     $paragraphs_item = reset($paragraphs_item);
     $host_entity = $paragraphs_item->hostEntity();
@@ -719,7 +719,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bund
 
     // If we are inserting the new paragraph after an existing one.
     if ($mode == 'after' && $paragraphs_item) {
-      // Load the paragraphs field
+      // Load the paragraphs field.
       $paragraphs = field_get_items($host_entity_type, $host_entity, $paragraphs_item->field_name);
 
       // Calculate the position of the new paragraph (delta).
@@ -858,4 +858,3 @@ function paragraphs_dialog_add_form_close($form, &$form_state) {
   }
   return $commands;
 }
-
