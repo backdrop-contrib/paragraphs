@@ -442,15 +442,11 @@ function paragraphs_dialog_save_close($form, &$form_state) {
     $item_id = $form_state['build_info']['args'][0]->item_id;
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
-    // $new_element = "<div class='paragraphs-item paragraphs-item-" . $item_id . "'>";
-    // $new_element .= backdrop_render(paragraphs_modal_admin_links($item_id));
     $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
     $new_element .= backdrop_render($fresh_paragraph['paragraphs_item']);
-    // $new_element .= "</div>";
     $commands['#commands'][] = ajax_command_html('.paragraphs-item-' . $item_id . ' .content', $new_element);
     $commands['#commands'][] = array(
       'command' => 'paragraphs_modal_admin_message_hide',
-      // 'value1'  => 'My first value',
     );
   }
   return $commands;
