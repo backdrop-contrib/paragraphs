@@ -334,7 +334,7 @@ function paragraphs_permission() {
 function paragraphs_menu() {
   $items = array();
   $items['admin/structure/paragraphs'] = array(
-    'title' => 'Paragraph Types',
+    'title' => 'Paragraph types',
     'description' => 'Manage Paragraph types',
     'page callback' => 'paragraphs_admin_bundle_overview',
     'access arguments' => array('administer paragraphs bundles'),
@@ -348,7 +348,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/add'] = array(
-    'title' => 'Add Paragraph Type',
+    'title' => 'Add Paragraph type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form'),
     'access arguments' => array('administer paragraphs bundles'),
