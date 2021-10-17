@@ -392,7 +392,7 @@ function paragraphs_admin_bar_map() {
   }
   $types = paragraphs_bundle_load();
   $type_keys = array();
-  foreach($types as $key => $type) {
+  foreach ($types as $key => $type) {
     $type_keys[] = str_replace('_', '-', $key);
   }
   $map = array(
