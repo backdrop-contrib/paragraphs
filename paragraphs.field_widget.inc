@@ -1087,8 +1087,7 @@ function paragraphs_remove_submit(array $form, array &$form_state) {
 
 
 /**
- * Submit callback to publish or unpublish an item in the field UI multiple
- * wrapper.
+ * Submit callback to un/publish an item in the field UI multiple wrapper.
  *
  * When an un/publish button is submitted, we need to find the item that it
  * referenced and delete it. Since field UI has the deltas as a straight
