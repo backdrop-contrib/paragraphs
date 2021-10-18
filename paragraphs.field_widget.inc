@@ -602,7 +602,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             ),
             '#limit_validation_errors' => array($parents),
             '#ajax' => array(
-              'callback' => '_paragraphs_ajax_unpublish_callback',
+              'callback' => '_paragraphs_ajax_update_callback',
               'effect' => 'fade',
               'wrapper' => $element['#wrapper_id'],
             ),
@@ -750,27 +750,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
 function _paragraphs_ajax_update_callback($form, $form_state) {
   // Get the information on what we're updating.
   $button = $form_state['triggering_element'];
-  debug($button);
 
   // Go three levels up in the form, to the whole widget.
   $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
-  debug($element);
-
-  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
-  return backdrop_render($element);
-}
-
-/**
- * FAPI #ajax callback to unpublish a paragraphs item.
- */
-function _paragraphs_ajax_unpublish_callback($form, $form_state) {
-  // Get the information on what we're updating.
-  $button = $form_state['triggering_element'];
-  debug($button);
-
-  // Go three levels up in the form, to the whole widget.
-  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
-  debug($element);
 
   // Send back the rendered element and let Backdrop wrap it in an AJAX command.
   return backdrop_render($element);
