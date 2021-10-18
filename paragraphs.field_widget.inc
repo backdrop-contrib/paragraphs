@@ -583,7 +583,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       }
 
       if (isset($paragraphs_item)) {
-        if (isset($bundle_info->status)) {
+        if (isset($bundle_info->allow_unpublish)) {
           if ($paragraphs_item->status) {
             $button_value = t('Unpublish');
           }

@@ -1036,7 +1036,7 @@ function paragraphs_bundle_save($bundle) {
     'label' => (string) $bundle->label,
     'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
-    'status' => (int) $bundle->status,
+    'allow_unpublish' => (int) $bundle->allow_unpublish,
   );
   foreach ($bundle_data as $key => $value) {
     $config->set($key, $value);

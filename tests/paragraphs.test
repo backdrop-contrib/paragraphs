@@ -226,7 +226,7 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
     $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
 
     $create_edit = array(
-      'status' => TRUE,
+      'allow_unpublish' => TRUE,
     );
 
     $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
@@ -234,18 +234,18 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
     // Ensure status enabled in paragraphs item form
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    $this->assertFieldChecked('edit-field-paragraphs-und-0-status', 'Status checkbox exist.');
+    $this->assertFieldChecked('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish button exists.');
 
     // Disable status checkbox in bundle
     $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
     $create_edit = array(
-      'status' => FALSE,
+      'allow_unpublish' => FALSE,
     );
     $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
 
     // Ensure status disabled in paragraphs item form
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    $this->assertNoFieldById('edit-field-paragraphs-und-0-status', 'Status checkbox not showing.');
+    $this->assertNoFieldById('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish button not showing.');
   }
 }

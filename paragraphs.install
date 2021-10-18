@@ -49,7 +49,7 @@ function paragraphs_schema() {
         'default' => 0,
         'size' => 'tiny',
       ),
-      'status' => array(
+      'allow_unpublish' => array(
         'description' => 'A boolean indicating whether the administrator can show/hide published status.',
         'type' => 'int',
         'not null' => TRUE,
@@ -264,7 +264,7 @@ function paragraphs_update_1002() {
  * Add status field for paragraphs bundle and item.
  */
 function paragraphs_update_1003() {
-  $bundle_status = array(
+  $allow_unpublish = array(
     'description' => 'A boolean indicating whether the administrator can show/hide published status.',
     'type' => 'int',
     'not null' => TRUE,
@@ -278,6 +278,6 @@ function paragraphs_update_1003() {
     'default' => 1,
   );
 
-  db_add_field('paragraphs_bundle', 'status', $bundle_status);
+  db_add_field('paragraphs_bundle', 'allow_unpublish', $allow_unpublish);
   db_add_field('paragraphs_item', 'status', $status);
 }
