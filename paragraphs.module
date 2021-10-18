@@ -166,7 +166,7 @@ function paragraphs_entity_info() {
  * @return bool
  *   Whether the user has access to a Paragraphs item.
  */
-function paragraphs_item_access($op, $entity, $account, $entity_type) {
+function paragraphs_item_access($op, $entity, $account = NULL) {
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $GLOBALS['user'];
@@ -175,6 +175,10 @@ function paragraphs_item_access($op, $entity, $account, $entity_type) {
 
   // If the $op was not one of the supported ones, we return access denied.
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    return FALSE;
+  }
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
     return FALSE;
   }
 
@@ -238,6 +242,11 @@ function paragraphs_paragraphs_item_access(ParagraphsItemEntity $entity, $op, $a
   // Update/Delete/Create access requires update access on the parent.
   if (in_array($op, array('update', 'delete', 'create'), TRUE)) {
     $check_parent_op = 'update';
+  }
+
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
+    return FALSE;
   }
 
   // When we have no entity, create a generic cid.
@@ -767,6 +776,11 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
         unset($items[$key]);
       }
       else {
+        // Update status from form item.
+        if (isset($item['status'])) {
+          $entity->status = $item['status'];
+        }
+
         $entity->save(TRUE);
 
         $item = array(
@@ -1022,6 +1036,7 @@ function paragraphs_bundle_save($bundle) {
     'label' => (string) $bundle->label,
     'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
+    'allow_unpublish' => (int) $bundle->allow_unpublish,
   );
   foreach ($bundle_data as $key => $value) {
     $config->set($key, $value);

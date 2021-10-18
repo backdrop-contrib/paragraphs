@@ -1,10 +1,21 @@
-.paragraphs-icon {
-    max-height: 50px;
+.field-widget-paragraphs-embed .removed {
+  padding-left: 1.5rem;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(231,37,27,.07),
+    rgba(231,37,27,.07) 20px,
+    rgba(231,37,27,.1) 20px,
+    rgba(231,37,27,.1) 40px
+  );
 }
-
-.paragraphs-label {
-    font-weight: bold;
-}
-.paragraphs-machine-name {
-    font-size: smaller;
+.field-widget-paragraphs-embed .unpublished {
+  padding-left: 1.5rem;
+  color: #444;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0,0,0,.05),
+    rgba(0,0,0,.05) 20px,
+    rgba(0,0,0,.03) 20px,
+    rgba(0,0,0,.03) 40px
+  );
 }

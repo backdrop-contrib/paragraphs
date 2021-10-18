@@ -106,6 +106,7 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
     $bundle->label = '';
     $bundle->description = '';
     $bundle->locked = 0;
+    $bundle->allow_unpublish = 1;
   }
   else {
     if (!$bundle) {
@@ -154,6 +155,12 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
   $form['locked'] = array(
     '#type' => 'value',
     '#value' => $bundle->locked,
+  );
+
+  $form['allow_unpublish'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow unpublishing from the admin interface.'),
+    '#default_value' => (isset($bundle->allow_unpublish)) ? $bundle->allow_unpublish : 0,
   );
 
   $form['actions'] = array('#type' => 'actions');
@@ -215,6 +222,8 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
+
+  $bundle->allow_unpublish = $form_state['values']['allow_unpublish'];
 
   // Set bundle label equal to name if empty.
   $bundle->label = empty($form_state['values']['label']) ? $bundle->name : trim($form_state['values']['label']);

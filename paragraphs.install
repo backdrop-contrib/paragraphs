@@ -49,6 +49,12 @@ function paragraphs_schema() {
         'default' => 0,
         'size' => 'tiny',
       ),
+      'allow_unpublish' => array(
+        'description' => 'A boolean indicating whether the administrator can show/hide published status.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
     ),
     'primary key' => array('bundle'),
   );
@@ -79,10 +85,16 @@ function paragraphs_schema() {
         'not null' => TRUE,
       ),
       'archived' => array(
-        'description' => 'Boolean indicating whether the Paragraph item is archived.',
+        'description' => 'Boolean indicating whether the Paragraphs item is archived.',
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
+      ),
+      'status' => array(
+        'description' => 'Boolean indicating whether the Paragraphs item is published.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
       ),
     ),
     'primary key' => array('item_id'),
@@ -246,4 +258,26 @@ function paragraphs_update_1002() {
     $cache_schema['description'] = 'Cache table used to store paragraphs_item entity records.';
     db_create_table('cache_entity_paragraphs_item', $cache_schema);
   }
+}
+
+/**
+ * Add status field for paragraphs bundle and item.
+ */
+function paragraphs_update_1003() {
+  $allow_unpublish = array(
+    'description' => 'A boolean indicating whether the administrator can show/hide published status.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 1,
+  );
+
+  $status = array(
+    'description' => 'Boolean indicating whether the paragraph item is published.',
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 1,
+  );
+
+  db_add_field('paragraphs_bundle', 'allow_unpublish', $allow_unpublish);
+  db_add_field('paragraphs_item', 'status', $status);
 }
