@@ -412,6 +412,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
   $deleted_paragraph = FALSE;
   $confirmed_deleted_paragraph = FALSE;
   $is_new_paragraph = FALSE;
+  $unpublished_paragraph = FALSE;
 
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
   $default_edit_mode_override = isset($instance['settings']['default_edit_mode_override']) ? $instance['settings']['default_edit_mode_override'] : PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE;
@@ -433,42 +434,42 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $being_edited_paragraph = FALSE;
     }
 
-    /* @var $paragraph_item ParagraphsItemEntity */
-    $paragraph_item = $field_state['entity'][$delta];
-    $paragraph_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
+    /* @var $paragraphs_item ParagraphsItemEntity */
+    $paragraphs_item = $field_state['entity'][$delta];
+    $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
   }
   else {
     if (isset($items[$delta])) {
-      $paragraph_item = paragraphs_field_get_entity($items[$delta]);
+      $paragraphs_item = paragraphs_field_get_entity($items[$delta]);
     }
 
     // Show an empty collection if we have no existing one or it does not
     // load.
-    if (empty($paragraph_item) && $bundle) {
-      /* @var $paragraph_item ParagraphsItemEntity */
-      $paragraph_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
-      $paragraph_item->being_edited = TRUE;
+    if (empty($paragraphs_item) && $bundle) {
+      /* @var $paragraphs_item ParagraphsItemEntity */
+      $paragraphs_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
+      $paragraphs_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
     }
 
-    if (!empty($paragraph_item)) {
-      /* @var $paragraph_item ParagraphsItemEntity */
-      $paragraph_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
+    if (!empty($paragraphs_item)) {
+      /* @var $paragraphs_item ParagraphsItemEntity */
+      $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
 
       if ($force_open) {
-        $paragraph_item->being_edited = TRUE;
+        $paragraphs_item->being_edited = TRUE;
         $being_edited_paragraph = TRUE;
       }
 
       // Put our entity in the form state, so FAPI callbacks can access it.
-      $field_state['entity'][$delta] = $paragraph_item;
+      $field_state['entity'][$delta] = $paragraphs_item;
     }
   }
   field_form_set_state($field_parents, $field_name, $language, $form_state, $field_state);
-  if (!empty($paragraph_item)) {
+  if (!empty($paragraphs_item)) {
 
-    $bundle_info = paragraphs_bundle_load($paragraph_item->bundle);
+    $bundle_info = paragraphs_bundle_load($paragraphs_item->bundle);
 
     if ($bundle_info) {
       $element['paragraph_bundle_title'] = array(
@@ -478,16 +479,6 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $element['paragraph_bundle_title']['info'] = array(
         '#markup' => t('@title type: %bundle', array('@title' => $instance_title, '%bundle' => $bundle_info->label)),
       );
-
-      // Show status in paragraphs item edit form only if enabled in bundle.
-      if (isset($bundle_info->status)) {
-        $element['status'] = array(
-          '#type' => 'checkbox',
-          '#title' => t('Published'),
-          '#default_value' => $paragraph_item->status,
-          '#weight' => 9998,
-        );
-      }
     }
 
     if (!$deleted_paragraph) {
@@ -496,9 +487,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#weight' => 9999,
       );
 
-      field_attach_form('paragraphs_item', $paragraph_item, $element, $form_state, $language);
+      field_attach_form('paragraphs_item', $paragraphs_item, $element, $form_state, $language);
       if ($being_edited_paragraph) {
-        if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraph_item)) {
+        if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraphs_item)) {
           foreach (element_children($element) as $key) {
             if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
               $element[$key]['#access'] = FALSE;
@@ -534,17 +525,17 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
               'effect' => 'fade',
               'wrapper' => $element['#wrapper_id'],
             ),
-            '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
+            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
             '#weight' => 999,
           );
         }
       }
       else {
-        if ($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraph_item)) {
+        if ($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraphs_item)) {
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
           );
-          $preview = $paragraph_item->view('paragraphs_editor_preview', $langcode);
+          $preview = $paragraphs_item->view('paragraphs_editor_preview', $langcode);
           $element['paragraph_bundle_preview']['preview'] = $preview;
         }
 
@@ -559,8 +550,16 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         );
 
         if (isset($field_state['entity'][$delta]->must_be_saved) && $field_state['entity'][$delta]->must_be_saved) {
+          $markup = '<div class="messages warning">';
+          if (config_get('system.core', 'messages_dismissible')) {
+            // Add the 'Dismiss' library and place a 'Dismiss' link on messages.
+            backdrop_add_library('system', 'backdrop.dismiss');
+            $markup .= '<a href="#" class="dismiss" title="' . t('Dismiss') . '"><span class="element-invisible">' . t('Dismiss') . '</span></a>' . "\n";
+          }
+          $markup .= t('This content must be saved to record recent changes.');
+          $markup .= '</div>';
           $element['actions']['must_be_saved'] = array(
-            '#markup' => '<p><em>' . t('Warning: this content must be saved to reflect changes on this paragraphs item.') . '</em></p>',
+            '#markup' => $markup,
             '#weight' => 998,
           );
         }
@@ -578,12 +577,39 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             'effect' => 'fade',
             'wrapper' => $element['#wrapper_id'],
           ),
-          '#access' => entity_access('update', 'paragraphs_item', $paragraph_item),
+          '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
           '#weight' => 999,
         );
       }
 
-      if (isset($paragraph_item)) {
+      if (isset($paragraphs_item)) {
+        if (isset($bundle_info->status)) {
+          if ($paragraphs_item->status) {
+            $button_value = t('Unpublish');
+          }
+          else {
+            $button_value = t('Publish');
+            $unpublished_paragraph = TRUE;
+          }
+          $element['actions']['togglepublish_button'] = array(
+            '#delta' => $delta,
+            '#name' => implode('_', $parents) . '_togglepublish_button',
+            '#type' => 'submit',
+            '#value' => $button_value,
+            '#validate' => array(),
+            '#submit' => array(
+              'paragraphs_togglepublish_submit',
+            ),
+            '#limit_validation_errors' => array($parents),
+            '#ajax' => array(
+              'callback' => '_paragraphs_ajax_unpublish_callback',
+              'effect' => 'fade',
+              'wrapper' => $element['#wrapper_id'],
+            ),
+            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
+            '#weight' => 1000,
+          );
+        }
         $element['actions']['remove_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_remove_button',
@@ -597,8 +623,8 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             'effect' => 'fade',
             'wrapper' => $element['#wrapper_id'],
           ),
-          '#access' => entity_access('delete', 'paragraphs_item', $paragraph_item),
-          '#weight' => 1000,
+          '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
+          '#weight' => 1001,
           '#attributes' => array(
             'class' => array('button-danger'),
           ),
@@ -692,6 +718,21 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     $element['#access'] = FALSE;
   }
 
+  // Add class if this is unpublished or deleted.
+  $class = '';
+  if ($deleted_paragraph) {
+    $class = 'removed';
+  }
+  elseif ($unpublished_paragraph) {
+    $class = 'unpublished';
+  }
+  if (!empty($class)) {
+    $element['paragraph_bundle_title']['#attributes'] = array(
+      'class' => array(
+        $class,
+      ),
+    );
+  }
   $recursion--;
   return $element;
 }
@@ -702,9 +743,27 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
 function _paragraphs_ajax_update_callback($form, $form_state) {
   // Get the information on what we're updating.
   $button = $form_state['triggering_element'];
+  debug($button);
 
   // Go three levels up in the form, to the whole widget.
   $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  debug($element);
+
+  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
+  return backdrop_render($element);
+}
+
+/**
+ * FAPI #ajax callback to unpublish a paragraphs item.
+ */
+function _paragraphs_ajax_unpublish_callback($form, $form_state) {
+  // Get the information on what we're updating.
+  $button = $form_state['triggering_element'];
+  debug($button);
+
+  // Go three levels up in the form, to the whole widget.
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -3));
+  debug($element);
 
   // Send back the rendered element and let Backdrop wrap it in an AJAX command.
   return backdrop_render($element);
@@ -772,16 +831,15 @@ function paragraphs_field_widget_embed_validate(array $element, array &$form_sta
   $field_parents = $element['#field_parents'];
   $field_name = $element['#field_name'];
   $language = $element['#language'];
-
   $field_state = field_form_get_state($field_parents, $field_name, $language, $form_state);
   if (isset($field_state['entity'][$element['#delta']])) {
-    $paragraph_item = $field_state['entity'][$element['#delta']];
+    $paragraphs_item = $field_state['entity'][$element['#delta']];
 
     // Now validate elements if the entity is not empty.
-    if (((!isset($paragraph_item->removed) || !$paragraph_item->removed) && (!isset($paragraph_item->confirmed_removed) || !$paragraph_item->confirmed_removed))) {
+    if (((!isset($paragraphs_item->removed) || !$paragraphs_item->removed) && (!isset($paragraphs_item->confirmed_removed) || !$paragraphs_item->confirmed_removed))) {
 
       // Attach field API validation of the embedded form.
-      field_attach_form_validate('paragraphs_item', $paragraph_item, $element, $form_state);
+      field_attach_form_validate('paragraphs_item', $paragraphs_item, $element, $form_state);
 
       if (!empty($element['#paragraphs_required_elements'])) {
         foreach ($element['#paragraphs_required_elements'] as &$elements) {
@@ -823,7 +881,7 @@ function paragraphs_field_widget_embed_validate(array $element, array &$form_sta
       }
 
       if (!$errors) {
-        field_attach_submit('paragraphs_item', $paragraph_item, $element, $form_state);
+        field_attach_submit('paragraphs_item', $paragraphs_item, $element, $form_state);
 
         // Load initial form values into $item, so any other form values below
         // the same parents are kept.
@@ -837,7 +895,7 @@ function paragraphs_field_widget_embed_validate(array $element, array &$form_sta
         // Put the paragraphs item in $item['entity'], so it is saved with
         // the host entity via hook_field_presave() if it is not empty.
         // @see paragraph_field_presave()
-        $item['entity'] = $paragraph_item;
+        $item['entity'] = $paragraphs_item;
         form_set_value($element, $item, $form_state);
       }
 
@@ -989,6 +1047,71 @@ function paragraphs_remove_submit(array $form, array &$form_state) {
 
   if (isset($field_state['entity'][$delta])) {
     $field_state['entity'][$delta]->removed = 1;
+  }
+
+  // Fix the weights. Field UI lets the weights be in a range of
+  // (-1 * item_count) to (item_count). This means that when we remove one,
+  // the range shrinks; weights outside of that range then get set to
+  // the first item in the select by the browser, floating them to the top.
+  // We use a brute force method because we lost weights on both ends
+  // and if the user has moved things around, we have to cascade because
+  // if I have items weight weights 3 and 4, and I change 4 to 3 but leave
+  // the 3, the order of the two 3s now is undefined and may not match what
+  // the user had selected.
+  $input = backdrop_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting.
+  unset($input['add_more']);
+  uasort($input, '_field_sort_items_helper');
+
+  // Reweight everything in the correct order.
+  $weight = -1 * $field_state['items_count'] + 1;
+  foreach ($input as $key => $item) {
+    if ($item) {
+      $input[$key]['_weight'] = $weight++;
+    }
+  }
+
+  backdrop_array_set_nested_value($form_state['input'], $address, $input);
+  field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
+
+  $form_state['rebuild'] = TRUE;
+}
+
+
+/**
+ * Submit callback to publish or unpublish an item in the field UI multiple
+ * wrapper.
+ *
+ * When an un/publish button is submitted, we need to find the item that it
+ * referenced and delete it. Since field UI has the deltas as a straight
+ * unbroken array key, we have to renumber everything down. Since we do this
+ * we *also* need to move all the deltas around in the $form_state['values']
+ * and $form_state['input'] so that user changed values follow. This is a bit
+ * of a complicated process.
+ *
+ * @param array $form
+ *   The form structure array.
+ * @param array $form_state
+ *   An associative array containing the current state of the form.
+ */
+function paragraphs_togglepublish_submit(array $form, array &$form_state) {
+  $button = $form_state['triggering_element'];
+  $delta = $button['#delta'];
+
+  // Where in the form we'll find the parent element.
+  $address = array_slice($button['#array_parents'], 0, -3);
+
+  // Go one level up in the form, to the widgets container.
+  $parent_element = backdrop_array_get_nested_value($form, $address);
+  $field_name = $parent_element['#field_name'];
+  $langcode = $parent_element['#language'];
+  $parents = $parent_element['#field_parents'];
+
+  $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
+  if (isset($field_state['entity'][$delta])) {
+    $field_state['entity'][$delta]->status = !($field_state['entity'][$delta]->status);
+    $field_state['entity'][$delta]->must_be_saved = TRUE;
   }
 
   // Fix the weights. Field UI lets the weights be in a range of
