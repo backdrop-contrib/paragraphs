@@ -157,14 +157,14 @@ function paragraphs_entity_info() {
 }
 
 /**
- * Access check for paragraphs.
+ * Access check for Paragraphs items.
  *
  * Most of the time the access callback is on the host entity.
  * In some cases you want specific access checks on paragraphs.
  * You can do this by implementing hook_paragraphs_item_access().
  *
  * @return bool
- *   Whether the user has access to a paragraphs item.
+ *   Whether the user has access to a Paragraphs item.
  */
 function paragraphs_item_access($op, $entity, $account = NULL) {
   // If no user object is supplied, the access check is for the current user.
@@ -343,7 +343,7 @@ function paragraphs_permission() {
 function paragraphs_menu() {
   $items = array();
   $items['admin/structure/paragraphs'] = array(
-    'title' => 'Paragraph Types',
+    'title' => 'Paragraphs types',
     'description' => 'Manage Paragraph types',
     'page callback' => 'paragraphs_admin_bundle_overview',
     'access arguments' => array('administer paragraphs bundles'),
@@ -351,13 +351,13 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/list'] = array(
-    'title' => 'List',
+    'title' => 'List Paragraphs types',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
 
   $items['admin/structure/paragraphs/add'] = array(
-    'title' => 'Add Paragraph Type',
+    'title' => 'Add Paragraphs type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form'),
     'access arguments' => array('administer paragraphs bundles'),
@@ -366,7 +366,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle'] = array(
-    'title' => 'Edit Paragraph type',
+    'title' => 'Edit Paragraphs type',
     'title callback' => 'paragraphs_bundle_title_callback',
     'title arguments' => array(3),
     'page callback' => 'backdrop_get_form',
@@ -375,20 +375,50 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
-  $items['admin/structure/paragraphs/%paragraphs_bundle/edit'] = array(
-    'title' => 'Edit',
+  $items['admin/structure/paragraphs/%paragraphs_bundle/configure'] = array(
+    'title' => 'Configure',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle/delete'] = array(
-    'title' => 'Delete Paragraph Type',
+    'title' => 'Delete Paragraphs type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_delete_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
     'file' => 'paragraphs.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_admin_bar_map().
+ */
+function paragraphs_admin_bar_map() {
+  if (!user_access('administer paragraphs bundles')) {
+    return;
+  }
+  $types = paragraphs_bundle_load();
+  $type_keys = array();
+  foreach ($types as $key => $type) {
+    $type_keys[] = str_replace('_', '-', $key);
+  }
+  $map = array(
+    'admin/structure/paragraphs/%paragraphs_bundle' => array(
+      'parent' => 'admin/structure/paragraphs',
+      'arguments' => array(
+        array('%paragraphs_bundle' => $type_keys),
+      ),
+    ),
+    'admin/structure/paragraphs/%paragraphs_bundle/edit' => array(
+      'parent' => 'admin/structure/paragraphs/%paragraphs_bundle',
+      'arguments' => array(
+        array('%paragraphs_bundle' => $type_keys),
+      ),
+    ),
+  );
+  return $map;
 }
 
 /**
@@ -1048,7 +1078,7 @@ function paragraphs_bundle_delete($bundle_machine_name) {
  *   The object of the bundle to get the title for.
  */
 function paragraphs_bundle_title_callback($bundle) {
-  return t('Edit Paragraph type !name', array('!name' => $bundle->name));
+  return t('!name', array('!name' => $bundle->name));
 }
 
 /**

@@ -668,12 +668,19 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#type' => 'actions',
         '#weight' => 9999,
       );
-      $remove_button = '<p>' . t('This @title has been removed, press the button below to restore.', array('@title' => $instance_title)) . ' </p>';
-      $remove_button .= '<p><em>' . t('Warning: this @title will actually be deleted when you press "!confirm" or "!save"!', array(
+      $remove_button = '<p>' . t('This @title has been removed.', array('@title' => $instance_title)) . ' </p>';
+      $remove_button .= '<div class="messages warning">';
+      if (config_get('system.core', 'messages_dismissible')) {
+        // Add the 'Dismiss' library and place a 'Dismiss' link on messages.
+        backdrop_add_library('system', 'backdrop.dismiss');
+        $remove_button .= '<a href="#" class="dismiss" title="' . t('Dismiss') . '"><span class="element-invisible">' . t('Dismiss') . '</span></a>' . "\n";
+      }
+      $remove_button .= t('This @title will be permanently deleted when you press %confirm or save this page. (You can restore it with the %restore button or by closing this screen without saving.)', array(
         '@title' => $instance_title,
-        '!confirm' => t('Confirm Deletion'),
-        '!save' => t('Save'),
-        )) . '</em></p>';
+        '%confirm' => t('Confirm Deletion'),
+        '%restore' => t('Restore'),
+        ));
+      $remove_button .= '</div>';
       $element['actions']['remove_button'] = array(
         '#markup' => $remove_button,
       );
