@@ -71,6 +71,13 @@ class ParagraphsItemEntity extends Entity {
   public $revision_id;
 
   /**
+   * Whether the paragraphs item is published.
+   *
+   * @var bool
+   */
+  public $status = TRUE;
+
+  /**
    * The name of the paragraphs field this item is associated with.
    *
    * @var string
@@ -174,6 +181,26 @@ class ParagraphsItemEntity extends Entity {
     return array(
       'path' => $this->path(),
     );
+  }
+
+  /**
+   * Overrides Entity::access().
+   *
+   * @param string $op
+   *   The operation to be performed on the node. Possible values are:
+   *   - create
+   *   - view
+   *   - update
+   *   - delete
+   * @param User|AnonymousUser|object $account
+   *   (optional) The user to check for. Leave it to NULL to check for the
+   *   global user.
+   *
+   * @return bool|NULL
+   *   TRUE if access is granted, FALSE otherwise.
+   */
+  public function access($op, $account = NULL) {
+    return paragraphs_item_access($op, $this, $account);
   }
 
   /**

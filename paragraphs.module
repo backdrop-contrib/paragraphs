@@ -158,16 +158,16 @@ function paragraphs_entity_info() {
 }
 
 /**
- * Access check for paragraphs.
+ * Access check for Paragraphs items.
  *
  * Most of the time the access callback is on the host entity.
  * In some cases you want specific access checks on paragraphs.
  * You can do this by implementing hook_paragraphs_item_access().
  *
  * @return bool
- *   Whether the user has access to a paragraphs item.
+ *   Whether the user has access to a Paragraphs item.
  */
-function paragraphs_item_access($op, $entity_type, $entity = NULL, $account = NULL) {
+function paragraphs_item_access($op, $entity, $account = NULL) {
   // If no user object is supplied, the access check is for the current user.
   if (empty($account)) {
     $account = $GLOBALS['user'];
@@ -176,6 +176,10 @@ function paragraphs_item_access($op, $entity_type, $entity = NULL, $account = NU
 
   // If the $op was not one of the supported ones, we return access denied.
   if (!in_array($op, array('view', 'update', 'delete', 'create'), TRUE)) {
+    return FALSE;
+  }
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
     return FALSE;
   }
 
@@ -239,6 +243,11 @@ function paragraphs_paragraphs_item_access(ParagraphsItemEntity $entity, $op, $a
   // Update/Delete/Create access requires update access on the parent.
   if (in_array($op, array('update', 'delete', 'create'), TRUE)) {
     $check_parent_op = 'update';
+  }
+
+  // If $op view and Paragraphs item not published, we return access denied.
+  if ($op == 'view' && !$entity->status) {
+    return FALSE;
   }
 
   // When we have no entity, create a generic cid.
@@ -335,7 +344,7 @@ function paragraphs_permission() {
 function paragraphs_menu() {
   $items = array();
   $items['admin/structure/paragraphs'] = array(
-    'title' => 'Paragraph Types',
+    'title' => 'Paragraphs types',
     'description' => 'Manage Paragraph types',
     'page callback' => 'paragraphs_admin_bundle_overview',
     'access arguments' => array('administer paragraphs bundles'),
@@ -343,13 +352,13 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/list'] = array(
-    'title' => 'List',
+    'title' => 'List Paragraphs types',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
 
   $items['admin/structure/paragraphs/add'] = array(
-    'title' => 'Add Paragraph Type',
+    'title' => 'Add Paragraphs type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_form'),
     'access arguments' => array('administer paragraphs bundles'),
@@ -358,7 +367,7 @@ function paragraphs_menu() {
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle'] = array(
-    'title' => 'Edit Paragraph type',
+    'title' => 'Edit Paragraphs type',
     'title callback' => 'paragraphs_bundle_title_callback',
     'title arguments' => array(3),
     'page callback' => 'backdrop_get_form',
@@ -367,16 +376,17 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
-  $items['admin/structure/paragraphs/%paragraphs_bundle/edit'] = array(
-    'title' => 'Edit',
+  $items['admin/structure/paragraphs/%paragraphs_bundle/configure'] = array(
+    'title' => 'Configure',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   $items['admin/structure/paragraphs/%paragraphs_bundle/delete'] = array(
-    'title' => 'Delete Paragraph Type',
+    'title' => 'Delete Paragraphs type',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_admin_bundle_delete_form', 3),
     'access arguments' => array('administer paragraphs bundles'),
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
     'file' => 'paragraphs.admin.inc',
   );
 
@@ -430,6 +440,35 @@ function paragraphs_menu() {
  */
 function paragraphs_add_title($paragraphs_bundle) {
   return t('Add !bundle', array('!bundle' => $paragraphs_bundle->name));
+}
+
+/**
+ * Implements hook_admin_bar_map().
+ */
+function paragraphs_admin_bar_map() {
+  if (!user_access('administer paragraphs bundles')) {
+    return;
+  }
+  $types = paragraphs_bundle_load();
+  $type_keys = array();
+  foreach ($types as $key => $type) {
+    $type_keys[] = str_replace('_', '-', $key);
+  }
+  $map = array(
+    'admin/structure/paragraphs/%paragraphs_bundle' => array(
+      'parent' => 'admin/structure/paragraphs',
+      'arguments' => array(
+        array('%paragraphs_bundle' => $type_keys),
+      ),
+    ),
+    'admin/structure/paragraphs/%paragraphs_bundle/edit' => array(
+      'parent' => 'admin/structure/paragraphs/%paragraphs_bundle',
+      'arguments' => array(
+        array('%paragraphs_bundle' => $type_keys),
+      ),
+    ),
+  );
+  return $map;
 }
 
 /**
@@ -794,6 +833,11 @@ function paragraphs_field_presave($host_entity_type, $host_entity, $field, $inst
         unset($items[$key]);
       }
       else {
+        // Update status from form item.
+        if (isset($item['status'])) {
+          $entity->status = $item['status'];
+        }
+
         $entity->save(TRUE);
 
         $item = array(
@@ -1049,6 +1093,7 @@ function paragraphs_bundle_save($bundle) {
     'label' => (string) $bundle->label,
     'description' => (string) $bundle->description,
     'locked' => (int) $bundle->locked,
+    'allow_unpublish' => (int) $bundle->allow_unpublish,
   );
   foreach ($bundle_data as $key => $value) {
     $config->set($key, $value);
@@ -1090,7 +1135,7 @@ function paragraphs_bundle_delete($bundle_machine_name) {
  *   The object of the bundle to get the title for.
  */
 function paragraphs_bundle_title_callback($bundle) {
-  return t('Edit Paragraph type !name', array('!name' => $bundle->name));
+  return t('!name', array('!name' => $bundle->name));
 }
 
 /**
@@ -1391,10 +1436,6 @@ function paragraphs_theme() {
       'template' => 'paragraphs-item',
       'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
       'file' => 'paragraphs.theme.inc',
-    ),
-    'paragraphs_admin_overview' => array(
-      'variables' => array('bundle' => NULL),
-      'file' => 'paragraphs.admin.inc',
     ),
   );
 }

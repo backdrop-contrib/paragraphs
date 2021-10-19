@@ -20,6 +20,7 @@ function paragraphs_admin_bundle_overview() {
 
   $header = array(
     t('Label'),
+    t('Description'),
     t('Operations'),
   );
   $rows = array();
@@ -27,7 +28,11 @@ function paragraphs_admin_bundle_overview() {
   foreach ($bundles as $bundle) {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
-    $row = array(theme('paragraphs_admin_overview', array('bundle' => $bundle)));
+    $row = array(theme('label_machine_name__paragraphs', array(
+      'label' => $bundle->label,
+      'machine_name' => $bundle->bundle,
+    )));
+    $row['description'] = $bundle->description;
 
     if ($field_ui) {
       // Manage fields.
@@ -79,31 +84,6 @@ function paragraphs_admin_bundle_overview() {
 }
 
 /**
- * Returns HTML for a paragraphs bundle description.
- *
- * @param array $variables
- *   An array with one item, containing the paragraphs bundle object.
- *   $variables['bundle'] is an object with the following properties:
- *   - name: The human-readable name of the bundle.
- *   - bundle: The machine name of the bundle.
- *   - label: The bundle's label when displayed in edit forms.
- *   - description: A text description of the bundle.
- *
- * @see paragraphs_admin_bundle_overview()
- * @ingroup themeable
- */
-function theme_paragraphs_admin_overview(array $variables) {
-  $bundle = $variables['bundle'];
-
-  $output = check_plain($bundle->name);
-  $output .= ($bundle->name != $bundle->label) ? ' [<em>' . check_plain($bundle->label) . '</em>]' : '';
-  $output .= ' <small>' . t('(Machine name: @bundle)', array('@bundle' => $bundle->bundle)) . '</small>';
-  $output .= !empty($bundle->description) ? '<div class="description">' . filter_xss_admin($bundle->description) . '</div>' : '';
-
-  return $output;
-}
-
-/**
  * Form to create or edit an paragraphs bundle.
  *
  * @param array $form
@@ -126,6 +106,7 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
     $bundle->label = '';
     $bundle->description = '';
     $bundle->locked = 0;
+    $bundle->allow_unpublish = 1;
   }
   else {
     if (!$bundle) {
@@ -174,6 +155,12 @@ function paragraphs_admin_bundle_form(array $form, array &$form_state, $bundle =
   $form['locked'] = array(
     '#type' => 'value',
     '#value' => $bundle->locked,
+  );
+
+  $form['allow_unpublish'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Allow unpublishing from the admin interface.'),
+    '#default_value' => (isset($bundle->allow_unpublish)) ? $bundle->allow_unpublish : 0,
   );
 
   $form['actions'] = array('#type' => 'actions');
@@ -235,6 +222,8 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   $bundle->locked = 1;
 
   $bundle->name = trim($form_state['values']['name']);
+
+  $bundle->allow_unpublish = $form_state['values']['allow_unpublish'];
 
   // Set bundle label equal to name if empty.
   $bundle->label = empty($form_state['values']['label']) ? $bundle->name : trim($form_state['values']['label']);

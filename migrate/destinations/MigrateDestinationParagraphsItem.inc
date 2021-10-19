@@ -168,6 +168,7 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
         'bundle' => $this->bundle,
         'field_name' => $this->field_name,
         'archived' => 0,
+        'status' => 1,
       );
       foreach ($defaults as $field => $value) {
         if (!isset($paragraphs_item->$field)) {

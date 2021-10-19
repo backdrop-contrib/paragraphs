@@ -2,16 +2,29 @@ html.dialog-open {
   position: inherit;
 }
 
-.paragraphs-icon {
-    max-height: 50px;
+.field-widget-paragraphs-embed .removed {
+  padding-left: 1.5rem;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(231,37,27,.07),
+    rgba(231,37,27,.07) 20px,
+    rgba(231,37,27,.1) 20px,
+    rgba(231,37,27,.1) 40px
+  );
+}
+.field-widget-paragraphs-embed .unpublished {
+  padding-left: 1.5rem;
+  color: #444;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(0,0,0,.05),
+    rgba(0,0,0,.05) 20px,
+    rgba(0,0,0,.03) 20px,
+    rgba(0,0,0,.03) 40px
+  );
 }
 
-.paragraphs-label {
-    font-weight: bold;
-}
-.paragraphs-machine-name {
-    font-size: smaller;
-}
+/* Modal Admin styles. */
 
 .paragraphs-item-modal-admin .dropbutton-wrapper {
   float: right;
@@ -35,7 +48,6 @@ html.dialog-open {
   background-color: inherit;
   position: inherit;
 }
-
 
 .paragraphs-item-modal-admin:hover .dropbutton-wrapper {
   display: inherit;
