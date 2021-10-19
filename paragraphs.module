@@ -1672,8 +1672,8 @@ function paragraphs_separate_create_access($mode, $paragraphs_bundle, $host_enti
 /**
  * Generate dropbuttons for modal administration.
  */
-function paragraphs_modal_admin_links($paragraph_id) {
-  $paragraphs_item = paragraphs_item_load($paragraph_id);
+function paragraphs_modal_admin_links($paragraphs_item) {
+  $paragraph_id = $paragraphs_item->item_id;
   $field_info = $paragraphs_item->fieldInfo();
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   $access = paragraphs_modal_admin_access($paragraphs_item);
@@ -1863,7 +1863,7 @@ function paragraphs_preprocess(&$variables, $hook) {
     }
     $variables['classes'][] = backdrop_html_class('paragraphs-item-modal-admin');
     if (paragraphs_item_access('delete', $paragraph)) {
-      $variables['admin_links'][$paragraph_id] = paragraphs_modal_admin_links($paragraph_id);
+      $variables['admin_links'][$paragraph_id] = paragraphs_modal_admin_links($paragraph);
     }
   }
 }
