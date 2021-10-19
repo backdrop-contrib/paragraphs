@@ -683,6 +683,72 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
   return $commands;
 }
 
+
+/**
+ * Page callback: Form constructor for modal Paragraph unpublishing.
+ *
+ * @see paragraphs_menu()
+ * @see paragraphs_dialog_unpublish_confirm_submit()
+ */
+function paragraphs_dialog_unpublish_confirm($form, &$form_state, $paragraphs_item = NULL) {
+  if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
+    $paragraphs_item = $form['paragraphs_item'];
+  }
+  $form['item_id'] = array(
+    '#type' => 'value',
+    '#value' => $paragraphs_item->item_id,
+  );
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
+  if ($bundle->allow_unpublish) {
+    $form['description'] = array(
+      '#markup' => t('Are you sure you want to unpublish this !type? (You will need to edit the content from the administrative side if you wish to republish it in the future.)', array('!type' => $bundle->name)),
+    );
+    $form['actions'] = array(
+      '#type' => 'actions',
+    );
+    $form['actions']['submit'] = array(
+      '#type' => 'submit',
+      '#value' => t('Unpublish'),
+      '#ajax' => array(
+        'callback' => 'paragraphs_dialog_unpublish_confirm_submit',
+        'effect' => 'fade',
+      ),
+    );
+  }
+  else {
+    $form['description'] = array(
+      '#markup' => t('Unpublishing is not configured for this !type. (You configure the Paragraphs type from the administrative side if you wish to allow unpublishing.)', array('!type' => $bundle->name)),
+    );
+  }
+  return $form;
+}
+
+/**
+ * Form submission handler for paragraphs_dialog_unpublish_confirm().
+ *
+ * @see paragraphs_dialog_unpublish_confirm()
+ */
+function paragraphs_dialog_unpublish_confirm_submit($form, &$form_state) {
+  // Close modal dialog upon submit.
+  $commands = array(
+    '#type' => 'ajax',
+    '#commands' => array(),
+  );
+  $commands['#commands'][] = ajax_command_close_modal_dialog();
+  // Unpublish paragraph item and refresh display.
+  if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
+    $item_id = $form_state['build_info']['args'][0]->item_id;
+    $paragraph = paragraphs_item_load($item_id);
+    $paragraph->status = 0;
+    $paragraph->save();
+    $commands['#commands'][] = ajax_command_replace('.paragraphs-item-' . $item_id, '<div class=\'messages status paragraphs-modal-admin-message\'>Paragraph has been unpublished.</div>');
+    $commands['#commands'][] = array(
+      'command' => 'paragraphs_modal_admin_message_hide',
+    );
+  }
+  return $commands;
+}
+
 /**
  * Separate paragraphs_item add form.
  *

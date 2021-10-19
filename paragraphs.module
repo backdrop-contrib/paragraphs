@@ -184,7 +184,7 @@ function paragraphs_item_access($op, $entity, $account = NULL) {
   }
 
   // When we have no entity, create a generic cid.
-  if (empty($entity)) {
+  if (empty($entity) || !is_object($entity)) {
     $cid = 'all_entities:' . $op;
   }
   // When OP is create, or the entity is new, the bundle is the cache key.
@@ -391,7 +391,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/edit'] = array(
-    'title' => 'Edit paragraph',
+    'title' => 'Edit',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_edit', 1),
@@ -401,7 +401,7 @@ function paragraphs_menu() {
   );
 
   $items['paragraphs/%paragraphs_item/remove'] = array(
-    'title' => 'Remove paragraph',
+    'title' => 'Remove',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_remove_confirm', 1),
@@ -410,8 +410,18 @@ function paragraphs_menu() {
     'file' => 'paragraphs.admin.inc',
   );
 
+  $items['paragraphs/%paragraphs_item/unpublish'] = array(
+    'title' => 'Unpublish',
+    'type' => MENU_LOCAL_ACTION,
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_dialog_unpublish_confirm', 1),
+    'access callback' => 'paragraphs_modal_admin_access',
+    'access arguments' => array(1),
+    'file' => 'paragraphs.admin.inc',
+  );
+
   $items['paragraphs/%paragraphs_item/sort'] = array(
-    'title' => 'Sort paragraph',
+    'title' => 'Sort',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('paragraphs_dialog_sort_form', 1),
@@ -1665,6 +1675,7 @@ function paragraphs_separate_create_access($mode, $paragraphs_bundle, $host_enti
 function paragraphs_modal_admin_links($paragraph_id) {
   $paragraphs_item = paragraphs_item_load($paragraph_id);
   $field_info = $paragraphs_item->fieldInfo();
+  $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   $access = paragraphs_modal_admin_access($paragraphs_item);
   $host_entity = $paragraphs_item->hostEntity();
   $host_entity_type = $paragraphs_item->hostEntityType();
@@ -1718,6 +1729,21 @@ function paragraphs_modal_admin_links($paragraph_id) {
         ),
       ),
     );
+    if (!empty($bundle->allow_unpublish)) {
+      $admin_links['#links']['paragraphs_admin_unpublish'] = array(
+        'title' => t('Unpublish'),
+        'href' => 'paragraphs/' . $paragraph_id . '/unpublish',
+        'attributes' => array(
+          'class' => array_merge(array('paragraphs-unpublish'), $classes),
+          'data-dialog' => TRUE,
+          'data-dialog-options' => json_encode(array(
+            'dialogClass' => 'paragraphs-admin-links-dialog',
+            'width' => 700,
+            'draggable' => TRUE,
+          )),
+        ),
+      );
+    }
     if ($field_info['cardinality'] != '1' && count($host_entity->{$field_info['field_name']}[$host_entity->langcode]) > 1) {
       $admin_links['#links']['paragraphs_admin_sort'] = array(
         'title' => t('Sort'),
@@ -1829,14 +1855,14 @@ function paragraphs_preprocess(&$variables, $hook) {
     $paragraph = paragraphs_item_load($paragraph_id);
     // Nothing to do here if the user does not have admin access to this item or
     // separate editing is not activated on this item.
-    if (!paragraphs_item_access('delete', 'paragraphs_item', $paragraph)
-      || !paragraphs_item_access('create', 'paragraphs_item', $paragraph)
-      || !paragraphs_item_access('update', 'paragraphs_item', $paragraph)
+    if (!paragraphs_item_access('delete', $paragraph)
+      || !paragraphs_item_access('create', $paragraph)
+      || !paragraphs_item_access('update', $paragraph)
       || empty($variables['content']['#modal_admin'])) {
       return;
     }
     $variables['classes'][] = backdrop_html_class('paragraphs-item-modal-admin');
-    if (paragraphs_item_access('delete', 'paragraphs_item', $paragraph)) {
+    if (paragraphs_item_access('delete', $paragraph)) {
       $variables['admin_links'][$paragraph_id] = paragraphs_modal_admin_links($paragraph_id);
     }
   }

@@ -107,3 +107,6 @@ html.dialog-open {
 .font-awesome.paragraphs-sort:before {
   content: '\f338';
 }
+.font-awesome.paragraphs-unpublish:before {
+  content: '\f070';
+}
