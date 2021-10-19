@@ -313,7 +313,7 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
 /**
  * Separate paragraphs_item edit form.
  */
-function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
+function paragraphs_modal_admin_edit($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
     backdrop_not_found();
   }
@@ -331,7 +331,7 @@ function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
     '#weight' => 10000,
     '#value' => t('Save'),
     '#ajax' => array(
-      'callback' => 'paragraphs_dialog_save_close',
+      'callback' => 'paragraphs_modal_admin_save_close',
       'effect' => 'fade',
       // 'wrapper' => $element['#wrapper_id'],
     ),
@@ -391,14 +391,14 @@ function paragraphs_dialog_edit($form, &$form_state, $paragraphs_item) {
 /**
  * Validation function for entity form for validating the fields.
  */
-function paragraphs_dialog_edit_validate($form, &$form_state) {
+function paragraphs_modal_admin_edit_validate($form, &$form_state) {
   field_attach_form_validate('paragraphs_item', $form_state['values']['paragraphs_item'], $form, $form_state);
 }
 
 /**
  * Submit function for edit entity form.
  */
-function paragraphs_dialog_edit_submit($form, &$form_state) {
+function paragraphs_modal_admin_edit_submit($form, &$form_state) {
   $paragraphs_item = $form_state['values']['paragraphs_item'];
   field_attach_submit('paragraphs_item', $paragraphs_item, $form, $form_state);
 
@@ -416,7 +416,7 @@ function paragraphs_dialog_edit_submit($form, &$form_state) {
 /**
  * Save and close Ajax modal popup.
  */
-function paragraphs_dialog_save_close($form, &$form_state) {
+function paragraphs_modal_admin_save_close($form, &$form_state) {
   $paragraphs_item = $form_state['values']['paragraphs_item'];
   $bundle = paragraphs_bundle_load($paragraphs_item->bundle);
   // Close modal dialog upon submit.
@@ -444,7 +444,7 @@ function paragraphs_dialog_save_close($form, &$form_state) {
 /**
  * Paragraphs sort dialog popup form.
  */
-function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
+function paragraphs_modal_admin_sort_form($form, &$form_state, $paragraphs_item) {
   if (!$paragraphs_item) {
     backdrop_not_found();
   }
@@ -516,7 +516,7 @@ function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
       '#type' => 'submit',
       '#value' => t('Save Order'),
       '#ajax' => array(
-        'callback' => 'paragraphs_dialog_sort_form_close',
+        'callback' => 'paragraphs_modal_admin_sort_form_close',
         'effect' => 'fade',
       ),
     );
@@ -527,7 +527,7 @@ function paragraphs_dialog_sort_form($form, &$form_state, $paragraphs_item) {
 /**
  * Paragraphs sort dialog popup form submit.
  */
-function paragraphs_dialog_sort_form_submit($form, &$form_state) {
+function paragraphs_modal_admin_sort_form_submit($form, &$form_state) {
   // Load host entity.
   $entity_type = $form_state['values']['host_entity'][0]['entity_type'];
   $entity_id = $form_state['values']['host_entity'][0]['entity_id'];
@@ -550,7 +550,7 @@ function paragraphs_dialog_sort_form_submit($form, &$form_state) {
 /**
  * Close Ajax modal popup.
  */
-function paragraphs_dialog_sort_form_close($form, &$form_state) {
+function paragraphs_modal_admin_sort_form_close($form, &$form_state) {
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -579,7 +579,7 @@ function paragraphs_dialog_sort_form_close($form, &$form_state) {
 /**
  * Paragraphs sort dialog popup form.
  */
-function theme_paragraphs_dialog_sort_form($variables) {
+function theme_paragraphs_modal_admin_sort_form($variables) {
   $form = $variables['form'];
 
   // Initialize the variable which will store our table rows.
@@ -627,9 +627,9 @@ function theme_paragraphs_dialog_sort_form($variables) {
  * Page callback: Form constructor for paragraph deletion confirmation form.
  *
  * @see paragraphs_menu()
- * @see paragraphs_dialog_remove_confirm_submit()
+ * @see paragraphs_modal_admin_remove_confirm_submit()
  */
-function paragraphs_dialog_remove_confirm($form, &$form_state, $paragraphs_item = NULL) {
+function paragraphs_modal_admin_remove_confirm($form, &$form_state, $paragraphs_item = NULL) {
   if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
     $paragraphs_item = $form['paragraphs_item'];
   }
@@ -649,7 +649,7 @@ function paragraphs_dialog_remove_confirm($form, &$form_state, $paragraphs_item 
     '#value' => t('Remove'),
     '#attributes' => array('class' => array('button-danger')),
     '#ajax' => array(
-      'callback' => 'paragraphs_dialog_remove_confirm_submit',
+      'callback' => 'paragraphs_modal_admin_remove_confirm_submit',
       'effect' => 'fade',
       // 'wrapper' => $element['#wrapper_id'],
     ),
@@ -658,11 +658,11 @@ function paragraphs_dialog_remove_confirm($form, &$form_state, $paragraphs_item 
 }
 
 /**
- * Form submission handler for paragraphs_dialog_remove_confirm().
+ * Form submission handler for paragraphs_modal_admin_remove_confirm().
  *
- * @see paragraphs_dialog_remove_confirm()
+ * @see paragraphs_modal_admin_remove_confirm()
  */
-function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
+function paragraphs_modal_admin_remove_confirm_submit($form, &$form_state) {
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -688,9 +688,9 @@ function paragraphs_dialog_remove_confirm_submit($form, &$form_state) {
  * Page callback: Form constructor for modal Paragraph unpublishing.
  *
  * @see paragraphs_menu()
- * @see paragraphs_dialog_unpublish_confirm_submit()
+ * @see paragraphs_modal_admin_unpublish_confirm_submit()
  */
-function paragraphs_dialog_unpublish_confirm($form, &$form_state, $paragraphs_item = NULL) {
+function paragraphs_modal_admin_unpublish_confirm($form, &$form_state, $paragraphs_item = NULL) {
   if (empty($paragraphs_item) && !empty($form['paragraphs_item'])) {
     $paragraphs_item = $form['paragraphs_item'];
   }
@@ -710,7 +710,7 @@ function paragraphs_dialog_unpublish_confirm($form, &$form_state, $paragraphs_it
       '#type' => 'submit',
       '#value' => t('Unpublish'),
       '#ajax' => array(
-        'callback' => 'paragraphs_dialog_unpublish_confirm_submit',
+        'callback' => 'paragraphs_modal_admin_unpublish_confirm_submit',
         'effect' => 'fade',
       ),
     );
@@ -724,11 +724,11 @@ function paragraphs_dialog_unpublish_confirm($form, &$form_state, $paragraphs_it
 }
 
 /**
- * Form submission handler for paragraphs_dialog_unpublish_confirm().
+ * Form submission handler for paragraphs_modal_admin_unpublish_confirm().
  *
- * @see paragraphs_dialog_unpublish_confirm()
+ * @see paragraphs_modal_admin_unpublish_confirm()
  */
-function paragraphs_dialog_unpublish_confirm_submit($form, &$form_state) {
+function paragraphs_modal_admin_unpublish_confirm_submit($form, &$form_state) {
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',
@@ -754,7 +754,7 @@ function paragraphs_dialog_unpublish_confirm_submit($form, &$form_state) {
  *
  * Add a new paragraphs item above the submitted paragraphs item.
  */
-function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bundle, $host_entity_type, $entity_id, $field_name) {
+function paragraphs_modal_admin_add_form($form, &$form_state, $mode, $paragraphs_bundle, $host_entity_type, $entity_id, $field_name) {
   $new_paragraph_position = 0;
 
   // If we start from an empty paragraph field.
@@ -830,7 +830,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bund
     '#weight' => 10000,
     '#value' => t('Save'),
     '#ajax' => array(
-      'callback' => 'paragraphs_dialog_add_form_close',
+      'callback' => 'paragraphs_modal_admin_add_form_close',
       'effect' => 'fade',
     ),
   );
@@ -841,7 +841,7 @@ function paragraphs_dialog_add_form($form, &$form_state, $mode, $paragraphs_bund
 /**
  * Submit function for add entity form.
  */
-function paragraphs_dialog_add_form_submit($form, &$form_state) {
+function paragraphs_modal_admin_add_form_submit($form, &$form_state) {
   // Get data from form object.
   $paragraphs_item = $form['paragraphs_item']['#value'];
   $host_entity = $form['host_entity']['#value'];
@@ -886,7 +886,7 @@ function paragraphs_dialog_add_form_submit($form, &$form_state) {
 /**
  * Close Ajax modal popup for adding a Paragraphs item.
  */
-function paragraphs_dialog_add_form_close($form, &$form_state) {
+function paragraphs_modal_admin_add_form_close($form, &$form_state) {
   // Close modal dialog upon submit.
   $commands = array(
     '#type' => 'ajax',

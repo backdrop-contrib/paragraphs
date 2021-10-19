@@ -394,7 +394,7 @@ function paragraphs_menu() {
     'title' => 'Edit',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_edit', 1),
+    'page arguments' => array('paragraphs_modal_admin_edit', 1),
     'access callback' => 'paragraphs_modal_admin_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -404,7 +404,7 @@ function paragraphs_menu() {
     'title' => 'Remove',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_remove_confirm', 1),
+    'page arguments' => array('paragraphs_modal_admin_remove_confirm', 1),
     'access callback' => 'paragraphs_modal_admin_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -414,7 +414,7 @@ function paragraphs_menu() {
     'title' => 'Unpublish',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_unpublish_confirm', 1),
+    'page arguments' => array('paragraphs_modal_admin_unpublish_confirm', 1),
     'access callback' => 'paragraphs_modal_admin_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -424,7 +424,7 @@ function paragraphs_menu() {
     'title' => 'Sort',
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_sort_form', 1),
+    'page arguments' => array('paragraphs_modal_admin_sort_form', 1),
     'access callback' => 'paragraphs_modal_admin_access',
     'access arguments' => array(1),
     'file' => 'paragraphs.admin.inc',
@@ -436,7 +436,7 @@ function paragraphs_menu() {
     'title arguments' => array(3),
     'type' => MENU_LOCAL_ACTION,
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_dialog_add_form', 2, 3, 4, 5, 6),
+    'page arguments' => array('paragraphs_modal_admin_add_form', 2, 3, 4, 5, 6),
     'access callback' => 'paragraphs_separate_create_access',
     'access arguments' => array(2, 3, 4, 5, 6),
     'file' => 'paragraphs.admin.inc',
@@ -1432,7 +1432,7 @@ function paragraphs_theme() {
     'paragraphs_bundle_settings_form' => array(
       'render element' => 'form',
     ),
-    'paragraphs_dialog_sort_form' => array(
+    'paragraphs_modal_admin_sort_form' => array(
       'render element' => 'form',
     ),
     'paragraphs_items' => array(
