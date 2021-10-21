@@ -29,17 +29,19 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
  */
 function template_preprocess_paragraphs_item(&$variables, $hook) {
   $children = element_children($variables['elements']['entity']['paragraphs_item']);
-  $view_mode = $variables['elements']['entity']['paragraphs_item'][$children[0]]['#view_mode'];
-  $bundle = $variables['elements']['entity']['paragraphs_item'][$children[0]]['#bundle'];
+  $paragraph_id = reset($children);
+  $view_mode = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#view_mode'];
+  $bundle = $variables['elements']['entity']['paragraphs_item'][$paragraph_id]['#bundle'];
 
   $variables['view_mode'] = $view_mode;
   $variables['bundle'] = $bundle;
-
-  $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$children[0]];
+  $variables['content'] = $variables['elements']['entity']['paragraphs_item'][$paragraph_id];
 
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $bundle);
   $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $view_mode);
+  $variables['classes'][] = backdrop_html_class('paragraphs-item-' . $paragraph_id);
 
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
   $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $view_mode;
+
 }

@@ -5,6 +5,7 @@
  * Default theme implementation for a single paragraph item.
  *
  * Available variables:
+ * - $admin_links: A dropbutton render array, if separate editing is turned on.
  * - $content: An array of content items. Use render($content) to print them
  *   all, or print a subset such as render($content['field_example']). Use
  *   hide($content['field_example']) to temporarily suppress the printing of a
@@ -27,6 +28,9 @@
  */
 ?>
 <div class="<?php print implode(' ', $classes); ?>"<?php print backdrop_attributes($attributes); ?>>
+  <?php print render($admin_links); ?>
+  <?php print render($title_prefix); ?>
+  <?php print render($title_suffix); ?>
   <div class="content"<?php print backdrop_attributes($content_attributes); ?>>
     <?php print render($content); ?>
   </div>

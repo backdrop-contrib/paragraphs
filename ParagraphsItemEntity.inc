@@ -317,16 +317,20 @@ class ParagraphsItemEntity extends Entity {
         $result = $query->execute();
         $this->hostEntityType = key($result);
         $data = current($result);
-
         if ($data) {
           $data_values = array_shift($data);
-          $host_entity_info = entity_get_info($this->hostEntityType);
-          $host_entity_keys = $host_entity_info['entity keys'];
 
-          $this->hostEntityId = (isset($data_values->{$host_entity_keys['id']}) ? $data_values->{$host_entity_keys['id']} : NULL);
-          $this->hostEntityRevisionId = (isset($data_values->{$host_entity_keys['revision']}) ? $data_values->{$host_entity_keys['revision']} : NULL);
-          $this->hostEntityBundle = (isset($data_values->{$host_entity_keys['bundle']}) ? $data_values->{$host_entity_keys['bundle']} : NULL);
-          $this->hostEntity = entity_plus_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
+          $this->hostEntityId = (isset($data_values->entity_id) ? $data_values->entity_id : NULL);
+          $this->hostEntityRevisionId = (isset($data_values->revision_id) ? $data_values->revision_id : NULL);
+          $this->hostEntityBundle = (isset($data_values->bundle) ? $data_values->bundle : NULL);
+          if ($this->hostEntityType == 'node') {
+            // Fetch current revision.
+            $this->hostEntity = entity_plus_revision_load($this->hostEntityType, $this->hostEntityRevisionId);
+          }
+          else {
+            // No revisions.
+            $this->hostEntity = entity_load($this->hostEntityType, $this->hostEntityId);
+          }
           $this->fetchedHostEntityDetails = TRUE;
         }
         else {
@@ -426,7 +430,12 @@ class ParagraphsItemEntity extends Entity {
     else {
       $host_entity = $this->hostEntity();
       if (!$host_entity) {
-        throw new Exception("Unable to save a paragraph without a valid reference to a host entity.");
+        if (!empty($this->hostEntityType) && !empty($this->hostEntityId)) {
+          $host_entity = entity_load($this->hostEntityType, $this->hostEntityId);
+        }
+        if (!$host_entity) {
+          throw new Exception("Unable to save a paragraph without a valid reference to a host entity.");
+        }
       }
       // If this is creating a new revision, also do so for the host entity.
       if (!empty($this->revision) || !empty($this->is_new_revision)) {
@@ -442,7 +451,16 @@ class ParagraphsItemEntity extends Entity {
         $host_entity->{$this->field_name}[$this->langcode][$delta] = array('entity' => $this);
       }
       else {
-        $host_entity->{$this->field_name}[$this->langcode][] = array('entity' => $this);
+        $found = 0;
+        foreach ($host_entity->{$this->field_name}[$this->langcode] as $delta => $paragraph) {
+          if ($paragraph['value'] == $this->item_id) {
+            $host_entity->{$this->field_name}[$this->langcode][$delta] = array('entity' => $this);
+            $found = 1;
+          }
+        }
+        if (!$found) {
+          $host_entity->{$this->field_name}[$this->langcode][] = array('entity' => $this);
+        }
       }
       return entity_plus_save($this->hostEntityType, $host_entity);
     }
@@ -471,13 +489,12 @@ class ParagraphsItemEntity extends Entity {
     if (!$this->revision_id) {
       return;
     }
-
     if (!$skip_host_update) {
       // Just remove the item from the host, which cares about deleting the
       // item (depending on whether the update creates a new revision).
       $this->deleteHostEntityReference();
+      entity_get_controller($this->hostEntityType)->resetCache(array($this->hostEntityId));
     }
-
     if (!empty($this->default_revision)) {
       entity_plus_revision_delete('paragraphs_item', $this->revision_id);
     }
