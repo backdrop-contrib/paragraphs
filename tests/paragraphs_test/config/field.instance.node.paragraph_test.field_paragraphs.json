@@ -1,0 +1,45 @@
+{
+    "_config_name": "field.instance.node.paragraph_test.field_paragraphs",
+    "field_name": "field_paragraphs",
+    "entity_type": "node",
+    "bundle": "paragraph_test",
+    "label": "Paragraphs",
+    "widget": {
+        "weight": "-2",
+        "type": "paragraphs_embed",
+        "module": "paragraphs",
+        "active": 0,
+        "settings": []
+    },
+    "description": "",
+    "required": 0,
+    "deleted": 0,
+    "default_value": null,
+    "default_value_function": null,
+    "settings": {
+        "title": "Paragraph",
+        "title_multiple": "Paragraphs",
+        "default_edit_mode": "preview",
+        "default_edit_mode_override": "1",
+        "add_mode": "select",
+        "modal_admin": 0,
+        "allowed_bundles": {
+            "ptest": "ptest"
+        },
+        "bundle_weights": {
+            "ptest": "2"
+        },
+        "user_register_form": false
+    },
+    "display": {
+        "default": {
+            "label": "hidden",
+            "type": "paragraphs_view",
+            "settings": {
+                "view_mode": "full"
+            },
+            "module": "paragraphs",
+            "weight": 1
+        }
+    }
+}

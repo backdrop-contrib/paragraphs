@@ -1,36 +1,9 @@
 <?php
-
 /**
  * Defines tests for paragraphs.
  */
-class ParagraphsWebTestCase extends BackdropWebTestCase {
 
-  /**
-   * A user object for the privilaged user.
-   *
-   * @var object
-   */
-  protected $privilegedUser;
-
-  /**
-   * Give display information to the SimpleTest system.
-   *
-   * It's a good idea to organize your tests consistently using the 'group' key.
-   *
-   * @return array
-   *   A keyed array of information for SimpleTest to show.
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Paragraphs test',
-      'description' => 'Ensure that the simpletest_example content type provided functions properly.',
-      'group' => 'Paragraphs',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
+ class ParagraphsWebTestCase extends BackdropWebTestCase {
   public function setUp() {
     $modules = array(
       'paragraphs_test',
@@ -41,9 +14,16 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     // @todo: Do this without Features
     // features_revert_module('paragraphs_test');
 
-    // Create with a user rolegiven by the feature.
+    // Create with a user role given by the feature.
     $this->privilegedUser = $this->backdropCreateUserWithRole('ptest creator');
   }
+
+  /**
+   * A user object for the privileged user.
+   *
+   * @var object
+   */
+  protected $privilegedUser;
 
   /**
    * Tests required field validation on paragraph bundle.
@@ -138,10 +118,9 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
 
     return $account;
   }
-
 }
 
-class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
+class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
 
   const HOST_ENTITY_TYPE = 'paragraph-test';
   const BUNDLE_NAME = 'ptest';
@@ -151,17 +130,6 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
   /**
    * Test paragraphs item visibility based on status.
    */
-  public static function getInfo() {
-    return array(
-      'name' => 'Paragraphs item and bundles status visibility',
-      'description' => 'Test for status functionality for bundles and items.',
-      'group' => 'Paragraphs',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setUp() {
     $modules = array(
       'paragraphs_test',
@@ -170,7 +138,8 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
     parent::setUp($modules);
 
     // Make sure the base configuration is set up.
-    features_revert_module('paragraphs_test');
+    // @todo without features (maybe with CMI?)
+    //features_revert_module('paragraphs_test');
 
     // Create user with administer paragraphs bundles and node edit access.
     $this->privilegedUser = $this->backdropCreateUser(array(
@@ -184,7 +153,7 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
   /**
    * Status visibility for Paragraphs item.
    */
-  public function testStatusVisibilityParagraphsItem(){
+  public function testStatusVisibilityParagraphsItem() {
     // Create host entity with Paragraphs item.
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
@@ -221,7 +190,7 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
   /**
    * Status visibility for Paragraphs bundle.
    */
-  public function testStatusVisibilityParagraphsBundle(){
+  public function testStatusVisibilityParagraphsBundle() {
     // Ensure status enabled in bundle
     $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
 

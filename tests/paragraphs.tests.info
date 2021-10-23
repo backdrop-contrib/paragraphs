@@ -2,5 +2,10 @@
 name = Paragraphs test
 description = Ensure that the simpletest_example content type provided functions properly.
 group = Paragraphs
-file = tests/paragraphs.test
+file = paragraphs.test
 
+[ParagraphStatusVisibilityTestCase]
+name = Paragraphs item and bundles status visibility
+description = Test for status functionality for bundles and items.
+group = Paragraphs
+file = paragraphs.test

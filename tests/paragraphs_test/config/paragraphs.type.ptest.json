@@ -1,0 +1,9 @@
+{
+    "_config_name": "paragraphs.type.ptest",
+    "bundle": "ptest",
+    "name": "PTest",
+    "label": "PTest",
+    "description": "This is the PTest item.",
+    "locked": 1,
+    "allow_unpublish": 0
+}

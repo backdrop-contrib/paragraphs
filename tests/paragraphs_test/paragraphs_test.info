@@ -2,7 +2,8 @@ name = Paragraphs test
 backdrop = 1.x
 type = module
 package = Paragraphs
+
 dependencies[] = node
 dependencies[] = paragraphs
-dependencies[] = text
+
 hidden = 1

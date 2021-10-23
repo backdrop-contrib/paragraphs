@@ -1,0 +1,13 @@
+{
+  "_config_name": "user.role.ptest_creator",
+  "name": "ptest_creator",
+  "label": "PTest Creator",
+  "weight": 4,
+  "permissions": [
+    "create paragraph_test content",
+    "edit own paragraph_test content",
+    "edit any paragraph_test content",
+    "delete own paragraph_test content",
+    "delete any paragraph_test content"
+  ]
+}

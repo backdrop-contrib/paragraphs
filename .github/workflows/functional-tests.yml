@@ -1,0 +1,52 @@
+name: Functional Tests
+on: [pull_request]
+jobs:
+  simpletest:
+    name: Run Simpletest
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Setup env
+        run: |
+          echo "REPO_NAME=${PWD##*/}" >> $GITHUB_ENV
+          echo 'USE_PHP_V=7.4' >> $GITHUB_ENV
+      - name: Start MySQL and create database
+        run: |
+          sudo systemctl start mysql.service
+          mysql -u root -proot -e 'CREATE DATABASE backdrop;'
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.USE_PHP_V }}
+          coverage: none
+
+      - name: Checkout Backdrop core
+        uses: actions/checkout@v2
+        with:
+          repository: backdrop/backdrop
+
+      - name: Checkout Entity Plus
+        uses: actions/checkout@v2
+        with:
+          repository: backdrop-contrib/entity_plus
+          path: modules/entity_plus
+
+      - name: Checkout module
+        uses: actions/checkout@v2
+        with:
+          path: modules/${{ env.REPO_NAME }}
+
+      - name: Setup Apache
+        run: |
+          sudo cp -f modules/i18n/.github/workflows/apache/default.conf /etc/apache2/sites-available/000-default.conf
+          sudo sed -i -e "s?_PWD?$PWD?g" -e "s/_PHP_V/${{ env.USE_PHP_V }}/g" /etc/apache2/sites-available/000-default.conf
+          sudo apt-get install libapache2-mod-fcgid
+          sudo a2enmod rewrite proxy fcgid proxy_fcgi
+          sudo systemctl start apache2.service
+          sudo sed -i -e 's/user = www-data/user = runner/' /etc/php/${{ env.USE_PHP_V }}/fpm/pool.d/www.conf
+          sudo sed -i -e 's/listen.owner = www-data/listen.owner = runner/' /etc/php/${{ env.USE_PHP_V }}/fpm/pool.d/www.conf
+          sudo systemctl restart php${{ env.USE_PHP_V }}-fpm.service
+      - name: Install Backdrop
+        run: core/scripts/install.sh --db-url=mysql://root:root@localhost/backdrop
+
+      - name: Run functional tests
+        run: core/scripts/run-tests.sh --force --directory=modules/${{ env.REPO_NAME }} --verbose --concurrency=2
