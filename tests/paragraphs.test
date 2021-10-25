@@ -3,30 +3,24 @@
  * Defines tests for paragraphs.
  */
 
- class ParagraphsWebTestCase extends BackdropWebTestCase {
+ /**
+ * This class provides methods specifically for testing Paragraph's field handling.
+ */
+class ParagraphsFieldTestCase extends BackdropWebTestCase {
+  protected $admin_user;
 
-  /**
-   * A user object for the privileged user.
-   *
-   * @var object
-   */
-  protected $privilegedUser;
+  function setUp() {
+    parent::setUp('paragraphs');
+    $this->admin_user = $this->backdropCreateUser(array('access content', 'access administration pages', 'administer site configuration', 'administer content types', 'administer fields', 'administer nodes', 'create post content', 'edit any post content', 'delete any post content', 'administer paragraphs bundles'));
+    $this->backdropLogin($this->admin_user);
 
-  public function setUp() {
-    $modules = array(
-      'paragraphs',
-      'paragraphs_test',
-    );
-
-    parent::setUp($modules);
-
-    // Create a user with appropriate permissions and log them in.
-    $this->privilegedUser = $this->backdropCreateUserWithRole('ptest_creator');
-    $this->backdropLogin($this->privilegedUser);
+    // Disable default path patterns for nodes.
+    config_set('path.settings', 'node_pattern', '');
+    config_set('path.settings', 'node_post_pattern', '');
   }
 
   /**
-   * Create a new Paragraphs field for a node type.
+   * Create a new Paragraphs field.
    *
    * @param $name
    *   The name of the new field (all lowercase), exclude the "field_" prefix.
@@ -64,6 +58,33 @@
     $instance['settings'] = array_merge($instance['settings'], $instance_settings);
     $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
     return field_create_instance($instance);
+  }
+}
+
+ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
+
+  /**
+   * A user object for the privileged user.
+   *
+   * @var object
+   */
+  protected $privilegedUser;
+
+  public function setUp() {
+    $modules = array(
+      'paragraphs',
+    );
+    parent::setUp($modules);
+
+    // Create a content type with a Paragraphs field.
+    $this->backdropCreateContentType(array(
+      'type' => 'paragraph_test',
+      'name' => 'Paragraph Test',
+    ));
+    $this->createParagraphsField('paragraphs', 'paragraph_test');
+    // Create a user with appropriate permissions and log them in.
+    $this->privilegedUser = $this->backdropCreateUserWithRole('ptest_creator');
+    $this->backdropLogin($this->privilegedUser);
   }
 
   /**
@@ -199,7 +220,7 @@
   }
 }
 
-class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
+class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
 
   const HOST_ENTITY_TYPE = 'paragraph-test';
   const BUNDLE_NAME = 'ptest';
@@ -212,7 +233,6 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
   public function setUp() {
     $modules = array(
       'paragraphs',
-      'paragraphs_test',
     );
 
     parent::setUp($modules);
