@@ -4,6 +4,7 @@
     "entity_type": "node",
     "bundle": "paragraph_test",
     "label": "Paragraphs",
+    "module": "paragraphs_test",
     "widget": {
         "weight": "-2",
         "type": "paragraphs_embed",
