@@ -184,7 +184,7 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
    */
   public function testStatusVisibilityParagraphsItem() {
     // Create host entity with Paragraphs item.
-    $this->backdropGet('node/add/paragraph-test';
+    $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     // $this->backdropPost(NULL, array(), t('Add new Paragraph'));
     $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
 
