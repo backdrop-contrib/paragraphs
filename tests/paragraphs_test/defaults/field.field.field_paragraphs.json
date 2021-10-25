@@ -3,6 +3,7 @@
   "field_name": "field_paragraphs",
   "type": "paragraphs",
   "translatable": false,
+  "module": "paragraphs",
   "active": 1,
   "locked": 0,
   "cardinality": "-1",

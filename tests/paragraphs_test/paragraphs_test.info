@@ -5,6 +5,5 @@ package = Paragraphs
 
 dependencies[] = node
 dependencies[] = entity_plus
-dependencies[] = paragraphs
 
 hidden = 1
