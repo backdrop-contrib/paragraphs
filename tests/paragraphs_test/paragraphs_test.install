@@ -4,6 +4,7 @@
  * Implements hook_install().
  */
 function paragraphs_test_install () {
+  module_enable('paragraphs', TRUE);
   $path = backdrop_get_path('module', 'paragraphs_test') . '/defaults';
   _paragraphs_test_install_default_config($path, 'node.type.paragraph_test');
   _paragraphs_test_install_default_config($path, 'paragraphs.type.ptest');
