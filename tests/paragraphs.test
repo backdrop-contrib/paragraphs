@@ -27,7 +27,87 @@
       "delete own paragraph_test content",
       "delete any paragraph_test content"
     );
+    $content_type = array(
+      'type' => 'paragraph_test',
+      'name' => 'Paragraph Test',
+    );
+    $paragraphs_field = array(
+      'field_name' => 'field_paragraphs',
+      'type' => 'paragraphs',
+    );
+    $paragraphs_field_instance = array(
+      'field_name' => 'field_paragraphs',
+      'entity_type' => 'node',
+      'bundle' => 'paragraph_test',
+      'label' => 'Paragraphs',
+    );
+    $paragraphs_type = new ParagraphsItemEntity();
+      $paragraphs_type->bundle = 'ptest';
+      $paragraphs_type->name = 'PTest';
+      $paragraphs_type->label = 'PTest';
+      $paragraphs_type->description =  'This is the PTest item.';
+      $paragraphs_type->locked = 1;
+      $paragraphs_type->allow_unpublish = 0;
+    $ptest_field = array(
+      'field_name' => 'field_ptest_text',
+      'type' => 'text',
+    );
+    $ptest_field_instance = array(
+      'field_name' => 'field_ptest_text',
+      'entity_type' => 'paragraphs_item',
+      'bundle' => 'ptest',
+      'label' => 'PTest Text',
+    );
+    $this->backdropCreateContentType($content_type);
+    field_create_field($paragraphs_field);
+    field_create_instance($paragraphs_field_instance);
+    paragraphs_bundle_save($paragraphs_type);
+    field_create_instance($ptest_field_instance);
+    field_create_field($ptest_field);
+    $this->backdropCreateRole($permissions, 'ptest_creator');
     $this->privilegedUser = $this->backdropCreateUserWithRole('ptest_creator');
+    cache_clear_all();
+  }
+
+  /**
+   * Tests creating and updating a node with paragraphs.
+   */
+  public function testNodeParagraphs() {
+
+    $this->backdropLogin($this->privilegedUser);
+
+    $this->backdropGet('node/add/paragraph-test');
+
+    // Add a new paragraph before saving node.
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+
+    $title = $this->randomString(20);
+    $value1 = $this->randomString(20);
+    $create_edit = array(
+      'title' => $title,
+      'field_paragraphs[und][0][field_ptest_text][und][0][value]' => $value1,
+    );
+    $this->backdropPost(NULL, $create_edit, t('Save'));
+
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
+
+    // Update the created node.
+    $node_url = $this->getUrl();
+    $this->backdropGet($node_url . '/edit');
+
+    $this->backdropPost(NULL, array(), t('Add another Paragraph'));
+
+    $value2 = $this->randomString(20);
+    $update_edit = array(
+      'field_paragraphs[und][1][field_ptest_text][und][0][value]' => $value2,
+    );
+    $this->backdropPost(NULL, $update_edit, t('Save'));
+
+    $this->assertRaw(t('!post %title has been updated.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node updated.');
+    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
+    $this->assertText(check_plain($value2), 'Second value of paragraph was rendered.');
+
   }
 
   /**
@@ -154,9 +234,9 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
    * Status visibility for Paragraphs item.
    */
   public function testStatusVisibilityParagraphsItem() {
-    debug($this);
     // Create host entity with Paragraphs item.
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
+    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
 
     $title = $this->randomString(20);
