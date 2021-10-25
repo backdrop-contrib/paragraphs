@@ -4,6 +4,7 @@ type = module
 package = Paragraphs
 
 dependencies[] = node
+dependencies[] = paragraphs
 dependencies[] = entity_plus
 
 hidden = 1
