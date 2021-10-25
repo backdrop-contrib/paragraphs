@@ -14,6 +14,7 @@
 
   public function setUp() {
     $modules = array(
+      'paragraphs',
       'paragraphs_test',
     );
 
@@ -169,6 +170,7 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase {
    */
   public function setUp() {
     $modules = array(
+      'paragraphs',
       'paragraphs_test',
     );
 
