@@ -59,6 +59,43 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
     return field_create_instance($instance);
   }
+
+  /**
+   * Helper to create a user with a given role.
+   *
+   * @param string $role_name
+   *   The name of the role to give the user.
+   *
+   * @return bool|object
+   *   A user account object.
+   *
+   * @throws \Exception
+   *
+   * @see BackdropWebTestCase::backdropCreateUser()
+   */
+  protected function backdropCreateUserWithRole($role_name) {
+
+    // Create a user assigned to that role.
+    $account = backdrop_anonymous_user();
+    $account->name = $this->randomName();
+    $account->mail = $edit['name'] . '@example.com';
+    $account->pass = user_password();
+    $account->status = 1;
+    $account->roles = array($role_name);
+
+    $account = user_save($account);
+
+    $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
+    if (empty($account->uid)) {
+      return FALSE;
+    }
+
+    // Add the raw password so that we can log in as this user.
+    $account->pass_raw = $account->pass;
+
+    return $account;
+  }
+
 }
 
  class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
@@ -181,42 +218,6 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     // Node should save.
     $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'Value of paragraph was rendered.');
-  }
-
-  /**
-   * Helper to create a user with a given role.
-   *
-   * @param string $role_name
-   *   The name of the role to give the user.
-   *
-   * @return bool|object
-   *   A user account object.
-   *
-   * @throws \Exception
-   *
-   * @see BackdropWebTestCase::backdropCreateUser()
-   */
-  protected function backdropCreateUserWithRole($role_name) {
-
-    // Create a user assigned to that role.
-    $account = backdrop_anonymous_user();
-    $account->name = $this->randomName();
-    $account->mail = $edit['name'] . '@example.com';
-    $account->pass = user_password();
-    $account->status = 1;
-    $account->roles = array($role_name);
-
-    $account = user_save($account);
-
-    $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
-    if (empty($account->uid)) {
-      return FALSE;
-    }
-
-    // Add the raw password so that we can log in as this user.
-    $account->pass_raw = $account->pass;
-
-    return $account;
   }
 }
 
