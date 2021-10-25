@@ -3,6 +3,6 @@
 /**
  * @file
  * Module file for the Paragraphs test feature.
- *
- * Config should be loaded from the config directory during module installation.
  */
+
+

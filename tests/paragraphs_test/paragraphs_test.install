@@ -1,0 +1,40 @@
+<?php
+
+/*
+ * Implements hook_install().
+ */
+function paragraphs_test_install () {
+  $path = backdrop_get_path('module', 'paragraphs_test') . '/defaults';
+  _paragraphs_test_install_default_config($path, 'node.type.paragraph_test');
+  _paragraphs_test_install_default_config($path, 'paragraphs.type.ptest');
+  _paragraphs_test_install_default_config($path, 'field.field.field_paragraphs');
+  _paragraphs_test_install_default_config($path, 'field.field.field_ptest_text');
+  _paragraphs_test_install_default_config($path, 'field.instance.node.paragraph_test.field_paragraphs');
+  _paragraphs_test_install_default_config($path, 'field.instance.paragraphs_item.ptest.field_ptest_text');
+  _paragraphs_test_install_default_config($path, 'user.role.ptest_creator');
+  backdrop_flush_all_caches();
+}
+
+/**
+ * Helper function to install config file from a saved copy.
+ */
+function _paragraphs_test_install_default_config($path = '', $machine_name = '', $force = FALSE) {
+    $error = '';
+    if (!empty($path) && !empty($machine_name)) {
+        $config = config($machine_name);
+        if ($config->isNew() || $force) {
+            $storage = new ConfigFileStorage($path);
+            $data = $storage->read($machine_name);
+            $config->setData($data);
+            module_invoke_all('config_create', $config);
+            $config->save();
+        }
+        else {
+            $error = t('Note: %config already exists and has not been changed. This could affect expected functionality.', array('%config' => $machine_name));
+        }
+    }
+    else {
+        $error = t('There was an error installing this config file.');
+    }
+    return $error;
+}
