@@ -76,7 +76,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
   protected function backdropCreateUserWithRole($role_name) {
 
     // Create a user assigned to that role.
-    $account = backdrop_anonymous_user();
+    $account = entity_create('user', array());
     $account->name = $this->randomName();
     $account->mail = $edit['name'] . '@example.com';
     $account->pass = user_password();
