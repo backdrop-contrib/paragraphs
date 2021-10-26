@@ -857,7 +857,7 @@ function paragraphs_field_widget_embed_validate(array $element, array &$form_sta
             $is_empty_value = ($elements['#value'] === 0);
             if ($is_empty_multiple || $is_empty_string || $is_empty_value) {
               if (isset($elements['#title'])) {
-                $error_text = t('!name field is required.', array('!name' => $elements['#title']));
+                $error_text = t('The !name field is required.', array('!name' => $elements['#title']));
                 form_error($elements, filter_xss_admin($error_text));
               }
               else {
@@ -986,7 +986,7 @@ function _paragraphs_multiple_field_validate($elements, &$form_state) {
     }
 
     if (count($field_values) < 1) {
-      form_error($elements, t('The "!name" field is required', array(
+      form_error($elements, t('The "!name" field is required.', array(
         '!name' => $elements['#title'],
       )));
     }

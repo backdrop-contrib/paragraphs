@@ -1,48 +1,219 @@
 <?php
-
 /**
  * Defines tests for paragraphs.
  */
-class ParagraphsWebTestCase extends BackdropWebTestCase {
+
+ /**
+ * This class provides methods specifically for testing Paragraph's field handling.
+ */
+class ParagraphsFieldTestCase extends BackdropWebTestCase {
+  protected $privilegedUser;
+
+  function setUp() {
+    parent::setUp('paragraphs');
+    $this->privilegedUser = $this->backdropCreateUser(array(
+      'access content',
+      'access administration pages',
+      'administer site configuration',
+      'administer content types',
+      'administer fields',
+      'administer nodes',
+      'create post content',
+      'edit any post content',
+      'delete any post content',
+      'administer paragraphs bundles',
+    ));
+    $this->backdropLogin($this->privilegedUser);
+
+    // Disable default path patterns for nodes.
+    config_set('path.settings', 'node_pattern', '');
+    config_set('path.settings', 'node_post_pattern', '');
+  }
 
   /**
-   * A user object for the privilaged user.
+   * Create a new Paragraphs field on a node type.
+   *
+   * @param $name
+   *   The name of the new field (all lowercase).
+   * @param $type_name
+   *   The node type that this field will be added to.
+   * @param $field_settings
+   *   A list of field settings that will be added to the defaults.
+   * @param $instance_settings
+   *   A list of instance settings that will be added to the instance defaults.
+   * @param $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
+   */
+  function createParagraphsField($name, $type_name, $field_settings = array(), $instance_settings = array(), $widget_settings = array()) {
+    $field = array(
+      'field_name' => $name,
+      'type' => 'paragraphs',
+      'settings' => array(),
+      'cardinality' => !empty($field_settings['cardinality']) ? $field_settings['cardinality'] : 1,
+    );
+    $field['settings'] = array_merge($field['settings'], $field_settings);
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => $name,
+      'entity_type' => 'node',
+      'label' => $name,
+      'bundle' => $type_name,
+      'required' => !empty($instance_settings['required']),
+      'settings' => array(),
+      'widget' => array(
+        'type' => 'paragraphs_embed',
+        'settings' => array(),
+      ),
+    );
+    $instance['settings'] = array_merge($instance['settings'], $instance_settings);
+    $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
+    return field_create_instance($instance);
+  }
+
+
+  /**
+   * Create a new text field on a Paragraphs type.
+   *
+   * @param $name
+   *   The name of the new field (all lowercase).
+   * @param $type_name
+   *   The Paragraphs type that this field will be added to.
+   * @param $field_settings
+   *   A list of field settings that will be added to the defaults.
+   * @param $instance_settings
+   *   A list of instance settings that will be added to the instance defaults.
+   * @param $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
+   */
+  function createParagraphsTypeTextField($name, $type_name, $field_settings = array(), $instance_settings = array(), $widget_settings = array()) {
+    $field = array(
+      'field_name' => $name,
+      'type' => 'text',
+      'settings' => array(),
+      'cardinality' => !empty($field_settings['cardinality']) ? $field_settings['cardinality'] : 1,
+    );
+    $field['settings'] = array_merge($field['settings'], $field_settings);
+    field_create_field($field);
+
+    $instance = array(
+      'field_name' => $field['field_name'],
+      'entity_type' => 'paragraphs_item',
+      'label' => $name,
+      'bundle' => $type_name,
+      'required' => !empty($instance_settings['required']),
+      'settings' => array(),
+      'widget' => array(
+        'type' => 'text_textfield',
+        'settings' => array(),
+      ),
+    );
+    $instance['settings'] = array_merge($instance['settings'], $instance_settings);
+    $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
+    return field_create_instance($instance);
+  }
+}
+
+ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
+
+  /**
+   * A user object for the privileged user.
    *
    * @var object
    */
   protected $privilegedUser;
 
-  /**
-   * Give display information to the SimpleTest system.
-   *
-   * It's a good idea to organize your tests consistently using the 'group' key.
-   *
-   * @return array
-   *   A keyed array of information for SimpleTest to show.
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'Paragraphs test',
-      'description' => 'Ensure that the simpletest_example content type provided functions properly.',
-      'group' => 'Paragraphs',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setUp() {
     $modules = array(
-      'paragraphs_test',
+      'paragraphs',
     );
     parent::setUp($modules);
 
-    // Make sure the base configuration is set up.
-    // @todo: Do this without Features
-    // features_revert_module('paragraphs_test');
+    // Create a content type with a Paragraphs field.
+    $this->backdropCreateContentType(array(
+      'type' => 'paragraph_test',
+      'name' => 'Paragraph Test',
+    ));
+    $paragraphs_type = new StdClass();
+      $paragraphs_type->bundle = 'ptest';
+      $paragraphs_type->name = 'PTest';
+      $paragraphs_type->label = 'PTest';
+      $paragraphs_type->description =  'This is the PTest item.';
+      $paragraphs_type->locked = 1;
+      $paragraphs_type->allow_unpublish = 0;
+    paragraphs_bundle_save($paragraphs_type);
+    $field_settings = array(
+      'cardinality' => 5,
+    );
+    $instance_settings = array(
+      'title' => 'Paragraph',
+      'title_multiple' => 'Paragraphs',
+      'default_edit_mode' => 'preview',
+      'default_edit_mode_override' => 2,
+      'add_mode' => 'select',
+      'modal_admin' => 0,
+      'allowed_bundles' => array(
+        'ptest' => 'ptest',
+      ),
+      'bundle_weights' => array(
+        'ptest' => '2',
+      ),
+      'user_register_form' => false,
+    );
+    $this->createParagraphsField('field_paragraphs', 'paragraph_test', $field_settings, $instance_settings);
+    $this->createParagraphsTypeTextField('field_ptest_text', 'ptest', array(), array('required' => 1));
 
-    // Create with a user rolegiven by the feature.
-    $this->privilegedUser = $this->backdropCreateUserWithRole('ptest creator');
+    // Create a user with appropriate permissions and log them in.
+    $this->privilegedUser = $this->backdropCreateUser(array(
+      'create paragraph_test content',
+      'edit own paragraph_test content',
+      'edit any paragraph_test content',
+      'delete own paragraph_test content',
+      'delete any paragraph_test content',
+    ));
+    $this->backdropLogin($this->privilegedUser);
+  }
+
+  /**
+   * Tests creating and updating a node with paragraphs.
+   */
+  public function testNodeParagraphs() {
+
+    $this->backdropLogin($this->privilegedUser);
+
+    $this->backdropGet('node/add/paragraph-test');
+
+    // Add a new paragraph before saving node.
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
+
+    $title = $this->randomString(20);
+    $value1 = $this->randomString(20);
+    $create_edit = array(
+      'title' => $title,
+      'field_paragraphs[und][0][field_ptest_text][und][0][value]' => $value1,
+    );
+    $this->backdropPost(NULL, $create_edit, t('Save'));
+
+    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
+
+    // Update the created node.
+    $node_url = $this->getUrl();
+    $this->backdropGet($node_url . '/edit');
+
+    $this->backdropPost(NULL, array(), t('Add another Paragraph'));
+
+    $value2 = $this->randomString(20);
+    $update_edit = array(
+      'field_paragraphs[und][1][field_ptest_text][und][0][value]' => $value2,
+    );
+    $this->backdropPost(NULL, $update_edit, t('Save'));
+
+    $this->assertRaw(t('!post %title has been updated.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node updated.');
+    $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
+    $this->assertText(check_plain($value2), 'Second value of paragraph was rendered.');
+
   }
 
   /**
@@ -55,6 +226,7 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
 
     // Add a new paragraph before saving node.
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
 
     $title = $this->randomString(20);
 
@@ -66,13 +238,13 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     $this->backdropPost(NULL, $create_edit, t('Save'));
 
     // Empty field should fail validation.
-    $this->assertRaw(t('!field field is required.', array('!field' => 'PTest Text')), 'Field failed whole-form validation');
+    $this->assertRaw(t('!field field is required.', array('!field' => 'field_ptest_text')), 'Field failed whole-form validation');
 
     // Click the Collapse button to test per-paragraph validation.
     $this->backdropPost(NULL, $create_edit, t('Collapse'));
 
     // Empty field should fail validation.
-    $this->assertRaw(t('!field field is required.', array('!field' => 'PTest Text')), 'Field failed per-paragraph validation');
+    $this->assertRaw(t('!field field is required.', array('!field' => 'field_ptest_text')), 'Field failed per-paragraph validation');
 
     // Add value to field.
     $value1 = $this->randomString(20);
@@ -84,7 +256,7 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     $this->backdropPost(NULL, $create_edit, t('Collapse'));
 
     // Paragraph item should collapse after passing validation.
-    $this->assertRaw(t('Warning: this content must be saved to reflect changes on this paragraphs item.'), 'Field passed per-paragraph validation');
+    $this->assertRaw(t('This content must be saved to record recent changes.'), 'Field passed per-paragraph validation');
 
     $create_edit = array(
       'title' => $title,
@@ -97,51 +269,9 @@ class ParagraphsWebTestCase extends BackdropWebTestCase {
     $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'Value of paragraph was rendered.');
   }
-
-  /**
-   * Helper to create a user with a given role.
-   *
-   * @param string $role_name
-   *   The name of the role to give the user.
-   *
-   * @return bool|object
-   *   A user account object.
-   *
-   * @throws \Exception
-   *
-   * @see BackdropWebTestCase::backdropCreateUser()
-   */
-  protected function backdropCreateUserWithRole($role_name) {
-
-    $role = user_role_load_by_name($role_name);
-    if (!$role) {
-      return FALSE;
-    }
-
-    // Create a user assigned to that role.
-    $edit           = array();
-    $edit['name']   = $this->randomName();
-    $edit['mail']   = $edit['name'] . '@example.com';
-    $edit['pass']   = user_password();
-    $edit['status'] = 1;
-    $edit['roles']  = array($role->rid => $role->rid);
-
-    $account = user_save(backdrop_anonymous_user(), $edit);
-
-    $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
-    if (empty($account->uid)) {
-      return FALSE;
-    }
-
-    // Add the raw password so that we can log in as this user.
-    $account->pass_raw = $edit['pass'];
-
-    return $account;
-  }
-
 }
 
-class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
+class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
 
   const HOST_ENTITY_TYPE = 'paragraph-test';
   const BUNDLE_NAME = 'ptest';
@@ -151,43 +281,67 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
   /**
    * Test paragraphs item visibility based on status.
    */
-  public static function getInfo() {
-    return array(
-      'name' => 'Paragraphs item and bundles status visibility',
-      'description' => 'Test for status functionality for bundles and items.',
-      'group' => 'Paragraphs',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function setUp() {
     $modules = array(
-      'paragraphs_test',
+      'paragraphs',
     );
 
     parent::setUp($modules);
 
-    // Make sure the base configuration is set up.
-    features_revert_module('paragraphs_test');
-
-    // Create user with administer paragraphs bundles and node edit access.
-    $this->privilegedUser = $this->backdropCreateUser(array(
-      'administer paragraphs bundles',
-      'bypass node access'
+    // Create a content type with a Paragraphs field.
+    $this->backdropCreateContentType(array(
+      'type' => 'paragraph_test',
+      'name' => 'Paragraph Test',
     ));
+    $paragraphs_type = new StdClass();
+      $paragraphs_type->bundle = 'ptest';
+      $paragraphs_type->name = 'PTest';
+      $paragraphs_type->label = 'PTest';
+      $paragraphs_type->description =  'This is the PTest item.';
+      $paragraphs_type->locked = 1;
+      $paragraphs_type->allow_unpublish = 1;
+    paragraphs_bundle_save($paragraphs_type);
+    $field_settings = array(
+      'cardinality' => 5,
+    );
+    $instance_settings = array(
+      'title' => 'Paragraph',
+      'title_multiple' => 'Paragraphs',
+      'default_edit_mode' => 'preview',
+      'default_edit_mode_override' => 2,
+      'add_mode' => 'select',
+      'modal_admin' => 0,
+      'allowed_bundles' => array(
+        'ptest' => 'ptest',
+      ),
+      'bundle_weights' => array(
+        'ptest' => '2',
+      ),
+      'user_register_form' => false,
+    );
+    $this->createParagraphsField('field_paragraphs', 'paragraph_test', $field_settings, $instance_settings);
+    $this->createParagraphsTypeTextField('field_ptest_text', 'ptest', array(), array('required' => 1));
 
+    // Create a user with appropriate permissions and log them in.
+    $this->privilegedUser = $this->backdropCreateUser(array(
+      'create paragraph_test content',
+      'edit own paragraph_test content',
+      'edit any paragraph_test content',
+      'delete own paragraph_test content',
+      'delete any paragraph_test content',
+      'administer paragraphs bundles',
+    ));
     $this->backdropLogin($this->privilegedUser);
   }
 
   /**
    * Status visibility for Paragraphs item.
    */
-  public function testStatusVisibilityParagraphsItem(){
+  public function testStatusVisibilityParagraphsItem() {
     // Create host entity with Paragraphs item.
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
 
     $title = $this->randomString(20);
     $value1 = $this->randomString(20);
@@ -200,7 +354,10 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
     $this->backdropPost(NULL, $create_edit, t('Save'));
 
     // Ensure creation passed.
-    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertRaw(t('!post %title has been created.', array(
+      '!post' => 'Paragraph Test',
+      '%title' => $title,
+    )), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'Value of paragraphs item is visible.');
 
     // Get host entity edit url.
@@ -209,11 +366,8 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
     // Change visibility of Paragraphs item.
     $this->backdropGet($this->hostEntityEditUrl);
 
-    $create_edit = array(
-      'field_paragraphs[und][0][status]' => FALSE,
-    );
-
-    $this->backdropPost(NULL, $create_edit, t('Save'));
+    $this->backdropPost(NULL, array(), t('Unpublish'));
+    $this->backdropPost(NULL, array(), t('Save'));
     // Ensure paragraphs item not visible.
     $this->assertNoText(check_plain($value1), 'Value of paragraphs item is not visible.');
   }
@@ -221,31 +375,32 @@ class ParagraphStatusVisibilityTestCase extends BackdropWebTestCase{
   /**
    * Status visibility for Paragraphs bundle.
    */
-  public function testStatusVisibilityParagraphsBundle(){
+  public function testStatusVisibilityParagraphsBundle() {
     // Ensure status enabled in bundle
-    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
+    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/configure');
 
     $create_edit = array(
       'allow_unpublish' => TRUE,
     );
 
-    $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
+    $this->backdropPost(NULL, $create_edit, t('Save Paragraph type'));
 
     // Ensure status enabled in paragraphs item form
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    $this->assertFieldChecked('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish button exists.');
+    $raw = t('Unpublish');
+    $this->assertRaw($raw, $message="Unpublish button exists.");
 
     // Disable status checkbox in bundle
-    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/edit');
+    $this->backdropGet('admin/structure/paragraphs/' . $this::BUNDLE_NAME . '/configure');
     $create_edit = array(
       'allow_unpublish' => FALSE,
     );
-    $this->backdropPost(NULL, $create_edit, t('Save Paragraph bundle'));
+    $this->backdropPost(NULL, $create_edit, t('Save Paragraph type'));
 
     // Ensure status disabled in paragraphs item form
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    $this->assertNoFieldById('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish button not showing.');
+    $this->assertNoFieldById('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish toggle button not showing.');
   }
 }

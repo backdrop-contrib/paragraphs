@@ -1,6 +1,11 @@
 [ParagraphsWebTestCase]
-name = Paragraphs test
-description = Ensure that the simpletest_example content type provided functions properly.
+name = Paragraphs field test
+description = Test content types and Paragraphs fields.
 group = Paragraphs
-file = tests/paragraphs.test
+file = paragraphs.test
 
+[ParagraphStatusVisibilityTestCase]
+name = Paragraphs item and bundles status visibility
+description = Test status functionality for Paragraphs bundles and items.
+group = Paragraphs
+file = paragraphs.test
