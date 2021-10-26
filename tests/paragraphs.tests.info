@@ -1,5 +1,5 @@
 [ParagraphsWebTestCase]
-name = Paragraphs test
+name = Paragraphs field test
 description = Test content types and Paragraphs fields.
 group = Paragraphs
 file = paragraphs.test
@@ -9,4 +9,3 @@ name = Paragraphs item and bundles status visibility
 description = Test status functionality for Paragraphs bundles and items.
 group = Paragraphs
 file = paragraphs.test
-
