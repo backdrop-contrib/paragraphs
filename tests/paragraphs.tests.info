@@ -3,10 +3,10 @@ name = Paragraphs test
 description = Test content types and Paragraphs fields.
 group = Paragraphs
 file = paragraphs.test
-/*
+
 [ParagraphStatusVisibilityTestCase]
 name = Paragraphs item and bundles status visibility
 description = Test status functionality for Paragraphs bundles and items.
 group = Paragraphs
 file = paragraphs.test
-*/
+
