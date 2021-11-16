@@ -37,10 +37,25 @@ html.dialog-open {
   border: 1px solid transparent;
 }
 
-.paragraphs-item-modal-admin:hover {
-  border: 1px dashed #333;
-  background-color: rgba(0,0,0,.05);
-  position: relative;
+.paragraphs-item-modal-admin:hover::before {
+  border: 1px dashed rgba(0,0,0,.04);
+  position: absolute;
+  display: table-cell;
+  content: '';
+  top: 0;
+  left: 0;
+  z-index: 5;
+  height: 100%;
+  width: 100%;
+  border: 1px dashed #d0e2d5;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0,0,0,.04),
+    rgba(0,0,0,.04) 20px,
+    rgba(0,0,0,.02) 20px,
+    rgba(0,0,0,.02) 40px
+  );
+  transition: .1s ease-in-out;
 }
 
 .ui-dialog .paragraphs-item-modal-admin:hover {
