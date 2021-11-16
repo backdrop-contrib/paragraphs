@@ -35,6 +35,16 @@ html.dialog-open {
 
 .paragraphs-item-modal-admin {
   border: 1px solid transparent;
+  position: relative;
+}
+
+.paragraphs-item-modal-admin::before {
+  position: relative;
+  display: table-cell;
+  content: '';
+  top: 0;
+  left: 0;
+  z-index: -5;
 }
 
 .paragraphs-item-modal-admin:hover::before {
@@ -44,9 +54,9 @@ html.dialog-open {
   content: '';
   top: 0;
   left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 5;
-  height: 100%;
-  width: 100%;
   border: 1px dashed #d0e2d5;
   background-image: repeating-linear-gradient(
     45deg,
