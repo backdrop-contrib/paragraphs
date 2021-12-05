@@ -121,11 +121,6 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
         if ($paragraph = paragraphs_field_get_entity($item)) {
           $paragraph->setHostEntity($entity_type, $entity, $langcode);
           if (entity_access('view', 'paragraphs_item', $paragraph)) {
-            // @todo Figure out why the line below is needed for
-            // separate modal edit and rendering as expected.
-            // It should be removed according to
-            // https://github.com/backdrop-contrib/paragraphs/issues/91.
-            $element[$delta]['#theme_wrappers'] = array('paragraphs_item');
 
             // Enter the paragraph item itself.
             $element[$delta]['entity'] = $paragraph->view($view_mode, $langcode);
