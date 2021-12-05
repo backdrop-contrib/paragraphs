@@ -1845,7 +1845,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
   return $admin_links;
 }
 
-/** 
+/**
  * Implements hook_preprocess_HOOK().
  */
 function paragraphs_preprocess_entity_plus(&$variables) {
@@ -1857,10 +1857,11 @@ function paragraphs_preprocess_entity_plus(&$variables) {
     $paragraph = $variables['paragraphs_item'];
     $paragraph_id = $paragraph->item_id;
 
-    // Add additional css classes for the paragraph item
+    // Add additional css classes for the paragraph item.
     $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $view_mode);
     $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $paragraph_id);
- 
+
+    // Check if modal admin is enabled and user has access before adding that functionality.
     if (!paragraphs_item_access('delete', $paragraph)
       || !paragraphs_item_access('create', $paragraph)
       || !paragraphs_item_access('update', $paragraph)
@@ -1868,7 +1869,6 @@ function paragraphs_preprocess_entity_plus(&$variables) {
       return;
     }
 
-    // If modal is enabled, add css class
     $variables['classes_array'][] = backdrop_html_class('paragraphs-item-modal-admin');
     if (paragraphs_item_access('delete', $paragraph)) {
       $variables['admin_links'][$paragraph_id] = paragraphs_modal_admin_links($paragraph);
