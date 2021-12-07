@@ -61,7 +61,7 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   field_attach_preprocess($paragraphs_item_type, $paragraphs_item, $variables['content'], $variables);
 
   // Gather css classes.
-  $variables['classes_array'][] = backdrop_html_class('entity-' . $paragraphs_item_type);
+  $variables['classes_array'][] = backdrop_html_class($paragraphs_item_type);
   $variables['classes_array'][] = backdrop_html_class($paragraphs_item_type . '-' . $bundle);
   $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $bundle);
   $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $variables['elements']['#view_mode']);
