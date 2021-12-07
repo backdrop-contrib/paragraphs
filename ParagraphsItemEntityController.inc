@@ -7,7 +7,7 @@
 
 class ParagraphsItemEntityController extends EntityPlusController {
 
-  /** 
+  /**
    * {@inheritdoc}
    */
   public function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
