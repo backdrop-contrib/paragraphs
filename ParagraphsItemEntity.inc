@@ -567,7 +567,7 @@ class ParagraphsItemEntity extends Entity {
         }
       }
     }
-    return entity_get_controller($this->entityType())->view(array($this), $view_mode, $langcode, $page);
+    return entity_plus_view($this->entityType(), array($this), $view_mode, $langcode, $page);
   }
 
   /**
