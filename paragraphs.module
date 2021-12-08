@@ -1744,7 +1744,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
         ),
       );
     }
-    if ($field_info['cardinality'] != '1' && count($host_entity->{$field_info['field_name']}[$host_entity->langcode]) > 1) {
+    if ($field_info['cardinality'] != '1' && count($host_entity->{$field_info['field_name']}[$langcode]) > 1) {
       $admin_links['#links']['paragraphs_admin_sort'] = array(
         'title' => t('Sort'),
         'href' => 'paragraphs/' . $paragraph_id . '/sort',
