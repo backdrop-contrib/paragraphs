@@ -1591,8 +1591,7 @@ function paragraphs_bundle_copy_info() {
  * Helper to ensure entitycache table.
  */
 function paragraphs_ensure_entitycache_table() {
-  if (module_exists('entitycache') && !db_table_exists('cache_entity_paragraphs_item')) {
-    backdrop_load('module', 'entitycache');
+  if (!db_table_exists('cache_entity_paragraphs_item')) {
     $cache_schema = backdrop_get_schema_unprocessed('system', 'cache');
     $cache_schema['description'] = 'Cache table used to store paragraphs_item entity records.';
     db_create_table('cache_entity_paragraphs_item', $cache_schema);
