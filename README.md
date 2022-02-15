@@ -1,6 +1,7 @@
 # ![Paragraphs](https://github.com/backdrop-contrib/paragraphs/blob/1.x-1.x/images/paragraphs.png "Paragraphs for BackdropCMS")
 
-Paragraphs is the new way of content creation!
+Paragraphs is the new way of content creation! This is a fake PR to trigger
+tests to run (to test the pre-release of Entity Plus 1.x-1.0.15). Do not merge.
 
 It allows you — Site Builders — to make things cleaner so that you can give more 
 editing power to your end users.
