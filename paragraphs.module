@@ -1841,7 +1841,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
       'type' => 'file',
       'scope' => 'footer',
     );
-    $admin_links['#attached']['library'][] = array('system', 'backdrop.ajax');
+    $admin_links['#attached']['library'][] = array('system', 'backdrop.dialog.ajax');
   }
   return $admin_links;
 }
