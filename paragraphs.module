@@ -1695,6 +1695,9 @@ function paragraphs_modal_admin_links($paragraphs_item) {
   if (module_exists('font_awesome')) {
     $classes[] = 'font-awesome';
   }
+  else {
+    $classes[] = 'svg-icons';
+  }
   if (is_numeric($paragraph_id) && $access) {
     $admin_links = array(
       '#type' => 'dropbutton',
