@@ -145,21 +145,21 @@ html.dialog-open {
 }
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.paragraphs-add {
   background: transparent url(../images/add.svg) 6px center no-repeat;
-  background-size: 18px;
+  background-size: 14px;
 }
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.paragraphs-edit {
   background: transparent url(../images/edit.svg) 6px center no-repeat;
-  background-size: 18px;
+  background-size: 14px;
 }
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.paragraphs-sort {
   background: transparent url(../images/sort.svg) 6px center no-repeat;
-  background-size: 18px;
+  background-size: 14px;
 }
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.paragraphs-remove {
   background: transparent url(../images/remove.svg) 6px center no-repeat;
-  background-size: 18px;
+  background-size: 14px;
 }
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.paragraphs-unpublish {
   background: transparent url(../images/unpublish.svg) 6px center no-repeat;
-  background-size: 18px;
+  background-size: 14px;
 }
