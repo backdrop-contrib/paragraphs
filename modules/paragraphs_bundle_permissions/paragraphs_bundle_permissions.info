@@ -1,5 +1,5 @@
-name = Paragraphs Bundle Permissions
-description = Add view / create / update / delete permissions for all paragraph bundles.
+name = Paragraphs Type Permissions
+description = Add view / create / update / delete permissions for all Paragraphs types.
 backdrop = 1.x
 type = module
 package = Paragraphs
