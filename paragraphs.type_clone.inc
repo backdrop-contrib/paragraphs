@@ -107,14 +107,14 @@ function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_sta
     '#default_value' => $paragraph_type_prefix . '_' . $num,
     '#required' => TRUE,
   );
-    // Target paragraph type label field.
-    $default_value = 'Clone of ' . $paragraph_type->label . ' (' . $num . ')';
-    $form['fieldset_target']['target_label'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Label'),
-      '#default_value' => $default_value,
-      '#required' => FALSE,
-    );
+  // Target paragraph type label field.
+  $default_value = 'Clone of ' . $paragraph_type->label . ' (' . $num . ')';
+  $form['fieldset_target']['target_label'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Label'),
+    '#default_value' => $default_value,
+    '#required' => FALSE,
+  );
   // Target paragraph type description field.
   $form['fieldset_target']['target_description'] = array(
     '#type' => 'textarea',
@@ -262,7 +262,7 @@ function paragraphs_type_clone_create(array $values) {
       foreach ($groups[$view_mode] as $group) {
         // Set the bundle (paragraph type) to be the new type machine name.
         $group->bundle = $values['target_machine_name'];
-        // Save the new group configuration
+        // Save the new group configuration.
         field_group_group_save($group, $new = TRUE);
       }
     }
@@ -299,6 +299,7 @@ function paragraphs_type_clone_set_target_field($instance, $field_name, $values,
 
   // Pass the cloned paragraph type name to context.
   $context['results']['source_name'] = $values['source_name'];
+  $context['results']['target_name'] = $values['target_name'];
 
   // Update the field count.
   if (!isset($context['results']['field_count'])) {
@@ -341,6 +342,7 @@ function paragraphs_type_clone_set_target_field($instance, $field_name, $values,
  *   The field name.
  * @return bool
  *   Number of requests.
+ * 
  */
 function _paragraphs_type_clone_exclude_field($field_name) {
   $exclude = array('title', 'body', 'metatags', 'locations');
@@ -380,24 +382,23 @@ function paragraphs_type_clone_finished($success, array $results, array $operati
   // Test the results.
   if ($success) {
     backdrop_set_message(
-      t(
-        'The "@source_name" paragraph type and @field_count fields have been cloned successfully.',
+      t('The "@source_name" paragraph type and @field_count fields have been cloned successfully to "@target_name".',
         array(
-      '@source_name' => $results['source_name'],
-      '@field_count' => $results['field_count'],
-    )
+          '@source_name' => $results['source_name'],
+          '@target_name' => $results['target_name'],
+          '@field_count' => $results['field_count'],
+        )
       )
     );
   }
   else {
     $error_operation = reset($operations);
     backdrop_set_message(
-      t(
-        'An error occurred while processing @operation with arguments : @args',
+      t('An error occurred while processing @operation with arguments : @args',
         array(
-      '@operation' => $error_operation[0],
-      '@args' => print_r($error_operation[0], TRUE),
-    )
+          '@operation' => $error_operation[0],
+          '@args' => print_r($error_operation[0], TRUE),
+        )
       )
     );
   }
