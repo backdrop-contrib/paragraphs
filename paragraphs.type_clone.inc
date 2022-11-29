@@ -340,9 +340,9 @@ function paragraphs_type_clone_set_target_field($instance, $field_name, $values,
  *
  * @param string $field_name
  *   The field name.
+ * 
  * @return bool
  *   Number of requests.
- * 
  */
 function _paragraphs_type_clone_exclude_field($field_name) {
   $exclude = array('title', 'body', 'metatags', 'locations');
