@@ -198,9 +198,6 @@ function paragraphs_admin_bundle_clone_create_form_validate(array $form, array &
  */
 function paragraphs_admin_bundle_clone_create_form_submit(array $form, array &$form_state) {
   if ($form['#form_id'] == 'paragraphs_admin_bundle_clone_create_form') {
-    // Reset counter for debug information.
-    $_SESSION['http_request_count'] = 0;
-
     // Execute the function batch function.
     $batch = paragraphs_type_clone_create($form_state['values']);
     batch_set($batch);
@@ -330,9 +327,6 @@ function paragraphs_type_clone_set_target_field($instance, $field_name, $values,
     // Create an instance of the field and bind it to the bundle.
     field_create_instance($instance);
   }
-
-  // Update progress.
-  _paragraphs_type_clone_update_http_requests();
 }
 
 /**
@@ -347,23 +341,6 @@ function paragraphs_type_clone_set_target_field($instance, $field_name, $values,
 function _paragraphs_type_clone_exclude_field($field_name) {
   $exclude = array('title', 'body', 'metatags', 'locations');
   return in_array($field_name, $exclude);
-}
-
-/**
- * Utility function to increment HTTP requests in a session variable.
- */
-function _paragraphs_type_clone_update_http_requests() {
-  $_SESSION['http_request_count']++;
-}
-
-/**
- * Utility function to count the HTTP requests in a session variable.
- *
- * @return int
- *   Number of requests.
- */
-function _paragraphs_type_clone_get_http_requests() {
-  return !empty($_SESSION['http_request_count']) ? $_SESSION['http_request_count'] : 0;
 }
 
 /**
