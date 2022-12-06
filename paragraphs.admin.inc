@@ -244,6 +244,28 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
 
   $status = paragraphs_bundle_save($bundle);
 
+  // Add permission if paragraphs_bundle_permissions is enabled and newly
+  // created.
+  if (module_exists('paragraphs_bundle_permissions') && $status == SAVED_NEW) {
+    // Define the permission name for viewing paragraph content.
+    $permission_name = 'view paragraph content ' . $bundle->bundle;
+    // Add the permission to the anonymous role.
+    user_role_change_permissions('anonymous', array(
+      $permission_name => TRUE,
+    ));
+    // Define all administrator permissions.
+    $admin_permissions = array('view', 'update', 'delete', 'create');
+    $permissions = array();
+    foreach ($admin_permissions as $permission) {
+      $permission_name = $permission . ' paragraph content ' . $bundle->bundle;
+      $permissions += array(
+        $permission_name => TRUE,
+      );
+    }
+    // Add the permissions to the administrator role.
+    user_role_change_permissions('administrator', $permissions);
+  }
+
   $t_args = array('%name' => $bundle->name);
 
   if ($status == SAVED_UPDATED) {

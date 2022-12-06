@@ -1,0 +1,41 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the paragraphs_bundle_permissions
+ * sub-module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function paragraphs_bundle_permissions_install() {
+  paragraphs_bundle_permissions_add_default_permissions();
+}
+
+/**
+ * Implements hook_update().
+ */
+function paragraphs_bundle_permissions_update_1100() {
+  paragraphs_bundle_permissions_add_default_permissions();
+}
+
+/**
+ * Helper function for adding default permissions.
+ *
+ * Adds the view permission for each type/bundle to the anonymous role.
+ */
+function paragraphs_bundle_permissions_add_default_permissions() {
+  // Define permission name prefix.
+  $permission_name_prefix = 'view paragraph content ';
+  // Load paragraph types/bundles.
+  $bundles = paragraphs_bundle_load();
+  // Define the view permission for each type/bundle.
+  $permissions = array();
+  foreach ($bundles as $machine_name => $bundle) {
+    $permissions += array(
+      'view paragraph content ' . $machine_name => TRUE,
+    );
+  }
+  // Add the permissions to the anonymous role.
+  user_role_change_permissions('anonymous', $permissions);
+}
