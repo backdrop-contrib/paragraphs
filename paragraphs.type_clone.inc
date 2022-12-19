@@ -15,14 +15,6 @@
  *   The machine name of the source paragraph type.
  */
 function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_state, $bundle) {
-  // Check if fields exist before showing the form.
-  if (!paragraphs_bundle_fields_exist($bundle->bundle)) {
-    // Return to paragraphs admin with warning message if no fields.
-    backdrop_set_message(t("The '%paragraph_type' paragraph type has no fields and therefore it cannot be cloned.", array(
-      '%paragraph_type' => $bundle->label,
-    )), 'warning');
-    backdrop_goto('/admin/structure/paragraphs');
-  }
 
   // Load the paragraph type from machine name.
   $paragraph_type = $bundle;
@@ -206,8 +198,23 @@ function paragraphs_admin_bundle_clone_create_form_validate(array $form, array &
  */
 function paragraphs_admin_bundle_clone_create_form_submit(array $form, array &$form_state) {
   if ($form['#form_id'] == 'paragraphs_admin_bundle_clone_create_form') {
+    $values = $form_state['values'];
     // Execute the function batch function.
-    $batch = paragraphs_type_clone_create($form_state['values']);
+    $batch = paragraphs_type_clone_create($values);
+    if (empty($batch)) {
+      // If $batch is empty (i.e. no fields), skip batch set, set a message and
+      // end clone operation.
+      backdrop_set_message(
+        t('The "@source_name" paragraph type has been cloned successfully to "@target_name".',
+          array(
+            '@source_name' => $values['source_name'],
+            '@target_name' => $values['target_name'],
+          )
+        )
+      );
+      // Redirect to the paragraph types list.
+      backdrop_goto('/admin/structure/paragraphs');
+    }
     batch_set($batch);
   }
 }
@@ -240,35 +247,38 @@ function paragraphs_type_clone_create(array $values) {
   // Get paragraph type base fields.
   $base_fields = field_info_instances('paragraphs_item', $values['source_machine_name']);
 
-  // Get paragraph type extra fields.
-  $extra_fields = field_info_extra_fields('paragraphs_item', $values['source_machine_name'], 'form');
+  // Check to see if fields exist before completing field actions.
+  if (!empty($base_fields)) {
+    // Get paragraph type extra fields.
+    $extra_fields = field_info_extra_fields('paragraphs_item', $values['source_machine_name'], 'form');
 
-  // Merge all fields.
-  $all_fields = array_merge($base_fields, $extra_fields);
+    // Merge all fields.
+    $all_fields = array_merge($base_fields, $extra_fields);
 
-  // Create new fields.
-  foreach ($all_fields as $name => $instance) {
-    if (isset($name) && !empty($name) && isset($instance['entity_type']) && !empty($instance['entity_type'])) {
-      $operations[] = array(
-        'paragraphs_type_clone_set_target_field',
-        array($instance, $name, $values),
-      );
+    // Create new fields.
+    foreach ($all_fields as $name => $instance) {
+      if (isset($name) && !empty($name) && isset($instance['entity_type']) && !empty($instance['entity_type'])) {
+        $operations[] = array(
+          'paragraphs_type_clone_set_target_field',
+          array($instance, $name, $values),
+        );
+      }
     }
-  }
 
-  // Check if the Fields Group module is installed.
-  if (module_exists('field_group')) {
-    // Get the groups from the form view and all display view modes.
-    $groups = field_group_info_groups('paragraphs_item', $values['source_machine_name'], NULL, TRUE);
-    // Loop through each display mode including form.
-    $view_modes = array_keys($groups);
-    foreach ($view_modes as $view_mode) {
-      // Loop through each group within the display mode.
-      foreach ($groups[$view_mode] as $group) {
-        // Set the bundle (paragraph type) to be the new type machine name.
-        $group->bundle = $values['target_machine_name'];
-        // Save the new group configuration.
-        field_group_group_save($group, $new = TRUE);
+    // Check if the Field Group module is installed.
+    if (module_exists('field_group')) {
+      // Get the groups from the form view and all display view modes.
+      $groups = field_group_info_groups('paragraphs_item', $values['source_machine_name'], NULL, TRUE);
+      // Loop through each display mode including form.
+      $view_modes = array_keys($groups);
+      foreach ($view_modes as $view_mode) {
+        // Loop through each group within the display mode.
+        foreach ($groups[$view_mode] as $group) {
+          // Set the bundle (paragraph type) to be the new type machine name.
+          $group->bundle = $values['target_machine_name'];
+          // Save the new group configuration.
+          field_group_group_save($group, $new = TRUE);
+        }
       }
     }
   }
@@ -302,17 +312,22 @@ function paragraphs_type_clone_create(array $values) {
     }
   }
 
-  // Define batch operation.
-  $batch = array(
-    'title' => t('Clone Paragraphs type'),
-    'operations' => $operations,
-    'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.type_clone.inc',
-    'finished' => 'paragraphs_type_clone_finished',
-    'init_message' => t('Operation in progress...'),
-    'progress_message' => t('Task @current/@total'),
-    'error_message' => t('An error has occurred please try again.'),
-  );
-  return $batch;
+  // Define batch operation if fields exist and therefore operations set.
+  if (!empty($operations) > 0) {
+    $batch = array(
+      'title' => t('Clone Paragraphs type'),
+      'operations' => $operations,
+      'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.type_clone.inc',
+      'finished' => 'paragraphs_type_clone_finished',
+      'init_message' => t('Operation in progress...'),
+      'progress_message' => t('Task @current/@total'),
+      'error_message' => t('An error has occurred please try again.'),
+    );
+    return $batch;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 /**

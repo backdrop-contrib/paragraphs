@@ -970,21 +970,6 @@ function paragraphs_field_delete_revision($entity_type, $entity, $field, $instan
 }
 
 /**
- * Determines if a paragraph type has one or more fields.
- *
- * @param string $bundle_name
- *   The machine name of the paragraph type.
- *
- * @return bool
- *   Returns TRUE if fields exist, FALSE if no fields exist.
- */
-function paragraphs_bundle_fields_exist($bundle_name) {
-  $field_list = field_info_instances('paragraphs_item', $bundle_name);
-  $fields_exist = count($field_list) > 0;
-  return $fields_exist;
-}
-
-/**
  * Get an array of paragraph item IDs stored in the given field items.
  */
 function paragraphs_field_item_to_ids($items) {
