@@ -164,6 +164,6 @@ html.dialog-open {
   background-size: 14px;
 }
 
-.paragraphs-type-clone-readonly-field {
-  background-color: #f1f1f1 !important;
+.paragraphs-admin-bundle-clone-create-form .paragraphs-type-clone-readonly-field {
+  background-color: #f1f1f1;
 }

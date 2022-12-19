@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Paragraph Type cloning functions.
+ * Paragraphs Type cloning functions.
  */
 
 /**
@@ -15,6 +15,15 @@
  *   The machine name of the source paragraph type.
  */
 function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_state, $bundle) {
+  // Check if fields exist before showing the form.
+  if (!paragraphs_bundle_fields_exist($bundle->bundle)) {
+    // Return to paragraphs admin with warning message if no fields.
+    backdrop_set_message(t("The '%paragraph_type' paragraph type has no fields and therefore it cannot be cloned.", array(
+      '%paragraph_type' => $bundle->label,
+    )), 'warning');
+    backdrop_goto('/admin/structure/paragraphs');
+  }
+
   // Load the paragraph type from machine name.
   $paragraph_type = $bundle;
   // Prepare the new paragraph type machine name prefix.
@@ -25,7 +34,7 @@ function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_sta
   // Source fieldset.
   $form['fieldset_source'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Paragraph type source'),
+    '#title' => t('Paragraphs type source'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -86,7 +95,7 @@ function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_sta
   // Target fieldset.
   $form['fieldset_target'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Paragraph type target'),
+    '#title' => t('Paragraphs type target'),
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
   );
@@ -131,7 +140,7 @@ function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_sta
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Generate'),
+    '#value' => t('Clone Paragraphs type'),
   );
 
   // Return the form.
@@ -295,7 +304,7 @@ function paragraphs_type_clone_create(array $values) {
 
   // Define batch operation.
   $batch = array(
-    'title' => t('Clone paragraph type'),
+    'title' => t('Clone Paragraphs type'),
     'operations' => $operations,
     'file' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.type_clone.inc',
     'finished' => 'paragraphs_type_clone_finished',
