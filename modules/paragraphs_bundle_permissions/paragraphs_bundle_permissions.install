@@ -31,7 +31,8 @@ function paragraphs_bundle_permissions_install() {
   // Get role names.
   $roles = user_roles();
   // Compile the message.
-  $message = t('Default permissions have been added to the %anonymous role (View) and %administrator role (All) for all existing paragraph types. Review and make changes if needed on the <a href="@url">permissions</a> page.',
+  $t = get_t();
+  $message = $t('Default permissions have been added to the %anonymous role (View) and %administrator role (All) for all existing paragraph types. Review and make changes if needed on the <a href="@url">permissions</a> page.',
     array(
       '%anonymous' => $roles['anonymous'],
       '%administrator' => $roles['administrator'],
@@ -86,7 +87,7 @@ function paragraphs_bundle_permissions_update_1100() {
 }
 
 /**
- * Generate a permissions page url
+ * Generate a permissions page url.
  */
 function paragraphs_bundle_permissions_url() {
   // Generate a link to the relevant section of the permissions screen.
