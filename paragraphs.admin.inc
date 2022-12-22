@@ -53,6 +53,11 @@ function paragraphs_admin_bundle_overview() {
       'title' => t('Configure'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
     );
+    // Clone bundle.
+    $operations['clone_type'] = array(
+      'title' => t('clone'),
+      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/clone',
+    );
     // Delete bundle.
     $operations['delete_type'] = array(
       'title' => t('Delete'),
