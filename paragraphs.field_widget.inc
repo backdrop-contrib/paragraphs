@@ -458,8 +458,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $paragraphs_item = paragraphs_field_get_entity($items[$delta]);
     }
 
-    // Show an empty collection if we have no existing one or it does not
-    // load.
+    // Show an empty collection if we have no existing one or it does not load.
     if (empty($paragraphs_item) && $bundle) {
       /* @var $paragraphs_item ParagraphsItemEntity */
       $paragraphs_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
@@ -497,8 +496,8 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     }
 
     if (!$deleted_paragraph) {
-      $element['actions'] = array(
-        '#type' => 'actions',
+      $element['inner_actions'] = array(
+          '#type' => 'inner_actions',
         '#weight' => 9999,
       );
 
@@ -527,7 +526,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         }
 
         if ($default_edit_mode != 'open') {
-          $element['actions']['collapse_button'] = array(
+          $element['inner_actions']['collapse_button'] = array(
             '#delta' => $delta,
             '#name' => implode('_', $parents) . '_collapse_button',
             '#type' => 'submit',
@@ -559,11 +558,6 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             $element[$key]['#access'] = FALSE;
           }
         }
-        // Make as dropbutton?
-        $element['actions'] = array(
-          '#type' => 'actions',
-          '#weight' => 9999,
-        );
 
         if (isset($field_state['entity'][$delta]->must_be_saved) && $field_state['entity'][$delta]->must_be_saved) {
           $markup = '<div class="messages warning">';
@@ -574,13 +568,13 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           }
           $markup .= t('This content must be saved to record recent changes.');
           $markup .= '</div>';
-          $element['actions']['must_be_saved'] = array(
+          $element['inner_actions']['must_be_saved'] = array(
             '#markup' => $markup,
             '#weight' => 998,
           );
         }
 
-        $element['actions']['edit_button'] = array(
+        $element['inner_actions']['edit_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_edit_button',
           '#type' => 'submit',
@@ -607,7 +601,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             $button_value = t('Publish');
             $unpublished_paragraph = TRUE;
           }
-          $element['actions']['togglepublish_button'] = array(
+          $element['inner_actions']['togglepublish_button'] = array(
             '#delta' => $delta,
             '#name' => implode('_', $parents) . '_togglepublish_button',
             '#type' => 'submit',
@@ -626,7 +620,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             '#weight' => 1000,
           );
         }
-        $element['actions']['remove_button'] = array(
+        $element['inner_actions']['remove_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_remove_button',
           '#type' => 'submit',
@@ -647,8 +641,8 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         );
       }
 
-      if (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']
-           && isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
+      if (isset($element['inner_actions']['edit_button']) && !$element['inner_actions']['edit_button']['#access']
+           && isset($element['inner_actions']['remove_button']) && !$element['inner_actions']['remove_button']['#access']) {
         $element['access_info'] = array(
           '#type' => 'container',
           '#weight' => 9998,
@@ -658,7 +652,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#markup' => '<em>' . t('You are not allowed to edit or remove this @title item.', array('@title' => $instance_title)) . '</em>',
         );
       }
-      elseif (isset($element['actions']['edit_button']) && !$element['actions']['edit_button']['#access']) {
+      elseif (isset($element['inner_actions']['edit_button']) && !$element['inner_actions']['edit_button']['#access']) {
         $element['access_info'] = array(
           '#type' => 'container',
           '#weight' => 9998,
@@ -668,7 +662,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#markup' => '<em>' . t('You are not allowed to edit this @title item.', array('@title' => $instance_title)) . '</em>',
         );
       }
-      elseif (isset($element['actions']['remove_button']) && !$element['actions']['remove_button']['#access']) {
+      elseif (isset($element['inner_actions']['remove_button']) && !$element['inner_actions']['remove_button']['#access']) {
         $element['access_info'] = array(
           '#type' => 'container',
           '#weight' => 9998,
@@ -680,7 +674,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       }
     }
     else {
-      $element['actions'] = array(
+      $element['inner_actions'] = array(
         '#type' => 'actions',
         '#weight' => 9999,
       );
@@ -697,10 +691,10 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '%restore' => t('Restore'),
         ));
       $remove_button .= '</div>';
-      $element['actions']['remove_button'] = array(
+      $element['inner_actions']['remove_button'] = array(
         '#markup' => $remove_button,
       );
-      $element['actions']['restore_button'] = array(
+      $element['inner_actions']['restore_button'] = array(
         '#delta' => $delta,
         '#name' => implode('_', $parents) . '_restore_button',
         '#type' => 'submit',
@@ -715,7 +709,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         ),
         '#weight' => 1000,
       );
-      $element['actions']['confirm_delete_button'] = array(
+      $element['inner_actions']['confirm_delete_button'] = array(
         '#delta' => $delta,
         '#name' => implode('_', $parents) . '_deleteconfirm_button',
         '#type' => 'submit',
