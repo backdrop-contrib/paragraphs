@@ -493,12 +493,12 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#markup' => t('@title type: %bundle', array('@title' => $instance_title, '%bundle' => $bundle_info->label)),
       );
     }
+    $element['inner_actions'] = array(
+      '#type' => 'container',
+      '#weight' => 9999,
+    );
 
     if (!$deleted_paragraph) {
-      $element['inner_actions'] = array(
-          '#type' => 'inner_actions',
-        '#weight' => 9999,
-      );
 
       field_attach_form('paragraphs_item', $paragraphs_item, $element, $form_state, $language);
       if ($being_edited_paragraph) {
