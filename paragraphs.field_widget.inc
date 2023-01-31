@@ -466,8 +466,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
     }
-
-    if (!empty($paragraphs_item)) {
+    elseif (!empty($paragraphs_item)) {
       /* @var $paragraphs_item ParagraphsItemEntity */
       $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
 
@@ -505,7 +504,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraphs_item)) {
           foreach (element_children($element) as $key) {
-            if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
+            if ($key != 'paragraph_bundle_title' && $key != 'inner_actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
               $element[$key]['#access'] = FALSE;
             }
           }
@@ -554,7 +553,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         }
 
         foreach (element_children($element) as $key) {
-          if ($key != 'paragraph_bundle_title' && $key != 'actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
+          if ($key != 'paragraph_bundle_title' && $key != 'inner_actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
             $element[$key]['#access'] = FALSE;
           }
         }
@@ -674,10 +673,6 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       }
     }
     else {
-      $element['inner_actions'] = array(
-        '#type' => 'actions',
-        '#weight' => 9999,
-      );
       $remove_button = '<p>' . t('This @title has been removed.', array('@title' => $instance_title)) . ' </p>';
       $remove_button .= '<div class="messages warning">';
       if (config_get('system.core', 'messages_dismissible')) {
