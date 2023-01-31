@@ -466,7 +466,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
     }
-    elseif (!empty($paragraphs_item)) {
+    if (!empty($paragraphs_item)) {
       /* @var $paragraphs_item ParagraphsItemEntity */
       $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
 
