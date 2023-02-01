@@ -8,15 +8,16 @@
 /**
  * Implements hook_install().
  *
- * Add default permissions to anonymous role. Admin roles are added by default
- * when the permissions are defined, so no need to add here.
+ * Add default permissions to anonymous and authenticated roles. Admin roles
+ * are added by default when the permissions are defined, so no need to add
+ * here.
  */
 function paragraphs_bundle_permissions_install() {
   // Load paragraph types/bundles.
   $bundles = paragraphs_bundle_load();
   // Create empty array for permissions.
   $permissions = array();
-  // Define the permissions for each type/bundle.
+  // Define the view permissions for each type/bundle.
   foreach ($bundles as $machine_name => $bundle) {
     $permission_name = 'view paragraph content ' . $machine_name;
     $permissions += array(
@@ -26,21 +27,34 @@ function paragraphs_bundle_permissions_install() {
   // Add the permissions to the anonymous role.
   user_role_change_permissions('anonymous', $permissions);
 
+  // Add the permissions to the authenticated role.
+  user_role_change_permissions('authenticated', $permissions);
+
   // Define a message informing the user default permissions have been added to
   // each paragraph type.
   // Get role names.
   $roles = user_roles();
   // Compile the message.
   $t = get_t();
-  $message = $t('Default permissions have been added to the %anonymous role (View) and %administrator role (All) for all existing paragraph types. Review and make changes if needed on the <a href="@url">permissions</a> page.',
+  $message = $t('Default permissions have been added to the %anonymous and %authenticated roles (View) and %administrator role (All) for all existing paragraph types. ',
     array(
       '%anonymous' => $roles['anonymous'],
+      '%authenticated' => $roles['authenticated'],
       '%administrator' => $roles['administrator'],
-      '@url' => paragraphs_bundle_permissions_url(),
     )
   );
-  // Display the message.
-  backdrop_set_message($message, 'info');
+  // Define part of the message depending on whether the user has permission
+  // to administer permissions or not.
+  if (user_access("administer permissions")) {
+    // Compile the message with the link.
+    $conditional_message = t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
+      array('@url' => paragraphs_bundle_permissions_url('Paragraphs Type Permissions')));
+  }
+  else {
+    $conditional_message = t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
+  }
+  // Display the combined message.
+  backdrop_set_message($message . $conditional_message, 'info');
 }
 
 /**
@@ -76,32 +90,18 @@ function paragraphs_bundle_permissions_update_1100() {
   // Get role names.
   $roles = user_roles();
   // Compile the message.
-  $message = t('Default permissions (All) have been added to the %administrator role for all existing paragraph types if they did not already exist. No other roles have been modified. Review and make changes if needed on the <a href="@url">permission</a> page.',
-    array(
-      '%administrator' => $roles['administrator'],
-      '@url' => paragraphs_bundle_permissions_url(),
-    )
-  );
-  // Display the message.
-  backdrop_set_message($message, 'info');
-}
-
-/**
- * Generate a permissions page url.
- */
-function paragraphs_bundle_permissions_url() {
-  // Generate a link to the relevant section of the permissions screen.
-  $url_base = 'admin/config/people/permissions';
-  $url_fragment = 'module-paragraphs_bundle_permissions';
-  // Handle differently if the Filter Permissions module is enabled as this
-  // needs the fragment as part of the path so it can be processed server-side.
-  if (module_exists('filter_perms')) {
-    $url_path = url($url_base . '/' . $url_fragment);
+  $message = t('Default permissions (All) have been added to the %administrator role for all existing paragraph types if they did not already exist. No other roles have been modified. ',
+    array('%administrator' => $roles['administrator']));
+  // Define part of the message depending on whether the user has permission
+  // to administer permissions or not.
+  if (user_access("administer permissions")) {
+    // Compile the message with the link.
+    $conditional_message = t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
+      array('@url' => paragraphs_bundle_permissions_url('Paragraphs Type Permissions')));
   }
   else {
-    $url_path = url($url_base, array(
-      'fragment' => $url_fragment,
-    ));
+    $conditional_message = t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
   }
-  return $url_path;
+  // Display the combined message.
+  backdrop_set_message($message . $conditional_message, 'info');
 }

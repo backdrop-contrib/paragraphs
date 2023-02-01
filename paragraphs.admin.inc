@@ -58,6 +58,17 @@ function paragraphs_admin_bundle_overview() {
       'title' => t('clone'),
       'href' => 'admin/structure/paragraphs/' . $type_url_str . '/clone',
     );
+
+    // Manage permissions if module enabled.
+    if (module_exists('paragraphs_bundle_permissions')) {
+      $operations['permissions'] = array(
+        'title' => t('Permissions'),
+        'href' => paragraphs_bundle_permissions_url(),
+        'query' => array('search' => $bundle->name . ': '),
+        'attributes' => array('title' => t('Configure permissions')),
+      );
+    }
+
     // Delete bundle.
     $operations['delete_type'] = array(
       'title' => t('Delete'),
@@ -255,9 +266,10 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
     // Define the permission name for viewing paragraph content.
     $permission_name = 'view paragraph content ' . $bundle->bundle;
     // Add the permission to the anonymous role.
-    user_role_change_permissions('anonymous', array(
-      $permission_name => TRUE,
-    ));
+    user_role_change_permissions('anonymous', array($permission_name => TRUE));
+    // Add the permission to the authenticated role.
+    user_role_change_permissions('authenticated', array($permission_name => TRUE));
+
     // Define all administrator permissions.
     $admin_permissions = array('view', 'update', 'delete', 'create');
     $permissions = array();
@@ -284,22 +296,10 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
     // to administer permissions or not.
     if (user_access("administer permissions")) {
       // Generate a url to the relevant section of the permissions screen.
-      $url_base = 'admin/config/people/permissions';
-      $url_fragment = 'module-paragraphs_bundle_permissions';
-      // Handle differently if the Filter Permissions module is enabled as
-      // this needs the fragment as part of the path so it can be processed
-      // server-side.
-      if (module_exists('filter_perms')) {
-        $url_path = url($url_base . '/' . $url_fragment);
-      }
-      else {
-        $url_path = url($url_base, array(
-          'fragment' => $url_fragment,
-        ));
-      }
+      $url = paragraphs_bundle_permissions_url($bundle->name);
       // Compile the message with the link.
       $conditional_message = t('Review and make changes if needed on the <a href="@url">permissions</a> page.', array(
-        '@url' => $url_path,
+        '@url' => $url,
       ));
     }
     else {

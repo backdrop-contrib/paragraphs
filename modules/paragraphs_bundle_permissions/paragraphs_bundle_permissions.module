@@ -74,3 +74,34 @@ function paragraphs_bundle_permissions_permission() {
 
   return $perms;
 }
+
+/**
+ * Generate a permissions page url.
+ */
+function paragraphs_bundle_permissions_url($search = '') {
+  // Generate a link to the relevant section of the permissions screen.
+  $url_path = 'admin/config/people/permissions';
+
+  // If the Filter Permissions module is enabled then we should filter this
+  // module within the path so the filter can be applied server-side.
+  if (module_exists('filter_perms')) {
+    $url_module_filter = 'module-paragraphs_bundle_permissions';
+    $url_path .= '/' . $url_module_filter;
+    // If the search text is just for the module we can remove it as Filter
+    // Permissions will handle this.
+    $search = (($search == 'Paragraphs Type Permissions') ? '' : $search);
+  }
+  // Create a blank $options array so we can include in url function whether or
+  // not a search string is needed.
+  $options = array();
+  // Add the search query to $options if applicable.
+  if (!empty($search)) {
+    $options = array(
+      'query' => array(
+        'search' => $search,
+      ),
+    );
+  }
+  // Generate the url string.
+  return url($url_path, $options);
+}
