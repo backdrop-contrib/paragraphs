@@ -47,11 +47,11 @@ function paragraphs_bundle_permissions_install() {
   // to administer permissions or not.
   if (user_access("administer permissions")) {
     // Compile the message with the link.
-    $conditional_message = t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
+    $conditional_message = $t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
       array('@url' => paragraphs_bundle_permissions_url('Paragraphs Type Permissions')));
   }
   else {
-    $conditional_message = t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
+    $conditional_message = $t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
   }
   // Display the combined message.
   backdrop_set_message($message . $conditional_message, 'info');
