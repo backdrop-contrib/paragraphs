@@ -76,6 +76,8 @@ function paragraphs_bundle_permissions_permission() {
 }
 
 /**
+ * Generate conditional message.
+ *
  * Generate the conditional part of the message to be displayed when
  * permissions are added.
  */
