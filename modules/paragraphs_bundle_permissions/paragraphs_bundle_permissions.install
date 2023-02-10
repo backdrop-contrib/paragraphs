@@ -34,25 +34,21 @@ function paragraphs_bundle_permissions_install() {
   // each paragraph type.
   // Get role names.
   $roles = user_roles();
+  $admin_role = config_get('system.core', 'user_admin_role');
   // Compile the message.
   $t = get_t();
   $message = $t('Default permissions have been added to the %anonymous and %authenticated roles (View) and %administrator role (All) for all existing paragraph types. ',
     array(
       '%anonymous' => $roles['anonymous'],
       '%authenticated' => $roles['authenticated'],
-      '%administrator' => $roles['administrator'],
+      '%administrator' => $roles[$admin_role],
     )
   );
+
   // Define part of the message depending on whether the user has permission
   // to administer permissions or not.
-  if (user_access("administer permissions")) {
-    // Compile the message with the link.
-    $conditional_message = $t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
-      array('@url' => paragraphs_bundle_permissions_url('Paragraphs Type Permissions')));
-  }
-  else {
-    $conditional_message = $t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
-  }
+  $conditional_message = paragraphs_bundle_permissions_conditional_message('Paragraphs Type Permissions');
+
   // Display the combined message.
   backdrop_set_message($message . $conditional_message, 'info');
 }
@@ -83,7 +79,8 @@ function paragraphs_bundle_permissions_update_1100() {
     }
   }
   // Add the permissions to the administrator role.
-  user_role_change_permissions('administrator', $permissions);
+  $admin_role = config_get('system.core', 'user_admin_role');
+  user_role_change_permissions($admin_role, $permissions);
 
   // Define a message informing the user that default permissions have been
   // added to each paragraph type.
@@ -91,17 +88,12 @@ function paragraphs_bundle_permissions_update_1100() {
   $roles = user_roles();
   // Compile the message.
   $message = t('Default permissions (All) have been added to the %administrator role for all existing paragraph types if they did not already exist. No other roles have been modified. ',
-    array('%administrator' => $roles['administrator']));
+    array('%administrator' => $roles[$admin_role]));
+
   // Define part of the message depending on whether the user has permission
   // to administer permissions or not.
-  if (user_access("administer permissions")) {
-    // Compile the message with the link.
-    $conditional_message = t('Review and make changes if needed on the <a href="@url">permissions</a> page.',
-      array('@url' => paragraphs_bundle_permissions_url('Paragraphs Type Permissions')));
-  }
-  else {
-    $conditional_message = t("Contact an administrator with permission to modify these permissions if different permissions are needed.");
-  }
+  $conditional_message = paragraphs_bundle_permissions_conditional_message('Paragraphs Type Permissions');
+
   // Display the combined message.
   backdrop_set_message($message . $conditional_message, 'info');
 }
