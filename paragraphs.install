@@ -230,3 +230,16 @@ function paragraphs_update_1003() {
 
   db_add_field('paragraphs_item', 'status', $status);
 }
+
+/**
+ * Drop paragraphs_bundle table.
+ */
+function paragraphs_update_1004() {
+  if (!db_table_exists('paragraphs_bundle')) {
+    return;
+  }
+  // New installs were creating the table from the schema, but the config is all
+  // in CMI now. The schema is now removed but need to ensure the table is
+  // dropped.
+  db_drop_table('paragraphs_bundle');
+}
