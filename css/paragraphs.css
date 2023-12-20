@@ -2,6 +2,9 @@ html.dialog-open {
   position: inherit;
 }
 
+.field-widget-paragraphs-embed .description {
+  text-wrap: wrap;
+}
 .field-widget-paragraphs-embed .removed {
   padding-left: 1.5rem;
   background: repeating-linear-gradient(
