@@ -23,6 +23,9 @@ html.dialog-open {
     rgba(0,0,0,.03) 40px
   );
 }
+.field-widget-paragraphs-embed table {
+  font-size: 0.923rem;
+}
 
 /* Modal Admin styles. */
 
