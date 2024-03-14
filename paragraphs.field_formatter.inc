@@ -98,14 +98,6 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
         return $element;
       }
 
-      // If we are dealing with an empty paragraphs field, render an insert point.
-      if ($items[0]['value'] == 'scratch_paragraph') {
-        if (!empty($instance['settings']['modal_admin'])) {
-          $entity_ids = entity_extract_ids($entity_type, $entity);
-        }
-        return $element;
-      }
-
       // Get view mode from entity.
       $display_view_mode = empty($display['settings']['view_mode']) ? 'full' : $display['settings']['view_mode'];
       // Get view mode from field instance (if configured).
