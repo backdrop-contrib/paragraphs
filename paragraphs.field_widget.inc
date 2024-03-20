@@ -565,7 +565,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             backdrop_add_library('system', 'backdrop.dismiss');
             $markup .= '<a href="#" class="dismiss" title="' . t('Dismiss') . '"><span class="element-invisible">' . t('Dismiss') . '</span></a>' . "\n";
           }
-          $markup .= t('This content must be saved to record recent changes.');
+          $markup .= t('Click "Save" at the page bottom to make changes permanent.');
           $markup .= '</div>';
           $element['inner_actions']['must_be_saved'] = array(
             '#markup' => $markup,
