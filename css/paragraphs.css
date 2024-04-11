@@ -2,29 +2,33 @@ html.dialog-open {
   position: inherit;
 }
 
-.field-widget-paragraphs-embed .removed {
-  padding-left: 1.5rem;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(231,37,27,.07),
-    rgba(231,37,27,.07) 20px,
-    rgba(231,37,27,.1) 20px,
-    rgba(231,37,27,.1) 40px
-  );
-}
-.field-widget-paragraphs-embed .unpublished {
-  padding-left: 1.5rem;
-  color: #444;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(0,0,0,.05),
-    rgba(0,0,0,.05) 20px,
-    rgba(0,0,0,.03) 20px,
-    rgba(0,0,0,.03) 40px
-  );
-}
-.field-widget-paragraphs-embed table {
-  font-size: 0.923rem;
+.field-widget-paragraphs-embed {
+  .removed {
+    padding-left: 1.5rem;
+    background: repeating-linear-gradient(45deg,
+        rgba(231, 37, 27, .07),
+        rgba(231, 37, 27, .07) 20px,
+        rgba(231, 37, 27, .1) 20px,
+        rgba(231, 37, 27, .1) 40px);
+  }
+
+  .unpublished {
+    padding-left: 1.5rem;
+    color: #444;
+    background: repeating-linear-gradient(45deg,
+        rgba(0, 0, 0, .05),
+        rgba(0, 0, 0, .05) 20px,
+        rgba(0, 0, 0, .03) 20px,
+        rgba(0, 0, 0, .03) 40px);
+  }
+
+  table {
+    font-size: 0.923rem;
+
+    .paragraphs-item {
+      white-space: normal;
+    }
+  }
 }
 
 /* Modal Admin styles. */
@@ -58,7 +62,7 @@ html.dialog-open {
 }
 
 .paragraphs-item-modal-admin:hover::before {
-  border: 1px dashed rgba(0,0,0,.04);
+  border: 1px dashed rgba(0, 0, 0, .04);
   position: absolute;
   display: table-cell;
   content: '';
@@ -68,13 +72,11 @@ html.dialog-open {
   bottom: 0;
   z-index: 5;
   border: 1px dashed #d0e2d5;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(0,0,0,.04),
-    rgba(0,0,0,.04) 20px,
-    rgba(0,0,0,.02) 20px,
-    rgba(0,0,0,.02) 40px
-  );
+  background-image: repeating-linear-gradient(45deg,
+      rgba(0, 0, 0, .04),
+      rgba(0, 0, 0, .04) 20px,
+      rgba(0, 0, 0, .02) 20px,
+      rgba(0, 0, 0, .02) 40px);
   transition: .1s ease-in-out;
 }
 
@@ -129,15 +131,19 @@ html.dialog-open {
 .font-awesome.paragraphs-edit:before {
   content: '\f304';
 }
+
 .font-awesome.paragraphs-remove:before {
   content: '\f2ed';
 }
+
 .font-awesome.paragraphs-add:before {
   content: '\f055';
 }
+
 .font-awesome.paragraphs-sort:before {
   content: '\f338';
 }
+
 .font-awesome.paragraphs-unpublish:before {
   content: '\f070';
 }
@@ -146,22 +152,27 @@ html.dialog-open {
   padding: 0.1em 0.5em 0.1em 32px;
   vertical-align: middle;
 }
+
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-add {
   background: transparent url(../images/add.svg) 6px center no-repeat;
   background-size: 14px;
 }
+
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-edit {
   background: transparent url(../images/edit.svg) 6px center no-repeat;
   background-size: 14px;
 }
+
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-sort {
   background: transparent url(../images/sort.svg) 6px center no-repeat;
   background-size: 14px;
 }
+
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-remove {
   background: transparent url(../images/remove.svg) 6px center no-repeat;
   background-size: 14px;
 }
+
 .paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-unpublish {
   background: transparent url(../images/unpublish.svg) 6px center no-repeat;
   background-size: 14px;
