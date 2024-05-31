@@ -1355,7 +1355,10 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
           'data' => '',
           'class' => array('field-multiple-drag'),
         ),
-        backdrop_render($item),
+        array(
+          'data' => backdrop_render($item),
+          'class' => array('paragraph-item'),
+        ),
         array(
           'data' => $delta_element,
           'class' => array('delta-order'),

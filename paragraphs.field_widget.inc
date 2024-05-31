@@ -273,7 +273,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
               '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more_bundle_' . $machine_name,
               '#value' => t('Add !title', array('!title' => $bundle['name'])),
               '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
-              '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
+              '#attributes' => array(
+                'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+              ),
               '#limit_validation_errors' => array(),
               '#submit' => array('paragraphs_add_more_submit'),
               '#ajax' => array(
@@ -298,7 +300,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             '#name' => strtr($id_prefix, '-', '_') . '_add_more_type',
             '#title' => t('!title type', array('!title' => $instance_title)),
             '#options' => $select_list,
-            '#attributes' => array('class' => array('field-add-more-type')),
+            '#attributes' => array(
+              'class' => array('field-add-more-type'),
+            ),
             '#limit_validation_errors' => array(
               array_merge($parents, array($field_name, $langcode)),
             ),
@@ -325,7 +329,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             '#type' => 'submit',
             '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more',
             '#value' => $text,
-            '#attributes' => array('class' => array('field-add-more-submit', 'paragraphs-add-more-submit')),
+            '#attributes' => array(
+              'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+            ),
             '#limit_validation_errors' => array(),
             '#submit' => array('paragraphs_add_more_submit'),
             '#ajax' => array(
@@ -488,6 +494,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $element['paragraph_bundle_title'] = array(
         '#type' => 'container',
         '#weight' => -100,
+        '#attributes' => array(
+          'class' => array('paragraph-bundle-title'),
+        ),
       );
       $element['paragraph_bundle_title']['info'] = array(
         '#markup' => t('@title type: %bundle', array('@title' => $instance_title, '%bundle' => $bundle_info->label)),
@@ -495,7 +504,10 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     }
     $element['inner_actions'] = array(
       '#type' => 'container',
-      '#weight' => 9999,
+      '#weight' => -99,
+      '#attributes' => array(
+        'class' => array('inner-actions'),
+      ),
     );
 
     if (!$deleted_paragraph) {
@@ -540,13 +552,20 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             ),
             '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
             '#weight' => 999,
+            '#attributes' => array(
+              'class' => array('paragraphs-collapse-button'),
+            ),
           );
+
         }
       }
       else {
         if ($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraphs_item)) {
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
+            '#attributes' => array(
+              'class' => array('paragraph-bundle-preview'),
+            ),
           );
           $preview = $paragraphs_item->view('paragraphs_editor_preview', $langcode);
           $element['paragraph_bundle_preview']['preview'] = $preview;
@@ -567,7 +586,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           }
           $markup .= t('This content must be saved to record recent changes.');
           $markup .= '</div>';
-          $element['inner_actions']['must_be_saved'] = array(
+          $element['must_be_saved'] = array(
             '#markup' => $markup,
             '#weight' => 998,
           );
@@ -588,6 +607,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           ),
           '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
           '#weight' => 999,
+          '#attributes' => array(
+            'class' => array('paragraphs-edit-button'),
+          ),
         );
       }
 
@@ -617,6 +639,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             ),
             '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
             '#weight' => 1000,
+            '#attributes' => array(
+              'class' => array('paragraphs-togglepublish-button'),
+            ),
           );
         }
         $element['inner_actions']['remove_button'] = array(
@@ -635,7 +660,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
           '#weight' => 1001,
           '#attributes' => array(
-            'class' => array('button-danger'),
+            'class' => array('button-danger', 'paragraph-remove-button'),
           ),
         );
       }
@@ -703,6 +728,9 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           'wrapper' => $element['#wrapper_id'],
         ),
         '#weight' => 1000,
+        '#attributes' => array(
+          'class' => array('paragraphs-restore-button'),
+        ),
       );
       $element['inner_actions']['confirm_delete_button'] = array(
         '#delta' => $delta,
@@ -719,7 +747,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         ),
         '#weight' => 1001,
         '#attributes' => array(
-          'class' => array('button-danger'),
+          'class' => array('button-danger', 'paragraphs-deleteconfirm-button'),
         ),
       );
     }
@@ -739,11 +767,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     $class = 'unpublished';
   }
   if (!empty($class)) {
-    $element['paragraph_bundle_title']['#attributes'] = array(
-      'class' => array(
-        $class,
-      ),
-    );
+    $element['paragraph_bundle_title']['#attributes']['class'][] = $class;
   }
   $recursion--;
   return $element;
