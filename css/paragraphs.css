@@ -2,23 +2,9 @@ html.dialog-open {
   position: inherit;
 }
 
-.field-widget-paragraphs-embed table td.paragraph-item {
-  display: grid;
-}
-
-.field-widget-paragraphs-embed table td.paragraph-item>div {
-  grid-column: 1 / 3;
-}
-
-.field-widget-paragraphs-embed table td.paragraph-item>.paragraph-bundle-title {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.field-widget-paragraphs-embed table td.paragraph-item>.inner-actions {
-  grid-column: 2;
-  grid-row: 1;
-  text-align: right;
+.field-widget-paragraphs-embed table td.paragraph-item .paragraph-bundle-header {
+  display: flex;
+  justify-content: space-between;
 }
 
 .field-widget-paragraphs-embed {
