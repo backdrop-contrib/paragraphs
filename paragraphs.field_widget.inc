@@ -509,15 +509,15 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       ),
     );
     $element['paragraph_bundle_header']['inner_actions']['more'] = array(
-    '#type' => 'details',
-    '#summary' => '...',
-    'child' => array(),
-    '#attributes' => array(
-      'class' => array('paragraphs-actions-more'),
-      'aria-label' => t('More actions'),
-    ),
-    '#weight' => 1003,
-  );
+      '#type' => 'details',
+      '#summary' => '...',
+      'child' => array(),
+      '#attributes' => array(
+        'class' => array('paragraphs-actions-more'),
+        'aria-label' => t('More actions'),
+      ),
+      '#weight' => 1003,
+    );
 
     if (!$deleted_paragraph) {
 
