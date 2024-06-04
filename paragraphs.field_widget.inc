@@ -155,16 +155,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
 
   if (module_exists('file')) {
     // file.js triggers uploads when the main Submit button is clicked.
-    $field_elements['#attached']['js'] = array(
-      backdrop_get_path('module', 'file') . '/js/file.js',
-      array(
-        'data' => backdrop_get_path('module', 'paragraphs') . '/paragraphs.js',
-        'type' => 'file',
-        'weight' => 9999,
-      ),
-    );
+    $field_elements['#attached']['js'][] = backdrop_get_path('module', 'file') . '/js/file.js';
     $form_state['has_file_element'] = TRUE;
   }
+  $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/paragraphs.js';
 
   return $field_elements;
 }
@@ -500,7 +494,6 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       );
       $element['paragraph_bundle_header']['paragraph_bundle_title'] = array(
         '#type' => 'container',
-        '#weight' => -100,
         '#attributes' => array(
           'class' => array('paragraph-bundle-title'),
         ),
@@ -515,6 +508,16 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         'class' => array('inner-actions'),
       ),
     );
+    $element['paragraph_bundle_header']['inner_actions']['more'] = array(
+    '#type' => 'details',
+    '#summary' => '...',
+    'child' => array(),
+    '#attributes' => array(
+      'class' => array('paragraphs-actions-more'),
+      'aria-label' => t('More actions'),
+    ),
+    '#weight' => 1003,
+  );
 
     if (!$deleted_paragraph) {
 
@@ -594,7 +597,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           $markup .= '</div>';
           $element['must_be_saved'] = array(
             '#markup' => $markup,
-            '#weight' => 998,
+            '#weight' => 1000,
           );
         }
 
@@ -628,7 +631,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             $button_value = t('Publish');
             $unpublished_paragraph = TRUE;
           }
-          $element['paragraph_bundle_header']['inner_actions']['togglepublish_button'] = array(
+          $element['paragraph_bundle_header']['inner_actions']['more']['child']['togglepublish_button'] = array(
             '#delta' => $delta,
             '#name' => implode('_', $parents) . '_togglepublish_button',
             '#type' => 'submit',
@@ -639,18 +642,18 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             ),
             '#limit_validation_errors' => array($parents),
             '#ajax' => array(
-              'callback' => '_paragraphs_ajax_update_callback',
+              'callback' => '_paragraphs_ajax_update_more_callback',
               'effect' => 'fade',
               'wrapper' => $element['#wrapper_id'],
             ),
             '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
-            '#weight' => 1000,
+            '#weight' => 999,
             '#attributes' => array(
               'class' => array('paragraphs-togglepublish-button'),
             ),
           );
         }
-        $element['paragraph_bundle_header']['inner_actions']['remove_button'] = array(
+        $element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button'] = array(
           '#delta' => $delta,
           '#name' => implode('_', $parents) . '_remove_button',
           '#type' => 'submit',
@@ -659,12 +662,12 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#submit' => array('paragraphs_remove_submit'),
           '#limit_validation_errors' => array(),
           '#ajax' => array(
-            'callback' => '_paragraphs_ajax_update_callback',
+            'callback' => '_paragraphs_ajax_update_more_callback',
             'effect' => 'fade',
             'wrapper' => $element['#wrapper_id'],
           ),
           '#access' => entity_access('delete', 'paragraphs_item', $paragraphs_item),
-          '#weight' => 1001,
+          '#weight' => 999,
           '#attributes' => array(
             'class' => array('button-danger', 'paragraph-remove-button'),
           ),
@@ -672,7 +675,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       }
 
       if (isset($element['paragraph_bundle_header']['inner_actions']['edit_button']) && !$element['paragraph_bundle_header']['inner_actions']['edit_button']['#access']
-           && isset($element['paragraph_bundle_header']['inner_actions']['remove_button']) && !$element['paragraph_bundle_header']['inner_actions']['remove_button']['#access']) {
+           && isset($element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button']) && !$element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button']['#access']) {
         $element['access_info'] = array(
           '#type' => 'container',
           '#weight' => 9998,
@@ -692,7 +695,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#markup' => '<em>' . t('You are not allowed to edit this @title item.', array('@title' => $instance_title)) . '</em>',
         );
       }
-      elseif (isset($element['paragraph_bundle_header']['inner_actions']['remove_button']) && !$element['paragraph_bundle_header']['inner_actions']['remove_button']['#access']) {
+      elseif (isset($element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button']) && !$element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button']['#access']) {
         $element['access_info'] = array(
           '#type' => 'container',
           '#weight' => 9998,
@@ -704,21 +707,25 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       }
     }
     else {
-      $remove_button = '<p>' . t('This @title has been removed.', array('@title' => $instance_title)) . ' </p>';
-      $remove_button .= '<div class="messages warning">';
+      $remove_markup = '<p>' . t('This @title has been removed.', array('@title' => $instance_title)) . ' </p>';
+      $remove_markup .= '<div class="messages warning">';
       if (config_get('system.core', 'messages_dismissible')) {
         // Add the 'Dismiss' library and place a 'Dismiss' link on messages.
         backdrop_add_library('system', 'backdrop.dismiss');
-        $remove_button .= '<a href="#" class="dismiss" title="' . t('Dismiss') . '"><span class="element-invisible">' . t('Dismiss') . '</span></a>' . "\n";
+        $remove_markup .= '<a href="#" class="dismiss" title="' . t('Dismiss') . '"><span class="element-invisible">' . t('Dismiss') . '</span></a>' . "\n";
       }
-      $remove_button .= t('This @title will be permanently deleted when you press %confirm or save this page. (You can restore it with the %restore button or by closing this screen without saving.)', array(
+      $remove_markup .= t('This @title will be permanently deleted when you press %confirm or save this page. (You can restore it with the %restore button or by closing this screen without saving.)', array(
         '@title' => $instance_title,
         '%confirm' => t('Confirm Deletion'),
         '%restore' => t('Restore'),
         ));
-      $remove_button .= '</div>';
-      $element['paragraph_bundle_header']['inner_actions']['remove_button'] = array(
-        '#markup' => $remove_button,
+      $remove_markup .= '</div>';
+      $element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button'] = array(
+        '#markup' => '',
+      );
+      $element['remove_warning'] = array(
+        '#markup' => $remove_markup,
+        '#weight' => 1000,
       );
       $element['paragraph_bundle_header']['inner_actions']['restore_button'] = array(
         '#delta' => $delta,
@@ -786,8 +793,22 @@ function _paragraphs_ajax_update_callback($form, $form_state) {
   // Get the information on what we're updating.
   $button = $form_state['triggering_element'];
 
-  // Go three levels up in the form, to the whole widget.
+  // Go four levels up in the form, to the whole widget.
   $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -4));
+
+  // Send back the rendered element and let Backdrop wrap it in an AJAX command.
+  return backdrop_render($element);
+}
+
+/**
+ * FAPI #ajax callback to update a paragraphs item from the extra buttons.
+ */
+function _paragraphs_ajax_update_more_callback($form, $form_state) {
+  // Get the information on what we're updating.
+  $button = $form_state['triggering_element'];
+
+  // Go six levels up in the form, to the whole widget.
+  $element = backdrop_array_get_nested_value($form, array_slice($button['#array_parents'], 0, -6));
 
   // Send back the rendered element and let Backdrop wrap it in an AJAX command.
   return backdrop_render($element);
@@ -1057,7 +1078,7 @@ function paragraphs_remove_submit(array $form, array &$form_state) {
   $delta = $button['#delta'];
 
   // Where in the form we'll find the parent element.
-  $address = array_slice($button['#array_parents'], 0, -4);
+  $address = array_slice($button['#array_parents'], 0, -6);
 
   // Go one level up in the form, to the widgets container.
   $parent_element = backdrop_array_get_nested_value($form, $address);
@@ -1121,7 +1142,7 @@ function paragraphs_togglepublish_submit(array $form, array &$form_state) {
   $delta = $button['#delta'];
 
   // Where in the form we'll find the parent element.
-  $address = array_slice($button['#array_parents'], 0, -4);
+  $address = array_slice($button['#array_parents'], 0, -6);
 
   // Go one level up in the form, to the widgets container.
   $parent_element = backdrop_array_get_nested_value($form, $address);

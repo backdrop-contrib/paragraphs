@@ -22,4 +22,32 @@
     }
   };
 
+  /**
+   * Close any open "more actions" menus.
+   */
+  Backdrop.behaviors.closeMoreActions = {
+    attach: function (context) {
+      $('body', context).on('click', Backdrop.paragraphs.closeActionMenu);
+    },
+    detach: function (context) {
+      $('body', context).on('click', Backdrop.paragraphs.closeActionMenu);
+    }
+  };
+
+  Backdrop.paragraphs = Backdrop.paragraphs || {
+
+    /**
+     * Close any open actions menus if the click is outside of the menu.
+     */
+    closeActionMenu: function (event) {
+      var $moreactions = $('.paragraphs-actions-more');
+      var $body = $('body');
+      var insideMoreActions = $.contains(event.target, $body);
+      if (!insideMoreActions) {
+        $moreactions.removeAttr('open');
+      }
+    }
+
+  };
+
 })(jQuery);

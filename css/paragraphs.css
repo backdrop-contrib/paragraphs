@@ -6,6 +6,51 @@ html.dialog-open {
   display: flex;
   justify-content: space-between;
 }
+.field-widget-paragraphs-embed table td.paragraph-item .inner-actions {
+  display: flex;
+}
+
+.paragraphs-actions-more {
+  position: relative;
+  border: 0;
+  margin: 0;
+  background-color: transparent;
+  overflow: visible;
+}
+.paragraphs-actions-more summary {
+  border: 0;
+  list-style: none;
+  transform: rotate(90deg);
+}
+.paragraphs-actions-more>summary::-webkit-details-marker {
+  display: none;
+}
+.paragraphs-actions-more .details-child-wrapper {
+  position: absolute;
+  left: 0;
+  display: block;
+  z-index: 100;
+  background: #eee;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+.paragraphs-actions-more .details-child-wrapper:before {
+  content: "";
+  border: 8px solid transparent;
+  border-bottom: 12px solid #eee;
+  height: 0;
+  left: 10px;
+  position: absolute;
+  top: -20px;
+  width: 0;
+}
+.paragraphs-actions-more .details-child-wrapper input {
+  margin-left: 1em;
+  margin-right: 1em;
+}
+.paragraphs-actions-more .details-child-wrapper input:first-child {
+  margin-top: 1em;
+}
 
 .field-widget-paragraphs-embed {
   .removed {
