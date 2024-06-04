@@ -27,21 +27,23 @@ html.dialog-open {
 }
 .paragraphs-actions-more .details-child-wrapper {
   position: absolute;
-  left: 0;
+  right: 0;
   display: block;
   z-index: 100;
   background: #eee;
   border-radius: 4px;
-  border: 1px solid #eee;
+  border: 0;
+  margin-top: 5px;
 }
 .paragraphs-actions-more .details-child-wrapper:before {
   content: "";
-  border: 8px solid transparent;
-  border-bottom: 12px solid #eee;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #eee;
   height: 0;
-  left: 10px;
+  right: 18px;
   position: absolute;
-  top: -20px;
+  top: -8px;
   width: 0;
 }
 .paragraphs-actions-more .details-child-wrapper input {
