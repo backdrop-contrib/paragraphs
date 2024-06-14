@@ -25,7 +25,8 @@ html.dialog-open {
   table {
     font-size: 0.923rem;
 
-    .paragraphs-item {
+    .paragraphs-item,
+    .form-item {
       white-space: normal;
     }
   }
