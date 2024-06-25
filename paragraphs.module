@@ -912,6 +912,8 @@ function paragraphs_field_update($entity_type, $entity, $field, $instance, $lang
         $item->deleteRevision(TRUE);
       }
     }
+    list($entity_id,,) = entity_extract_ids($entity_type, $entity);
+    entity_get_controller($entity_type)->resetCache(array($entity_id));
   }
 }
 
