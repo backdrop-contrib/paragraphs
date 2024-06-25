@@ -159,6 +159,7 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
     $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/paragraphs.js';
     $form_state['has_file_element'] = TRUE;
   }
+  $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_actions.js';
 
   return $field_elements;
 }
@@ -240,7 +241,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
       );
     }
     elseif (count($select_bundles)) {
-      // uasort($select_bundles, 'backdrop_sort_weight');
+      // uasort($select_bundles, 'backdrop_sort_weight');.
       backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
 
       if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
@@ -281,7 +282,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
           }
         }
         else {
-          // uasort($select_bundles, 'backdrop_sort_weight');
+          // uasort($select_bundles, 'backdrop_sort_weight');.
           backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
 
           $select_list = array();
@@ -336,7 +337,6 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
           );
         }
       }
-      $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_actions.js';
     }
     else {
       $field_elements['add_more']['add_more'] = array(
@@ -719,7 +719,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '@title' => $instance_title,
         '%confirm' => t('Confirm Deletion'),
         '%restore' => t('Restore'),
-        ));
+      ));
       $remove_markup .= '</div>';
       $element['paragraph_bundle_header']['inner_actions']['more']['child']['remove_button'] = array(
         '#markup' => '',
