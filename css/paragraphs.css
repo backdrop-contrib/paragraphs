@@ -20,7 +20,6 @@ html.dialog-open {
 .paragraphs-actions-more summary {
   border: 0;
   list-style: none;
-  transform: rotate(90deg);
 }
 .paragraphs-actions-more>summary::-webkit-details-marker {
   display: none;
@@ -32,7 +31,7 @@ html.dialog-open {
   z-index: 100;
   background: #fff;
   border-radius: 4px;
-  border: 1px solid #eee;
+  border: 2px solid #ccc;
   margin-top: 5px;
 }
 .paragraphs-actions-more .details-child-wrapper:before {
@@ -40,20 +39,20 @@ html.dialog-open {
   display: inline-block;
   position: absolute;
   left: auto;
-  right: 18px;
-  top: -16px;
-  border: 8px solid transparent;
-  border-bottom: 8px solid #eee;
+  right: 17px;
+  top: -18px;
+  border: 9px solid transparent;
+  border-bottom: 9px solid #ccc;
 }
 .paragraphs-actions-more .details-child-wrapper:after {
   content: "";
   display: inline-block;
   position: absolute;
   left: auto;
-  right: 19px;
+  right: 18px;
   top: -14px;
-  border: 7px solid transparent;
-  border-bottom: 7px solid #fff;
+  border: 8px solid transparent;
+  border-bottom: 8px solid #fff;
 }
 .paragraphs-actions-more .details-child-wrapper input.form-submit {
   padding: 0.5em 1em;
@@ -61,7 +60,6 @@ html.dialog-open {
   border: 0;
   border-radius: unset;
   box-shadow: none;
-  /* background-color: transparent; */
   line-height: normal;
   transition: none;
   text-align: left;
