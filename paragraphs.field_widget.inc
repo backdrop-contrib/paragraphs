@@ -166,6 +166,11 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
     $form_state['has_file_element'] = TRUE;
   }
 
+  // Attach any paragraph specific stylesheets from the default theme.
+  if ($css = _paragraphs_theme_css()) {
+    $field_elements['#attached']['css'] = $css;
+  }
+
   return $field_elements;
 }
 
