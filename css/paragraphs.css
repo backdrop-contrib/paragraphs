@@ -33,6 +33,7 @@ html.dialog-open {
   border-radius: 4px;
   border: 2px solid #ccc;
   margin-top: 5px;
+  box-shadow: 0 0 4px #ddd;
 }
 .paragraphs-actions-more .details-child-wrapper:before {
   content: "";

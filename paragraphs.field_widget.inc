@@ -156,9 +156,9 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
   if (module_exists('file')) {
     // file.js triggers uploads when the main Submit button is clicked.
     $field_elements['#attached']['js'][] = backdrop_get_path('module', 'file') . '/js/file.js';
+    $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/paragraphs.js';
     $form_state['has_file_element'] = TRUE;
   }
-  $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/paragraphs.js';
 
   return $field_elements;
 }
@@ -336,6 +336,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
           );
         }
       }
+      $field_elements['#attached']['js'][] = backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_actions.js';
     }
     else {
       $field_elements['add_more']['add_more'] = array(
