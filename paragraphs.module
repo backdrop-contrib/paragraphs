@@ -504,7 +504,7 @@ function paragraphs_field_info() {
       'allowed_bundles' => array(),
       'bundle_weights' => array(),
     ),
-    'default_widget' => 'paragraphs_hidden',
+    'default_widget' => 'paragraphs_embed',
     'default_formatter' => 'paragraphs_view',
     'settings' => array(),
     'property_type' => 'paragraphs_item',
