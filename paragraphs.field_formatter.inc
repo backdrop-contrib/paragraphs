@@ -77,8 +77,10 @@ function paragraphs_field_formatter_settings_summary($field, $instance, $view_mo
 function paragraphs_field_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items) {
   if ($field['type'] == 'paragraphs') {
     foreach ($items as $key => $item) {
-      if (!isset($item[0]['value'])) {
-        $items[$key][0]['value'] = 'scratch_paragraph';
+      foreach ($item as $delta => $instance) {
+        if (!isset($instance['value'])) {
+          $items[$key][$delta]['value'] = 'scratch_paragraph';
+        }
       }
     }
   }
@@ -93,16 +95,13 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
   switch ($display['type']) {
     case 'paragraphs_view':
 
-      // Prevent displaying useless markup if we don't have any values.
-      if (empty($items)) {
-        return $element;
+      $in_preview = &backdrop_static('in_preview');
+      if (!isset($in_preview)) {
+        $in_preview = !empty($entity->in_preview);
       }
 
-      // If we are dealing with an empty paragraphs field, render an insert point.
-      if ($items[0]['value'] == 'scratch_paragraph') {
-        if (!empty($instance['settings']['modal_admin'])) {
-          $entity_ids = entity_extract_ids($entity_type, $entity);
-        }
+      // Prevent displaying useless markup if we don't have any values.
+      if (empty($items)) {
         return $element;
       }
 
@@ -129,6 +128,7 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
           if (!empty($instance['settings']['modal_admin'])) {
             $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#modal_admin'] = 1;
           }
+          $element[$delta]['entity']['paragraphs_item'][$paragraph->item_id]['#in_preview'] = $in_preview;
           $count++;
         }
       }

@@ -80,7 +80,8 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   if (!paragraphs_item_access('delete', $paragraphs_item)
     || !paragraphs_item_access('create', $paragraphs_item)
     || !paragraphs_item_access('update', $paragraphs_item)
-    || empty($variables['elements']['#modal_admin'])) {
+    || empty($variables['elements']['#modal_admin'])
+    || !empty($variables['elements']['#in_preview'])) {
     return;
   }
   $variables['classes_array'][] = backdrop_html_class('paragraphs-item-modal-admin');
