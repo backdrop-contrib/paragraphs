@@ -514,6 +514,48 @@ function paragraphs_field_info() {
 }
 
 /**
+ * Implements hook_icon_info().
+ */
+function paragraphs_icon_info() {
+  $icons = array(
+    'paragraphs-add' => array(),
+    'paragraphs-edit' => array(),
+    'paragraphs-remove' => array(),
+    'paragraphs-unpublish' => array(),
+    'paragraphs-sort' => array(),
+    'paragraph' => array(),
+  );
+  return $icons;
+}
+
+/**
+ * Implements hook_library_info().
+ */
+function paragraphs_library_info() {
+  $libraries = array();
+  $info = system_get_info('module', 'paragraphs');
+  $libraries['paragraphs_modal_admin'] = array(
+    'title' => 'Paragraphs Modal Admin',
+    'version' => $info['version'],
+    'js' => array(
+      'js/paragraphs_modal_admin.js' => array(),
+    ),
+    'icons' => array(
+      'paragraphs-add',
+      'paragraphs-edit',
+      'paragraphs-remove',
+      'paragraphs-unpublish',
+      'paragraphs-sort',
+      'paragraph',
+    ),
+    'dependencies' => array(
+      array('system', 'backdrop.dialog.ajax'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
  * Implements hook_form_field_ui_field_edit_form_alter().
  */
 function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
@@ -1699,13 +1741,8 @@ function paragraphs_modal_admin_links($paragraphs_item) {
   // Set up array of links.
   $classes = array(
     'use-ajax',
+    'svg-icons',
   );
-  if (module_exists('font_awesome')) {
-    $classes[] = 'font-awesome';
-  }
-  else {
-    $classes[] = 'svg-icons';
-  }
   if (is_numeric($paragraph_id) && $access) {
     $admin_links = array(
       '#type' => 'dropbutton',
@@ -1846,13 +1883,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
         }
       }
     }
-
-    $admin_links['#attached']['js'][] = array(
-      'data' => backdrop_get_path('module', 'paragraphs') . '/js/paragraphs_modal_admin.js',
-      'type' => 'file',
-      'scope' => 'footer',
-    );
-    $admin_links['#attached']['library'][] = array('system', 'backdrop.dialog.ajax');
+    $admin_links['#attached']['library'][] = array('paragraphs', 'paragraphs_modal_admin');
   }
   return $admin_links;
 }
