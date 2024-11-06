@@ -533,12 +533,19 @@ function paragraphs_icon_info() {
  */
 function paragraphs_library_info() {
   $libraries = array();
+  $module_path = backdrop_get_path('module', 'paragraphs');
   $info = system_get_info('module', 'paragraphs');
   $libraries['paragraphs_modal_admin'] = array(
     'title' => 'Paragraphs Modal Admin',
     'version' => $info['version'],
     'js' => array(
-      'js/paragraphs_modal_admin.js' => array(),
+      $module_path . '/js/paragraphs_modal_admin.js' => array(
+        'type' => 'file',
+        'scope' => 'footer',
+      ),
+    ),
+    'css' => array(
+      $module_path . '/css/paragraphs_modal_admin.css' => array(),
     ),
     'icons' => array(
       'paragraphs-add',
@@ -1743,6 +1750,12 @@ function paragraphs_modal_admin_links($paragraphs_item) {
     'use-ajax',
     'svg-icons',
   );
+  // @todo: At some future point when there is little or no usage of versions of
+  // core prior to 1.28.0, we can remove the deprecated icon implementation here
+  // and in the paragraphs_modal_admin.css file.
+  if (!function_exists('icon_get_info')) {
+    $classes[] = 'deprecated-icons';
+  }
   if (is_numeric($paragraph_id) && $access) {
     $admin_links = array(
       '#type' => 'dropbutton',
