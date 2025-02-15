@@ -205,7 +205,7 @@ function paragraphs_update_1001() {
   }
   foreach ($bundles as $bundle) {
     if (!property_exists($bundle, 'allow_unpublish')) {
-      $bundle->allow_unpublish = 1;
+      $bundle->allow_unpublish = 0;
     }
     paragraphs_bundle_save($bundle);
   }
