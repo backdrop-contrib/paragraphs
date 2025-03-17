@@ -2,168 +2,121 @@ html.dialog-open {
   position: inherit;
 }
 
-.field-widget-paragraphs-embed .removed {
-  padding-left: 1.5rem;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(231,37,27,.07),
-    rgba(231,37,27,.07) 20px,
-    rgba(231,37,27,.1) 20px,
-    rgba(231,37,27,.1) 40px
-  );
-}
-.field-widget-paragraphs-embed .unpublished {
-  padding-left: 1.5rem;
-  color: #444;
-  background: repeating-linear-gradient(
-    45deg,
-    rgba(0,0,0,.05),
-    rgba(0,0,0,.05) 20px,
-    rgba(0,0,0,.03) 20px,
-    rgba(0,0,0,.03) 40px
-  );
+.field-widget-paragraphs-embed table td.paragraph-item .paragraph-bundle-header {
+  display: flex;
+  justify-content: space-between;
 }
 
-/* Modal Admin styles. */
+.field-widget-paragraphs-embed table td.paragraph-item .inner-actions {
+  display: flex;
+}
 
-.paragraphs-item-modal-admin .dropbutton-wrapper {
-  float: right;
-  margin: 2px 2px 10px 10px;
+.paragraphs-actions-more {
+  position: relative;
+  border: 0;
+  margin: 0;
+  background-color: transparent;
+  overflow: visible;
+}
+
+.paragraphs-actions-more summary {
+  border: 0;
+  list-style: none;
+}
+
+.paragraphs-actions-more > summary::-webkit-details-marker {
   display: none;
-  min-height: 2em;
-  position: relative;
-  z-index: 10;
 }
 
-.paragraphs-item-modal-admin > .content {
-  position: relative;
-  z-index: 9;
-}
-
-.paragraphs-item-modal-admin {
-  border: 1px solid transparent;
-  position: relative;
-}
-
-.paragraphs-item-modal-admin::before {
-  position: relative;
-  display: table-cell;
-  content: '';
-  top: 0;
-  left: 0;
-  z-index: -5;
-}
-
-.paragraphs-item-modal-admin:hover::before {
-  border: 1px dashed rgba(0,0,0,.04);
+.paragraphs-actions-more .details-child-wrapper {
   position: absolute;
-  display: table-cell;
-  content: '';
-  top: 0;
-  left: 0;
   right: 0;
-  bottom: 0;
-  z-index: 5;
-  border: 1px dashed #d0e2d5;
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(0,0,0,.04),
-    rgba(0,0,0,.04) 20px,
-    rgba(0,0,0,.02) 20px,
-    rgba(0,0,0,.02) 40px
-  );
-  transition: .1s ease-in-out;
+  display: block;
+  z-index: 100;
+  background: #fff;
+  border-radius: 4px;
+  border: 2px solid #ccc;
+  margin-top: 5px;
+  box-shadow: 0 0 4px #ddd;
 }
 
-.ui-dialog .paragraphs-item-modal-admin:hover {
-  border: 1px solid transparent;
-  background-color: inherit;
-  position: inherit;
-}
-
-.paragraphs-item-modal-admin:hover .dropbutton-wrapper {
-  display: inherit;
-  position: absolute;
-  top: 0;
-  right: 0;
-  text-align: right;
-  z-index: 1000;
-}
-
-.paragraphs-item-modal-admin:hover .dropbutton-widget {
-  left: auto;
-  right: 0;
-  min-width: 6em;
-  padding-right: 2em;
-}
-
-.paragraphs-item-modal-admin:hover .dropbutton-widget .dropbutton li,
-.paragraphs-item-modal-admin:hover .dropbutton-widget .dropbutton a {
-  text-align: left;
-}
-
-.paragraphs-item-modal-admin:hover .dropbutton-widget .dropbutton a.font-awesome {
-  padding: 0.1em 0.5em 0.1em 1em;
-}
-
-.paragraphs-item-modal-admin:hover .dropbutton-widget .dropbutton a.font-awesome:before {
-  font-family: "Font Awesome 5 Free";
+.paragraphs-actions-more .details-child-wrapper:before {
+  content: "";
   display: inline-block;
-  padding-right: .5em;
-  vertical-align: middle;
-  font-weight: 900;
+  position: absolute;
+  left: auto;
+  right: 17px;
+  top: -18px;
+  border: 9px solid transparent;
+  border-bottom: 9px solid #ccc;
 }
 
-.paragraphs-admin-dropbutton a {
-  text-decoration: none;
+.paragraphs-actions-more .details-child-wrapper:after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  left: auto;
+  right: 18px;
+  top: -14px;
+  border: 8px solid transparent;
+  border-bottom: 8px solid #fff;
 }
 
-.ui-dialog-content .paragraphs-dialog-edit img {
-  max-width: 100%;
-  width: auto;
+.paragraphs-actions-more .details-child-wrapper input.form-submit {
+  padding: 0.5em 1em;
+  margin: 0;
+  border: 0;
+  border-radius: unset;
+  box-shadow: none;
+  line-height: normal;
+  transition: none;
+  text-align: left;
+  width: 100%;
 }
 
-.font-awesome.paragraphs-edit:before {
-  content: '\f304';
-}
-.font-awesome.paragraphs-remove:before {
-  content: '\f2ed';
-}
-.font-awesome.paragraphs-add:before {
-  content: '\f055';
-}
-.font-awesome.paragraphs-sort:before {
-  content: '\f338';
-}
-.font-awesome.paragraphs-unpublish:before {
-  content: '\f070';
+.paragraphs-actions-more .details-child-wrapper input.form-submit:hover {
+  box-shadow: none;
 }
 
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons {
-  padding: 0.1em 0.5em 0.1em 32px;
-  vertical-align: middle;
-}
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-add {
-  background: transparent url(../images/add.svg) 6px center no-repeat;
-  background-size: 14px;
-}
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-edit {
-  background: transparent url(../images/edit.svg) 6px center no-repeat;
-  background-size: 14px;
-}
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-sort {
-  background: transparent url(../images/sort.svg) 6px center no-repeat;
-  background-size: 14px;
-}
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-remove {
-  background: transparent url(../images/remove.svg) 6px center no-repeat;
-  background-size: 14px;
-}
-.paragraphs-item-modal-admin .dropbutton-widget .dropbutton a.svg-icons.paragraphs-unpublish {
-  background: transparent url(../images/unpublish.svg) 6px center no-repeat;
-  background-size: 14px;
+.paragraphs-actions-more .details-child-wrapper input.form-submit:not(.button-danger):hover {
+  color: #ffffff;
+  background-color: #0074bd;
 }
 
-.paragraphs-admin-bundle-clone-create-form .paragraphs-type-clone-readonly-field {
-  background-color: #f1f1f1;
+.paragraphs-actions-more .details-child-wrapper input:first-child {
+  margin-top: 0.5em;
+}
+
+.paragraphs-actions-more .details-child-wrapper input:last-child {
+  margin-bottom: 0.5em;
+}
+
+.field-widget-paragraphs-embed {
+  .removed {
+    padding-left: 1.5rem;
+    background: repeating-linear-gradient(45deg,
+        rgba(231, 37, 27, .07),
+        rgba(231, 37, 27, .07) 20px,
+        rgba(231, 37, 27, .1) 20px,
+        rgba(231, 37, 27, .1) 40px);
+  }
+
+  .unpublished {
+    padding-left: 1.5rem;
+    color: #444;
+    background: repeating-linear-gradient(45deg,
+        rgba(0, 0, 0, .05),
+        rgba(0, 0, 0, .05) 20px,
+        rgba(0, 0, 0, .03) 20px,
+        rgba(0, 0, 0, .03) 40px);
+  }
+
+  table {
+    font-size: 0.923rem;
+
+    .paragraphs-item,
+    .form-item {
+      white-space: normal;
+    }
+  }
 }
