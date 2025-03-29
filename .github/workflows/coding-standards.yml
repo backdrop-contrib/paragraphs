@@ -8,10 +8,10 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '7.2'
+          php-version: '7.4'
           coverage: none
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Get composer cache directory
         id: composer-cache
@@ -19,7 +19,7 @@ jobs:
           echo "::set-output name=dir::$(composer config cache-files-dir)"
 
       - name: Cache composer directory
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('./composer.json') }}
