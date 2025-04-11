@@ -11,11 +11,19 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
   var $layout;
 
   /**
-   * The information from hook_layout_info() for the layout template.
+   * Deprecated. Now replaced by $layout_template_info.
+   *
+   * @var NULL
+   * @deprecated since 1.29.0
+   */
+  var $layout_info;
+
+  /**
+   * The information from hook_layout_template_info() for the layout template.
    *
    * @var array
    */
-  var $layout_info;
+  var $layout_template_info;
 
   /**
    * The complete rendered editor.
@@ -64,7 +72,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
     $template_id = $layout->layout_template;
 
     $template_info = layout_paragraphs_get_layout_template_info($template_id);
-    $template_data = layout_flexible_tempstore_load($template_id, 'paragraphs');
+    $template_data = layout_paragraphs_tempstore_load($template_id);
 
     foreach ($template_data->rows as $position => $info) {
       $layout->positions[$position] = array();
@@ -73,14 +81,14 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
 
     $this->admin = TRUE;
     $this->layout = &$layout;
-    $this->layout_info = $template_info;
+    $this->layout_template_info = $template_info;
   }
 
   /**
    * Render the entire editor HTML and attach meta data.
    *
    * @return string
-   *  Themed & rendered HTML output.
+   *   Themed & rendered HTML output.
    */
   function render() {
     $this->addMeta();
@@ -105,18 +113,18 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
     $this->renderRowButtons();
 
     module_load_include('inc', 'layout', 'layout.theme');
-    if (empty($this->layout_info['template'])) {
-      $theme = 'layout__flexible';
+    if (empty($this->layout_template_info['template'])) {
+      $theme = 'layout__paragraphs';
     }
     else {
-      $theme = str_replace('-', '_', $this->layout_info['template']);
+      $theme = str_replace('-', '_', $this->layout_template_info['template']);
     }
 
     $this->rendered_editor = theme($theme, array(
       'content' => array(),
       'settings' => array(),
       'layout' => $this->layout,
-      'layout_info' => $this->layout_info,
+      'layout_template_info' => $this->layout_template_info,
       'renderer' => $this,
       'admin' => $this->admin,
     ));
@@ -138,7 +146,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    * Render row dropbuttons.
    */
   function renderRowButtons() {
-    foreach ($this->layout_info['regions'] as $region_id => $title) {
+    foreach ($this->layout_template_info['regions'] as $region_id => $title) {
       $this->region_buttons[$region_id] = $this->getRowButtons($region_id);
     }
 
@@ -163,7 +171,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
       'title' => t('Delete row'),
       'href' => 'admin/structure/paragraphs/layouts/' . $this->layout->layout_template . '/row/' . $region_id . '/delete',
       'query' => array(
-        'token' => backdrop_get_token('layout-region-' . $region_id)
+        'token' => backdrop_get_token('layout-region-' . $region_id),
       ),
       'attributes' => array(
         'class' => array('use-ajax'),

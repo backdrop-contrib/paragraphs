@@ -145,7 +145,7 @@ function paragraphs_entity_info() {
       'admin' => array(
         'path' => 'admin/structure/paragraphs/types/%paragraphs_bundle',
         'real path' => 'admin/structure/paragraphs/types/' . strtr($machine_name, array('_' => '-')),
-        'bundle argument' => 3,
+        'bundle argument' => 4,
         'access arguments' => array('administer paragraphs bundles'),
       ),
     );
@@ -377,7 +377,7 @@ function paragraphs_menu() {
     'title callback' => 'paragraphs_bundle_title_callback',
     'title arguments' => array(4),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_admin_bundle_form', 3),
+    'page arguments' => array('paragraphs_admin_bundle_form', 4),
     'access arguments' => array('administer paragraphs bundles'),
     'file' => 'paragraphs.admin.inc',
   );
@@ -399,7 +399,7 @@ function paragraphs_menu() {
   $items['admin/structure/paragraphs/types/%paragraphs_bundle/delete'] = array(
     'title' => 'Delete Paragraphs type',
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_admin_bundle_delete_form', 3),
+    'page arguments' => array('paragraphs_admin_bundle_delete_form', 4),
     'access arguments' => array('administer paragraphs bundles'),
     'type' => MENU_VISIBLE_IN_BREADCRUMB,
     'file' => 'paragraphs.admin.inc',
@@ -2053,3 +2053,67 @@ function _paragraphs_theme_css($theme = NULL) {
   }
   return $css;
 }
+
+/**
+ * Helper function to get the available bundles for a field instance.
+ *
+ * @param array $instance
+ *
+ * @return array
+ */
+function _paragraphs_get_field_instance_bundles($instance, $original_element, $langcode = LANGUAGE_NONE) {
+    $instance_bundles = array();
+    $instance_bundles_weighted = array();
+    $available_bundles = paragraphs_bundle_load();
+
+    // By default, consider that no bundle has been explicitly picked.
+    $explicitly_enabled = FALSE;
+    foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
+      if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
+        $instance_bundles['selected'][$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
+
+        // If an item has been explicitly selected, raise our flag.
+        $explicitly_enabled = TRUE;
+      }
+      elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
+        $instance_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
+      }
+    }
+
+    // If no bundle has been explicitly selected, give access to all of them.
+    if (!$explicitly_enabled) {
+      $instance_bundles['selected'] = $instance_bundles_weighted;
+      foreach ($available_bundles as $bundle) {
+        if (!isset($instance_bundles['selected'][$bundle->bundle])) {
+          $instance_bundles['selected'][$bundle->bundle] = $bundle->label;
+        }
+      }
+    }
+
+    $instance_bundles['removed_a_bundle'] = FALSE;
+
+    $weight = 0;
+    foreach ($instance_bundles['selected'] as $machine_name => $bundle) {
+      $instance_bundles['selected'][$machine_name] = array(
+        'name' => $bundle,
+        'description' => $available_bundles[$machine_name]->description ?? '',
+        'weight' => $weight,
+      );
+
+      /* @var $entity_shell ParagraphsItemEntity */
+      $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $instance['field_name']));
+      $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
+
+      if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
+        unset($instance_bundles['selected'][$machine_name]);
+        $instance_bundles['removed_a_bundle'] = TRUE;
+      }
+      elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
+        $instance_bundles['selected'][$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
+      }
+      $weight++;
+    }
+
+    return $instance_bundles;
+  }
+

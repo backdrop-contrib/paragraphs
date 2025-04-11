@@ -4,15 +4,24 @@
  * Class file to control the main Layout Paragraphs editor.
  */
 
+/**
+ *
+ */
 class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
+
+  /**
+   * Information about the Paragraphs field instance.
+   */
+  private $paragraphs_field_info_instance;
+
   /**
    * {@inheritdoc}
    */
   function __construct(Layout $layout, array $renderer_plugin) {
-    $template_id = $layout->layout_template;
+    $template_id = $layout->layout_template ?? 'default';
 
     $template_info = layout_paragraphs_get_layout_template_info($template_id);
-    $template_data = layout_flexible_tempstore_load($template_id, 'paragraphs');
+    $template_data = layout_paragraphs_tempstore_load($template_id);
 
     foreach ($template_data->rows as $position => $info) {
       $layout->positions[$position] = array();
@@ -21,8 +30,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
 
     $this->admin = TRUE;
     $this->layout = &$layout;
-    $this->layout_info = $template_info;
+    $this->layout_template_info = $template_info;
     $this->plugin = $renderer_plugin;
+    $this->paragraphs_field_info_instance = _layout_paragraphs_get_field_instance($layout->name);
   }
 
   /**
@@ -41,7 +51,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   function render() {
     $this->addMeta();
 
-    $output = '<div id="layout-edit-main">';
+    $output = '<div class="layout--paragraphs-edit-main">';
     $output .= $this->renderLayout();
     $output .= '</div>';
 
@@ -70,13 +80,21 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
     $this->renderRegions();
 
     module_load_include('inc', 'layout', 'layout.theme');
-    if (empty($this->layout_info['template'])) {
+    if (empty($this->layout_template_info['template'])) {
       $theme = 'layout__' . $this->layout->layout_template;
     }
     else {
-      $theme = str_replace('-', '_', $this->layout_info['template']);
+      $theme = str_replace('-', '_', $this->layout_template_info['template']);
     }
-    $this->rendered['layout'] = theme($theme, array('content' => $this->rendered['regions'], 'settings' => $this->layout->settings, 'layout' => $this->layout, 'layout_info' => $this->layout_info, 'renderer' => $this, 'admin' => $this->admin));
+    $layout_details = array(
+      'content' => $this->rendered['regions'],
+      'settings' => $this->layout->settings,
+      'layout' => $this->layout,
+      'layout_template_info' => $this->layout_template_info,
+      'renderer' => $this,
+      'admin' => $this->admin,
+    );
+    $this->rendered['layout'] = theme($theme, $layout_details);
     return $this->prefix . $this->rendered['layout'] . $this->suffix;
   }
 
@@ -84,36 +102,17 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
    * {@inheritdoc}
    */
   function renderRegion($region_id, $blocks) {
-    $render_title_region = TRUE;
-    $all_layout_blocks = $this->layout->content;
-    foreach ($all_layout_blocks as $block) {
-      if ($block->module == 'system' && $block->delta == 'page_components' && ($block->childDelta == 'title' || $block->childDelta =='title_combo')) {
-        $render_title_region = FALSE;
-        break;
-      }
-    }
-
     $output = '';
-    if ($region_id == 'title') {
-      if ($render_title_region) {
-        return $this->renderTitleRegion($region_id);
-      }
-      else {
-        $output = '<div id="layout-title-region-empty"></div>';
-      }
-    }
-    else {
-      $content = implode('', $blocks);
-      $region_buttons = $this->getRegionLinks($region_id);
+    $content = implode('', $blocks);
+    $region_buttons = $this->getRegionLinks($region_id);
 
-      $output = '<div class="layout-editor-region" id="layout-editor-region-' . $region_id . '" data-region-name="' . $region_id . '">';
-      $output .= '<div class="layout-editor-region-title clearfix">';
-      $output .= '<h2 class="label">' . check_plain($this->layout_info['regions'][$region_id]) . '</h2>';
-      $output .= $region_buttons;
-      $output .= '</div>';
-      $output .= '<div class="layout-editor-region-content">' . $content . '</div>';
-      $output .= '</div>';
-    }
+    $output = '<div class="layout-editor-region" id="layout-editor-region-' . $region_id . '" data-region-name="' . $region_id . '">';
+    $output .= '<div class="layout-editor-region-title clearfix">';
+    $output .= '<h2 class="label">' . check_plain($this->layout_template_info['regions'][$region_id]) . '</h2>';
+    $output .= $region_buttons;
+    $output .= '</div>';
+    $output .= '<div class="layout-editor-region-content">' . $content . '</div>';
+    $output .= '</div>';
 
     return $output;
   }
@@ -127,7 +126,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
 
     $output  = '<div class="layout-editor-block" id="layout-editor-title" data-region-name="' . $region_id . '">';
     $output .= '  <div class="layout-editor-block-title clearfix">';
-    $output .= '    <span class="text">' . check_plain($this->layout_info['regions'][$region_id]) . '</span>';
+    $output .= '    <span class="text">' . check_plain($this->layout_template_info['regions'][$region_id]) . '</span>';
     $output .= '    <span class="description">' . $description . '</span>';
     $output .= '    <span class="buttons">' . $region_buttons . '</span>';
     $output .= '  </div>';
@@ -164,9 +163,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
     if ($buttons) {
       $output .= '<span class="buttons">' . $buttons . '</span>';
     }
-    $output .= '</div>'; // layout-block-title
+    $output .= '</div>'; // layout-block-title.
     $output .= '<div tabindex="0" class="layout-editor-block-content">' . render($content) . '</div>';
-    $output .= '</div>'; // layout-block
+    $output .= '</div>'; // layout-block.
 
     return $output;
   }
@@ -217,37 +216,26 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
    */
   protected function getRegionLinks($region_id) {
     $links = array();
-    if ($region_id == 'title') {
-      $links['title'] = array(
-        'title' => t('Configure'),
-        'href' => $this->getUrl('edit-title', $region_id),
-        'attributes' => array(
-          'class' => array('use-ajax'),
-          'data-dialog' => TRUE,
-          'data-dialog-options' => json_encode(array('dialogClass' => 'layout-dialog')),
-        ),
-      );
-    }
-    else {
-      $links['add'] = array(
-        'title' => t('Add paragraph'),
-        'href' => $this->getUrl('add-block', $region_id),
-        'attributes' => array(
-          'class' => array('use-ajax'),
-          'data-dialog' => TRUE,
-          'data-dialog-options' => json_encode(array('dialogClass' => 'layout-dialog')),
-        ),
-      );
-      $links['configure'] = array(
-        'title' => t('Configure region'),
-        'href' => $this->getUrl('configure-region', $region_id),
-        'attributes' => array(
-          'class' => array('use-ajax'),
-          'data-dialog' => TRUE,
-          'data-dialog-options' => json_encode(array('dialogClass' => 'layout-dialog')),
-        ),
-      );
-    }
+    // @todo: Check permissions for adding/configuring paragraphs.
+    $title = $this->paragraphs_field_info_instance['settings']['title'] ?? t('paragraph');
+    $links['add'] = array(
+      'title' => t('Add !title', array('!title' => $title)),
+      'href' => $this->getUrl('add-block', $region_id),
+      'attributes' => array(
+        'class' => array('use-ajax'),
+        'data-dialog' => TRUE,
+        'data-dialog-options' => json_encode(array('dialogClass' => 'layout-dialog')),
+      ),
+    );
+    $links['configure'] = array(
+      'title' => t('Configure region'),
+      'href' => $this->getUrl('configure-region', $region_id),
+      'attributes' => array(
+        'class' => array('use-ajax'),
+        'data-dialog' => TRUE,
+        'data-dialog-options' => json_encode(array('dialogClass' => 'layout-dialog')),
+      ),
+    );
 
     $dropbutton = array(
       '#type' => 'dropbutton',
@@ -287,7 +275,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
       );
     }
 
-    if ($block->module == 'system' && $block->delta == 'page_components' && ($block->childDelta == 'title' || $block->childDelta =='title_combo')) {
+    if ($block->module == 'system' && $block->delta == 'page_components' && ($block->childDelta == 'title' || $block->childDelta == 'title_combo')) {
       $links['title'] = array(
         'title' => t('Page title settings'),
         'href' => $this->getUrl('edit-title', 'title'),

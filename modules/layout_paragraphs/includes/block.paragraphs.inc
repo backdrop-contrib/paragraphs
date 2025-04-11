@@ -5,6 +5,35 @@
  * via the Layout Paragraphs module.
  */
 class BlockParagraphs extends Block {
+
+  /**
+   * The Paragraphs item entity.
+   *
+   * @var ParagraphsItemEntity
+   */
+  public $paragraphs_item;
+
+  /**
+   * The field instance of the Paragraphs field.
+   *
+   * @var array
+   */
+  protected $field_instance;
+
+  /**
+   * The Paragraphs bundle information.
+   *
+   * @var object
+   */
+  protected $bundle;
+
+  /**
+   * The entity ID of the host.
+   *
+   * @var int
+   */
+  protected $host_entity_id;
+
   /**
    * {@inheritdoc}
    */
@@ -12,9 +41,25 @@ class BlockParagraphs extends Block {
     parent::__construct($plugin_name, $data);
 
     $this->settings += array(
-      'content' => '',
-      'format' => NULL,
+      'admin_label' => '',
+      'admin_description' => '',
     );
+
+    // $this->host_entity_id = end(preg_split('/./', $data['layout_name']));
+    $this->field_instance = _layout_paragraphs_get_field_instance($data['layout_name']);
+    $this->bundle = paragraphs_bundle_load($this->delta);
+    if (!empty($data['paragraphs_item_id'])) {
+      $this->paragraphs_item = entity_load('paragraphs_item', $data['paragraphs_item_id']);
+      $this->status = $this->paragraphs_item->status;
+    }
+    else {
+      /** @var $paragraphs_shell ParagraphsItemEntity **/
+      $paragraphs_shell = entity_create('paragraphs_item', array(
+        'bundle' => $this->delta,
+        'field_name' => $this->field_instance['field_name'],
+      ));
+      $this->paragraphs_item = $paragraphs_shell;
+    }
   }
 
   /**
@@ -22,17 +67,40 @@ class BlockParagraphs extends Block {
    */
   function getAdminTitle() {
     if (!empty($this->settings['admin_label'])) {
+      // If a custom admin title was added in the block itself, use it first.
       return check_plain($this->settings['admin_label']);
     }
+    else {
+      // Otherwise, try for a title from the particular Paragraphs bundle.
+      if (!empty($this->bundle->name)) {
+        return $this->bundle->name;
+      }
+    }
+    if (!empty($this->field_instance['settings']['title'])) {
+      // Still nothing? We'll try the general field instance title.
+      return $this->field_instance['settings']['title'];
+    }
 
-    return !empty($this->settings['title']) ? check_plain($this->settings['title']) : t('Custom block');
+    // Last resort: use the default Paragraphs title.
+    return PARAGRAPHS_DEFAULT_TITLE;
   }
 
   /**
-   *  Sets block subject on block view.
+   * {@inheritdoc}
+   */
+  function getAdminPreview() {
+    if (!empty($this->settings['admin_description'])) {
+      return filter_xss($this->settings['admin_description']);
+    }
+    $output = $this->paragraphs_item->view('paragraphs_editor_preview');
+    return $output;
+  }
+
+  /**
+   *  Paragraphs don't have front-facing titles, so this returns an empty string.
    */
   function getTitle() {
-    return isset($this->settings['title']) ? check_plain($this->settings['title']) : '';
+    return '';
   }
 
   /**
@@ -41,54 +109,53 @@ class BlockParagraphs extends Block {
    * @return string
    */
   function getContent() {
-    if (!empty($this->settings['content'])) {
-      return check_markup(token_replace($this->settings['content']), $this->settings['format'], '', TRUE);
-    }
+    $content = '';
+    // @todo: load content, if any.
+    return $content;
   }
 
   /**
-   *  Builds the block's configuration form.
+   * Overrides Block::getChildren().
+   *
+   * Return available child blocks (e.g. Paragraph types that are available).
+   * Array is keyed by child_type and values are the child block_info.
+   *
+   * @return array|null
+   */
+  function getChildren() {
+    $blocks = array();
+    $query_parts = explode('/', check_plain($_GET['q']));
+    $layout_name = $query_parts[5];
+    $field_instance = _layout_paragraphs_get_field_instance($layout_name);
+    if (!empty($field_instance)) {
+      $entity_info = entity_get_info($field_instance['entity_type']);
+      $host_shell = entity_create($field_instance['entity_type'], array($entity_info['bundle keys']['bundle'] => $field_instance['bundle']));
+      $original_element = array(
+        '#entity_type' => $field_instance['entity_type'],
+        '#entity' => $host_shell,
+      );
+      $instance_bundles = _paragraphs_get_field_instance_bundles($field_instance, $original_element);
+      $all_paragraphs_blocks = layout_paragraphs_get_block_info();
+      foreach ($instance_bundles['selected'] as $machine_name => $bundle) {
+        if (!empty($all_paragraphs_blocks['layout_paragraphs'][$machine_name])) {
+          $blocks[$machine_name] = $all_paragraphs_blocks['layout_paragraphs'][$machine_name];
+        }
+      }
+      // @todo: Add blocks for Paragraphs items that are on this entity.
+    }
+    return $blocks;
+  }
+
+  /**
+   * Overrides Block::form().
+   * Builds the block's configuration form.
    */
   function form(&$form, &$form_state) {
-    parent::form($form, $form_state);
-
-    // Hide the title display, as custom text blocks don't have "default" title
-    // from which they would inherit, so it's either a custom title or no title.
-    $form['title_display']['title_display']['#access'] = FALSE;
-
     $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
+    $this->paragraphs_item->being_edited = TRUE;
 
-    $form['title_display']['title'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Display title'),
-      '#default_value' => $this->settings['title'],
-      '#maxlength' => 255,
-    );
-    $form['content'] = array(
-      '#type' => 'text_format',
-      '#title' => t('Block content'),
-      '#default_value' => $this->settings['content'],
-      '#format' => $this->settings['format'],
-      '#editor_uploads' => TRUE,
-      '#rows' => 5,
-    );
+    field_attach_form('paragraphs_item', $this->paragraphs_item, $form, $form_state);
 
-    if (module_exists('block')) {
-      $form['convert'] = array(
-        '#weight' => 2,
-        '#parents' => array(),
-      );
-      $form['convert']['reusable'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Make this block reusable'),
-        '#description' => t('If enabled, this block will be made reusable across different layouts and be listed in on the !block_link page.', array('!block_link' => l(t('Custom blocks'), 'admin/structure/block'))),
-        '#weight' => 1,
-      );
-      // Add a notice for translation.
-      if (module_exists('locale')) {
-        $form['convert']['reusable']['#description'] .= ' ' . t('Reusable blocks may also be translated.');
-      }
-    }
     $form['admin_label'] = array(
       '#type' => 'fieldset',
       '#title' => t('Admin label'),
@@ -106,20 +173,8 @@ class BlockParagraphs extends Block {
       '#type' => 'textfield',
       '#default_value' => isset($this->settings['admin_label']) ? $this->settings['admin_label'] : '',
       '#title' => t('Admin label'),
-      '#description' => t('Used to identify the block on layout pages. Required for reusable blocks.'),
+      '#description' => t('Used to help identify the block in layouts while editing.'),
       '#maxlength' => 255,
-    );
-    $form['admin_label']['delta'] = array(
-      '#type' => 'machine_name',
-      '#title' => t('Internal name'),
-      '#maxlength' => 64,
-      '#machine_name' => array(
-        'source' => array('admin_label', 'admin_label'),
-        'exists' => 'block_custom_block_load',
-      ),
-      '#description' => t('A unique machine-readable name containing letters, numbers, and underscores.'),
-      '#weight' => 3,
-      '#required' => FALSE,
     );
     $form['admin_label']['admin_description'] = array(
       '#type' => 'textfield',
@@ -132,48 +187,21 @@ class BlockParagraphs extends Block {
   }
 
   /**
-   * Validates the form settings.
+   * Validates the block form settings.
    */
   function formValidate($form, &$form_state) {
     parent::formValidate($form, $form_state);
 
-    if (module_exists('block')) {
-      $admin_label = trim($form_state['values']['admin_label']);
-      $delta = trim($form_state['values']['delta']);
-      if ($form_state['values']['reusable']) {
-        if (empty($admin_label)) {
-          form_error($form['admin_label']['admin_label'], t('Admin label is required when making a block reusable.'));
-        }
-        elseif (empty($delta)) {
-          form_error($form['admin_label']['delta'], t('An internal name is required when making a block reusable.'));
-        }
-      }
-    }
+    field_attach_form_validate('paragraphs_item', $this->paragraphs_item, $form, $form_state);
   }
 
   /**
-   * Submit handler to save the form settings.
+   * Submit handler to save the block form settings.
    */
   function formSubmit($form, &$form_state) {
     parent::formSubmit($form, $form_state);
 
-    if (module_exists('block') && $form_state['values']['reusable']) {
-      $delta = $form_state['values']['delta'];
-      $this->settings = array_diff_key($this->settings, array('title' => '', 'content' => '', 'format' => ''));
-      $this->plugin = 'block:' . $delta;
-
-      $edit = array(
-        'info' => $form_state['values']['admin_label'],
-        'title' => $form_state['values']['title'],
-        'description' => $form_state['values']['admin_description'],
-        'body' => $form_state['values']['content'],
-      );
-      block_custom_block_save($edit, $delta);
-    }
-    else {
-      $this->settings['title'] = $form_state['values']['title'];
-      $this->settings['content'] = $form_state['values']['content']['value'];
-      $this->settings['format'] = $form_state['values']['content']['format'];
-    }
+    $this->settings['admin_label'] = trim($form_state['values']['admin_label']);
+    $this->settings['admin_description'] = trim($form_state['values']['admin_description']);
   }
 }

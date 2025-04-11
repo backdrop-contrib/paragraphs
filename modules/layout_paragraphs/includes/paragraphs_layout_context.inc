@@ -4,7 +4,7 @@
  * Layout context handler for entities.
  */
 class ParagraphsLayoutContext extends LayoutContext {
-  var $usageType = LayoutContext::USAGE_TYPE_SYSTEM;
+  var $usageType = LayoutContext::USAGE_TYPE_CUSTOM;
 
   /**
    * Return the indicator for this context.
