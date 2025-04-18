@@ -33,6 +33,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
     $this->layout_template_info = $template_info;
     $this->plugin = $renderer_plugin;
     $this->paragraphs_field_info_instance = _layout_paragraphs_get_field_instance($layout->name);
+    // @todo: Add content/blocks?
   }
 
   /**
@@ -170,6 +171,66 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
     return $output;
   }
 
+  /**
+   * Overrides LayoutRendererStandard::prepareBlocks() to process Layout
+   * Paragraphs blocks.
+   */
+  function prepareBlocks(array $blocks) {
+    // Use local variables as writing to them is very slightly faster.
+    $first = $normal = $last = array();
+
+    // Prepare the list of blocks to be rendered.
+    foreach ($blocks as $uuid => $block) {
+
+      // Check access on each block.
+      if (empty($this->admin)) {
+        // Assign contexts to each block.
+        $layout_contexts = $this->layout->getContexts();
+
+        $has_contexts = TRUE;
+        $required_contexts = $block->getRequiredContexts();
+        if ($required_contexts) {
+          $has_contexts = $this->layout->hasContexts($required_contexts);
+          if ($has_contexts) {
+            $block->setContexts($layout_contexts);
+          }
+        }
+        elseif ($block->conditions) {
+          $block->setContexts($layout_contexts);
+        }
+
+        // Then check access on the block.
+        if (!$has_contexts || !$block->checkAccess()) {
+          continue;
+        }
+      }
+
+      // Let the block prepare any data before rendering.
+      $block->prepare();
+
+      $block_info = layout_get_block_info($block->module, $block->delta);
+
+      // If this block wants to render last, add it to the $last array. We allow
+      // this because some blocks need to be rendered after other blocks,
+      // primarily so they can do things like the leftovers of forms.
+      if (!empty($block_info['render last'])) {
+        $last[$uuid] = $block;
+      }
+      // If it wants to render first, add it to the $first array. This is used
+      // by blocks that need to do some processing before other blocks are
+      // rendered.
+      elseif (!empty($block_info['render first'])) {
+        $first[$uuid] = $block;
+      }
+      // Otherwise, render it in the normal order.
+      else {
+        $normal[$uuid] = $block;
+      }
+    }
+
+    $this->prepared['blocks'] = $first + $normal + $last;
+    return $this->prepared['blocks'];
+  }
 
   /**
    * {@inheritdoc}
@@ -177,6 +238,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   function renderBlocks() {
     $this->rendered['blocks'] = array();
     foreach ($this->prepared['blocks'] as $uuid => $block) {
+      $block->uuid = $uuid;
       $this->rendered['blocks'][$uuid] = $this->renderBlock($block);
     }
     return $this->rendered['blocks'];

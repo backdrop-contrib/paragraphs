@@ -80,8 +80,8 @@ function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $inst
  *  A form element array containing basic properties for the widget.
  *
  * @see layout_paragraphs_menu()
- * @see layout_paragraphs_edit_content_validate() @todo
- * @see layout_paragraphs_edit_content_submit() @todo
+ * @see layout_paragraphs_edit_content_validate()
+ * @see layout_paragraphs_edit_content_submit()
  * @ingroup forms
  */
 function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
@@ -98,12 +98,14 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         'id' => array('ajax-layout-paragraphs-templates'),
       ),
     );
-    $form['layout_paragraphs']['#field'] = $field;
-    $form['layout_paragraphs']['#instance'] = $instance;
     $all_templates = layout_flexible_template_load_all('paragraphs');
     $available_templates = $instance['widget']['settings']['available_layout_templates'];
-    $entity_type = $instance['entity_type'];
-    $entity_id = $form["#$entity_type"]->id();
+    $entity_type = $element['#entity_type'];
+    $entity_id = $element['#entity']->id() ?? 0;
+    $form['layout_paragraphs']['#field'] = $field;
+    $form['layout_paragraphs']['#instance'] = $instance;
+    $form['layout_paragraphs']['#entity'] = $element['#entity'];
+    $form['layout_paragraphs']['#entity_tempstore_id'] = (!empty($entity_id)) ? $entity_id : (new Uuid())->generate();
     if (!empty($form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'])) {
       $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
     }
@@ -153,14 +155,26 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       );
     }
 
-    $id = (!empty($form_state[$instance['entity_type']]->id())) ? '.' . $form_state[$instance['entity_type']]->id() : '';
-    $name = $instance['entity_type'] . '.' . $instance['bundle'] . '.' . $instance['field_name'] . $id;
-    $layout = layout_paragraphs_layout_load($name);
+    $layout_name = _layout_paragraphs_get_layout_name($instance, $form['layout_paragraphs']['#entity_tempstore_id']);
+    if (empty($entity_id) || !($layout = tempstore_get('layout_paragraphs', $layout_name))) {
+      $layout = layout_paragraphs_layout_load($layout_name);
+      tempstore_set('layout_paragraphs', $layout_name, $layout, 604800);
+      $layout->locked = FALSE;
+    }
 
     $layout_form = $layout_form_state = [];
-    $form['layout_paragraphs']['layout'] = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
+    $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
+    $form['layout_paragraphs']['layout'] = $layout_content;
 
-    $form['actions']['submit']['#submit'][] = 'layout_paragraphs_edit_content_submit';
+    if ($entity_type == 'taxonomy_term') {
+      // @todo: Figure out why this seems to be needed for terms.
+      // Maybe because the submit handler is not explicitly set in taxonomy_form_term?
+      // Paragraphs don't seem to be saving on new terms, unless you save the term,
+      // then edit it again. Maybe tempstore needs to be set earlier?
+      $form['#submit'] = [];
+      $form['#submit'][] = 'taxonomy_form_term_submit';
+    }
+    $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
   }
 }
 
@@ -181,61 +195,36 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
  * @see layout_paragraphs_edit_content()
  */
 function layout_paragraphs_edit_content_submit($form, &$form_state) {
+  // @todo: Ensure paragraph items are saved regularly into this field's
+  // database table as well.
   $module = 'layout_paragraphs';
   $lp_id = 0;
   $layout_template = $form_state['values']['layout_paragraphs_templates'];
   $field_name = $form['layout_paragraphs']['#field']['field_name'];
   $entity_type = $form['#entity_type'];
   $bundle = $form['#bundle'];
-  $entity = $form["#$entity_type"];
-  $entity_id = $entity->id();
-  // Check if this entity already has a layout_paragraphs entry.
-  $result = db_select('layout_paragraphs', 'lp')
-    ->fields('lp')
-    ->condition('lp.entity_id', $entity_id)
-    ->condition('lp.entity_type', $entity_type)
-    ->condition('lp.bundle', $bundle)
-    ->condition('lp.field_name', $field_name)
-    ->execute()
-    ->fetchAssoc();
-
-  if (!empty($result)) {
-    $lp_id = $result['id'];
+  $entity = $form['layout_paragraphs']['#entity'];
+  $entity_id = $entity->id() ?? 0;
+  if (!empty($entity_id)) {
+    // Update existing entity.
+    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
   }
-  elseif (!empty($entity_id)) {
-    $lp_id = layout_paragraphs_entity_template_insert($entity_id, $entity_type, $bundle, $field_name, $layout_template);
-  }
-
-  foreach ($form_state['values']['content']['positions'] as $region_id => $uuid_string) {
-    $uuids = explode(',', $uuid_string);
-    foreach ($uuids as $block_index => $uuid) {
-      if (!empty($uuid)) {
-        $block = tempstore_get('layout_paragraphs_block', $uuid);
-        // @todo: Error: Cannot access protected property BlockParagraphs::$paragraphs_item
-        // Temporarily set it to public; decide if this is what we actually want.
-        $block->paragraphs_item->setHostEntity($entity_type, $entity);
-        $block->paragraphs_item->being_edited = FALSE;
-        $block->paragraphs_item->save(TRUE);
-        tempstore_clear('layout_paragraphs_block', $uuid);
-        // @todo: Consider revisions here. Deeper testing needed for certain.
-
-        $block_data = json_encode([
-          'paragraphs_item_id' => $block->paragraphs_item->item_id,
-          'layout_name' => _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id),
-        ]);
-        $block_info = [
-          'lp_id' => $lp_id,
-          'uuid' => $uuid,
-          'region_id' => $region_id,
-          'block_index' => $block_index,
-          'block_data' => $block_data,
-        ];
-        $exists = db_query('SELECT count(uuid) FROM {layout_paragraphs_blocks} WHERE uuid = :uuid', array(':uuid' => $uuid))->fetchField();
-        $primary_key = ($exists) ? ['uuid'] : [];
-        backdrop_write_record('layout_paragraphs_blocks', $block_info, $primary_key);
-      }
+  else {
+    // We need to handle insertion of new entities yet...
+    // 1. The URLs on the layout have a blank where the layout name should be,
+    //    e.g. when trying to add a Paragraphs block.
+    // 2. Saving the entity fires this submit hook before the entity ID is set.
+    if ($entity_type == 'taxonomy_term') {
+      // Seems to require a special case based on how and when terms get saved.
+      $entity_id = $form_state['values']['tid'] ?? 0;
     }
-  }
 
-  // layout_clear_layout_tempstore?
+    $form_state['values']['content']['layout_instance_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'];
+    $insert_data = [
+      'field_instance' => $form['layout_paragraphs']['#instance'],
+      'layout_template' => $layout_template,
+    ];
+    tempstore_set('layout_paragraphs_field', $form['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 604800);
+    return;
+  }
 }

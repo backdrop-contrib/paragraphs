@@ -53,7 +53,7 @@ function layout_paragraphs_select_template($field, $instance, $template_options,
       '#value' => t('Change layout template'),
       '#limit_validation_errors' => array(),
       '#ajax' => array(
-        'callback' => 'layout_paragraphs_select_template_change',
+        'callback' => 'layout_paragraphs_select_template_change_ajax',
         'wrapper' => 'ajax-layout-paragraphs-templates',
         'effect' => 'fade',
       ),
@@ -157,11 +157,11 @@ function layout_paragraphs_select_template_after_build($element, $form_state) {
  * Ajax handler for layout_paragraphs_select_template() to change the active
  * Layout Paragraphs template.
  *
- * @param [type] $form
- * @param [type] $form_state
+ * @param array $form
+ * @param array $form_state
  * @return void
  */
-function layout_paragraphs_select_template_change($form, &$form_state) {
+function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
   $new_template_name = $form_state['values']['layout_paragraphs_templates'];
   $form_element = $form['layout_paragraphs'];
   $field = $form_element['select_template']['#field'];
@@ -175,15 +175,23 @@ function layout_paragraphs_select_template_change($form, &$form_state) {
       unset($templates[$template_name]['#attributes']['data-default']);
     }
   }
-  // @todo adjust this refreshing of the layout and shifting paragraphs/regions
-  // once schema and data are in place.
-  $id = (!empty($form_state[$form['#entity_type']]->id())) ? '.' . $form_state[$form['#entity_type']]->id() : '';
+  $entity = $form_state[$form['#entity_type']] ?? NULL;
+  if (empty($entity) && $form['#entity_type'] == 'taxonomy_term' && !empty($form['#term'])) {
+    // Special case due to mismatch between entity type and form key.
+    $entity = $form_state['term'];
+  }
+  $entity_id = (!empty($entity->id())) ?? '';
+  $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
+  // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
+  // load the old layout and process all regions/blocks to new layout.
+  $old_layout = tempstore_get('layout_paragraphs', $layout_name);
+
   $config = array(
     'is_new' => TRUE,
     'layout_template' => $new_template_name,
     'layout_template_type' => 'paragraphs',
     'is_full_page' => FALSE,
-    'name' => $form['#entity_type'] . '.' . $form['#bundle'] . '.' . $field['field_name'] . $id,
+    'name' => $form['#entity_type'] . '.' . $form['#bundle'] . '.' . $field['field_name'] . '.' . $entity_id,
   );
   $layout = new Layout($config);
   $layout->setContexts('paragraphs', layout_paragraphs_context());
@@ -267,13 +275,10 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
 
   $form['content'] = array('#tree' => TRUE);
   $form['content']['block'] = array('#tree' => TRUE);
-
-  $form['content']['display'] = array(
-    '#markup' => $renderer->render(),
-  );
-
   $blocks_by_region = [];
   $lp_id = _layout_paragraphs_get_lp_id($layout->name);
+  // @todo: populate blocks here? From db or tempstore?
+  /*
   $blocks = db_select('layout_paragraphs_blocks', 'lpb')
     ->fields('lpb')
     ->condition('lpb.lp_id', $lp_id)
@@ -282,6 +287,7 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
   foreach ($blocks as $block) {
     $blocks_by_region[$block->region_id][] = $block->uuid;
   }
+  */
 
   foreach ($renderer->layout_template_info['regions'] as $region_id => $title) {
     // Make sure we at least have an empty array for all possible locations.
@@ -296,6 +302,13 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
     );
   }
 
+  // @todo: This is a hack to get the layout to render correctly. It can
+  // probably be improved.
+  // $renderer->layout->content = $form['content']['positions'];
+  $form['content']['display'] = array(
+    '#markup' => $renderer->render(),
+  );
+  tempstore_set('layout_paragraphs', $layout->name, $layout, 604800);
   return $form;
 }
 
@@ -332,6 +345,9 @@ function layout_paragraphs_content_form_validate($form, &$form_state) {
 function layout_paragraphs_content_form_submit($form, &$form_state) {
   /* @var Layout $layout */
   $layout = &$form_state['layout'];
+
+  // @todo: How is this different than layout_paragraphs_edit_content_submit,
+  // and is it ever called?
 
   // Update the block positions based on the hidden position elements.
   if (!empty($form_state['values']['content']['positions'])) {
@@ -1836,7 +1852,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
 
   // Temporarily store any unfinished blocks (those that do not yet have a
   // position but were just added) in the layout so it can be retrieved. See
-  // layout_tempstore_block_load().
+  // layout_paragraphs_tempstore_block_load().
   if (!empty($form_state['triggering_element']['#save_in_progress'])) {
     $layout->in_progress['region_name'] = $form_state['values']['region'];
     $layout->in_progress['block'] = $block;
@@ -1852,11 +1868,11 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     $layout->in_progress = NULL;
   }
 
-  layout_set_layout_tempstore($layout, 'paragraphs');
 
-  // Save the Paragraphs item to tempstore.
-  $expire = settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
-  tempstore_set('layout_paragraphs_block', $block->uuid, $block, REQUEST_TIME + $expire);
+  // Save the Layout and Block/Paragraphs item to tempstore.
+  $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
+  tempstore_set('layout_paragraphs', $layout->name, $layout, $expire);
+  // tempstore_set('layout_paragraphs_block', $block->uuid, $block, $expire);
 }
 
 /**
