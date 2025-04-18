@@ -1,5 +1,7 @@
 name: Coding Standards
+
 on: [push, pull_request]
+
 jobs:
   phpcs:
     uses: backdrop-ops/gha/.github/workflows/phpcs.yml@main
