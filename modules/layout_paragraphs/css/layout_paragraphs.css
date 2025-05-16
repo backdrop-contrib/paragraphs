@@ -1,0 +1,132 @@
+:root {
+  --layout-paragraph-template-height: 110px;
+  --layout-paragraph-template-width: 90px;
+}
+
+.form-type-radios.form-item-layout-paragraphs-templates {
+  .form-radios {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 10px;
+  }
+}
+
+.form-type-radio.form-item-layout-paragraphs-templates {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  width: var(--layout-paragraph-template-width);
+  margin: 0;
+  padding: 0;
+
+  .description {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: 0;
+    margin: 0;
+    padding: 0;
+    width: var(--layout-paragraph-template-width);
+    height: var(--layout-paragraph-template-height);
+
+    .layout-icon {
+      width: var(--layout-paragraph-template-width);
+      height: var(--layout-paragraph-template-height);
+      max-width: var(--layout-paragraph-template-width);
+      max-height: var(--layout-paragraph-template-height);
+      background-color: #efefef;
+      border-radius: 5px;
+    }
+
+    svg {
+      margin: 10px;
+      width: calc(100% - 30px);
+      height: calc(100% - 30px);
+      color: blue;
+      transition: all 0.3s ease-in-out;
+      border: 5px solid transparent;
+    }
+  }
+
+  input,
+  input:checked,
+  input:focus {
+    cursor: pointer;
+    position: static;
+    width: var(--layout-paragraph-template-width);
+    height: var(--layout-paragraph-template-height);
+    padding: 0;
+    margin: 0;
+    border-width: 1px;
+    border-radius: 5px;
+    transform: none;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    z-index: 5;
+    background-color: transparent;
+    opacity: 0;
+  }
+
+  input {
+    &:hover {
+      border: 5px solid green;
+
+      ~ .description svg {
+        color: green;
+      }
+    }
+
+    &:focus {
+      border: 5px solid red;
+
+      ~ .description svg {
+        color: red;
+        border: 5px solid blue;
+      }
+    }
+
+    &:checked,
+    &:focus:checked {
+      border: 5px solid purple;
+
+      ~ .description svg {
+        color: purple;
+      }
+    }
+
+  }
+
+  &:has(input[data-default="true"]:checked) ~ .layout-paragraphs-templates-select {
+    display: none;
+  }
+}
+
+/** Temporary CSS **/
+.layout-paragraphs--wrapper {
+  .layout {
+    height: auto;
+    width: 100%;
+  }
+
+  .block-content {
+    padding: 1rem;
+  }
+
+  .container,
+  .container-fluid {
+    padding-inline: 0;
+  }
+
+  .flexible-row {
+    min-height: 2rem;
+    background: #efefef;
+    margin: 0.5rem;
+    padding: 0;
+
+    .l-col {
+      border-right: white .5rem solid;
+      min-height: 2rem;
+    }
+  }
+}

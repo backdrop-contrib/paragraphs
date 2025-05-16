@@ -230,7 +230,7 @@ class ParagraphsItemEntity extends Entity {
     if (!isset($this->hostEntityId)) {
       $this->hostEntityId = FALSE;
     }
-    // We are create a new paragraphs for a non-default entity, thus
+    // We are creating a new paragraphs for a non-default entity revision, thus
     // set archived to TRUE.
     if (!entity_plus_revision_is_default($entity_type, $entity)) {
       $this->hostEntityId = FALSE;
@@ -387,6 +387,7 @@ class ParagraphsItemEntity extends Entity {
    * revisions. If the paragraphs item does not appear in the default
    * host entity revision, the item is actually not used by default and so
    * marked as 'archived'.
+   *
    * If the paragraphs item appears in the default revision of the host
    * entity, the default revision of the paragraphs item is in use there
    * and the collection is not marked as archived.

@@ -1,0 +1,13 @@
+name = Paragraphs - Layout
+description = Allow paragraph fields to use more complex layouts.
+backdrop = 1.x
+type = module
+tags[] = Layouts
+tags[] = Site Architecture
+tags[] = Paragraphs
+package = Paragraphs
+
+stylesheets[all][] = css/layout_paragraphs.css
+
+dependencies[] = paragraphs
+dependencies[] = layout

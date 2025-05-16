@@ -38,25 +38,25 @@ function paragraphs_admin_bundle_overview() {
       // Manage fields.
       $operations['manage_fields'] = array(
         'title' => t('Manage fields'),
-        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/fields',
+        'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/fields',
       );
 
       // Display fields.
       $operations['manage_display'] = array(
         'title' => t('Manage display'),
-        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/display',
+        'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/display',
       );
     }
 
     // Manage bundle.
     $operations['edit_type'] = array(
       'title' => t('Configure'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/edit',
     );
     // Clone bundle.
     $operations['clone_type'] = array(
       'title' => t('clone'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/clone',
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/clone',
     );
 
     // Manage permissions if module enabled.
@@ -72,7 +72,7 @@ function paragraphs_admin_bundle_overview() {
     // Delete bundle.
     $operations['delete_type'] = array(
       'title' => t('Delete'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/delete',
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/delete',
     );
 
     $row['operations'] = array(
@@ -309,10 +309,10 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   }
   elseif ($status == SAVED_NEW) {
     backdrop_set_message(t('The Paragraph type %name has been added.', $t_args));
-    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
+    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs/types'));
   }
 
-  $form_state['redirect'] = 'admin/structure/paragraphs';
+  $form_state['redirect'] = 'admin/structure/paragraphs/types';
 }
 
 /**
@@ -330,7 +330,7 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
 function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $bundle) {
   if (!$bundle) {
     backdrop_set_message(t('Could not load Paragraph type'), 'error');
-    backdrop_goto('admin/structure/paragraphs');
+    backdrop_goto('admin/structure/paragraphs/types');
   }
 
   $form['type'] = array(
@@ -345,7 +345,7 @@ function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $b
   $message = t('Are you sure you want to delete the Paragraph type %bundle?', array('%bundle' => $bundle->name));
   $caption = '<p>' . t('This action cannot be undone. Content using this Paragraph type will be broken.') . '</p>';
 
-  return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs', filter_xss_admin($caption), t('Delete'));
+  return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs/types', filter_xss_admin($caption), t('Delete'));
 }
 
 /**
@@ -365,7 +365,54 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
   backdrop_set_message(t('The Paragraph type %name has been deleted.', $t_args));
   watchdog('paragraphs', 'Deleted Paragraph type %name.', $t_args, WATCHDOG_NOTICE);
 
-  $form_state['redirect'] = 'admin/structure/paragraphs';
+  $form_state['redirect'] = 'admin/structure/paragraphs/types';
+}
+
+/**
+ * Paragraphs admin landing page.
+ *
+ * @return string Rendered page.
+ */
+function paragraphs_config_page() {
+  $blocks = array();
+  if ($admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/structure/paragraphs' AND module = 'system'")->fetchAssoc()) {
+    $admin[':type'] = MENU_NORMAL_ITEM;
+    $result = db_query("
+      SELECT m.*, ml.*
+      FROM {menu_links} ml
+      INNER JOIN {menu_router} m ON ml.router_path = m.path
+      WHERE menu_name = :menu_name
+        AND ml.plid = :mlid
+        AND m.type = :type
+        AND hidden = 0
+      ORDER BY ml.link_title ASC", $admin, array('fetch' => PDO::FETCH_ASSOC));
+    foreach ($result as $item) {
+      _menu_link_translate($item);
+      if (!$item['access']) {
+        continue;
+      }
+      // The link description, either derived from 'description' in hook_menu()
+      // or customized via menu module is used as title attribute.
+      if (!empty($item['localized_options']['attributes']['title'])) {
+        $item['description'] = $item['localized_options']['attributes']['title'];
+        unset($item['localized_options']['attributes']['title']);
+      }
+      $block = $item;
+      $block['content'] = '';
+      $block['content'] .= theme('admin_block_content', array(
+        'content' => system_admin_menu_block($item),
+      ));
+      if (!empty($block['content'])) {
+        $block['show'] = TRUE;
+      }
+
+      // Prepare for sorting as in function _menu_tree_check_access().
+      // The weight is offset so it is always positive, with a uniform 5-digits.
+      $blocks[(50000 + $item['weight']) . ' ' . $item['title'] . ' ' . $item['mlid']] = $block;
+    }
+  }
+
+  return theme('admin_page', array('blocks' => $blocks));
 }
 
 /**
