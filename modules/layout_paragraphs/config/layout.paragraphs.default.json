@@ -4,6 +4,7 @@
   "title": "Default",
   "module": "layout_paragraphs",
   "description": "The default Paragraphs layout template in its simplest form.",
+  "layout_template_type": "paragraphs",
   "rows": {
     "paragraphs-layout-default-template": {
       "contains": "region_12",

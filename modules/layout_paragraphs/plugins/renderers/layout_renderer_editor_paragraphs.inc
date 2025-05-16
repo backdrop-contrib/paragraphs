@@ -165,7 +165,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
       $output .= '<span class="buttons">' . $buttons . '</span>';
     }
     $output .= '</div>'; // layout-block-title.
-    $output .= '<div tabindex="0" class="layout-editor-block-content">' . render($content) . '</div>';
+    $output .= '<div tabindex="0" class="layout-editor-block-content">' . $content . '</div>';
     $output .= '</div>'; // layout-block.
 
     return $output;
@@ -181,7 +181,6 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
 
     // Prepare the list of blocks to be rendered.
     foreach ($blocks as $uuid => $block) {
-
       // Check access on each block.
       if (empty($this->admin)) {
         // Assign contexts to each block.

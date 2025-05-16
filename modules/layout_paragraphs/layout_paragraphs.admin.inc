@@ -12,8 +12,8 @@ function layout_paragraphs_select_template($field, $instance, $template_options,
   $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
   $form['#attached']['css'][] = backdrop_get_path('module', 'layout') . '/css/layout.admin.css';
 
-  foreach ($template_options as $template_option) {
-    $pause = 1;
+  if (!isset($template_options[$default])) {
+    $default = 'default';
   }
 
   $form['#attributes'] = array(
@@ -36,10 +36,6 @@ function layout_paragraphs_select_template($field, $instance, $template_options,
 
   foreach ($template_options as $template_name => $template_info) {
     $form['layout_paragraphs_templates']['#options'][$template_name] = $template_info->title;
-    if ($template_name == $default) {
-      // $form['layout_paragraphs_templates']['#options'][$template_name]['#attributes']['data-default'] = 'default';
-    }
-    // $form['layout_paragraphs_templates'][$template_name]['#description'] = theme('layout_paragraphs_template_option', array('template_info' => $template_info));
     $form['layout_paragraphs_templates'][$template_name]['#description'] = $template_info->preview;
   }
 
@@ -180,25 +176,25 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
     // Special case due to mismatch between entity type and form key.
     $entity = $form_state['term'];
   }
-  $entity_id = (!empty($entity->id())) ?? '';
+  $entity_id = (!empty($entity->id())) ? $entity->id() : '';
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
   // load the old layout and process all regions/blocks to new layout.
-  $old_layout = tempstore_get('layout_paragraphs', $layout_name);
-
   $config = array(
     'is_new' => TRUE,
     'layout_template' => $new_template_name,
     'layout_template_type' => 'paragraphs',
     'is_full_page' => FALSE,
-    'name' => $form['#entity_type'] . '.' . $form['#bundle'] . '.' . $field['field_name'] . '.' . $entity_id,
+    'name' => $layout_name,
   );
-  $layout = new Layout($config);
-  $layout->setContexts('paragraphs', layout_paragraphs_context());
+  $new_layout = new Layout($config);
+  $new_layout->setContexts('paragraphs', layout_paragraphs_context());
+  // @todo: Change this second argument to 'tempstore' when we are ready.
+  _layout_paragraphs_add_paragraphs_to_layout($new_layout, 'tempstore');
   // $layout_renderer = layout_get_renderer_info('paragraphs_editor');
-  // $renderer = new LayoutRendererEditorParagraphs($layout, $layout_renderer);
+  // $renderer = new LayoutRendererEditorParagraphs($new_layout, $layout_renderer);
   $layout_form = $layout_form_state = [];
-  $form_element['layout'] = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
+  $form_element['layout'] = layout_paragraphs_content_form($layout_form, $layout_form_state, $new_layout, 'paragraphs_editor');
   $form_element['layout']['#layout']->renderer_name = 'paragraphs_editor';
   return $form_element;
 }
@@ -275,40 +271,62 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
 
   $form['content'] = array('#tree' => TRUE);
   $form['content']['block'] = array('#tree' => TRUE);
-  $blocks_by_region = [];
-  $lp_id = _layout_paragraphs_get_lp_id($layout->name);
-  // @todo: populate blocks here? From db or tempstore?
   /*
-  $blocks = db_select('layout_paragraphs_blocks', 'lpb')
-    ->fields('lpb')
-    ->condition('lpb.lp_id', $lp_id)
-    ->execute()
-    ->fetchAllAssoc('uuid');
-  foreach ($blocks as $block) {
-    $blocks_by_region[$block->region_id][] = $block->uuid;
-  }
-  */
-
-  foreach ($renderer->layout_template_info['regions'] as $region_id => $title) {
-    // Make sure we at least have an empty array for all possible locations.
-    if (!isset($blocks_by_region[$region_id])) {
-      $blocks_by_region[$region_id] = [];
+  $layout_tempstore = tempstore_get('layout_paragraphs', $layout->name);
+  foreach ($layout_tempstore->positions as $region_id => $block_uuids) {
+    foreach ($block_uuids as $block_uuid) {
+      // Make sure the block is in the content array.
+      if (!isset($layout->content[$block_uuid])) {
+        $layout->content[$block_uuid] = $layout_tempstore->content[$block_uuid];
+      }
+      // Make sure the block is in the positions array.
+      $safe_region = (isset($layout->positions[$region_id])) ? $region_id : 'paragraph-layout-default-template';
+      if (!in_array($block_uuid, $layout->positions[$safe_region])) {
+        $layout->positions[$safe_region][] = $block_uuid;
+      }
+       $layout->positions[$safe_region] = array_unique( $layout->positions[$safe_region]);
     }
-
-    $form['content']['positions'][$region_id] = array(
-      // Use 'hidden' instead of 'value' so the JS can access it.
-      '#type' => 'hidden',
-      '#default_value' => implode(',', $blocks_by_region[$region_id]),
-    );
   }
-
+  $renderer->layout = $layout;
+  */
   // @todo: This is a hack to get the layout to render correctly. It can
   // probably be improved.
   // $renderer->layout->content = $form['content']['positions'];
   $form['content']['display'] = array(
     '#markup' => $renderer->render(),
   );
-  tempstore_set('layout_paragraphs', $layout->name, $layout, 604800);
+
+  $layout_positions = $layout->positions;
+  $default_region = _layout_paragraphs_get_default_region($form['content']['positions'] ?? []);
+  foreach ($renderer->layout_template_info['regions'] as $region_id => $title) {
+    // Make sure we at least have an empty array for all possible locations.
+    if (!isset($layout_positions[$region_id])) {
+      $layout_positions[$region_id] = array();
+    }
+    if (empty($form['content']['positions'][$region_id])) {
+      // Use 'hidden' instead of 'value' so the JS can access it.
+      $form['content']['positions'][$region_id] = array(
+        '#type' => 'hidden',
+        '#default_value' => implode(',', $layout_positions[$region_id]),
+      );
+    }
+    unset($layout_positions[$region_id]);
+  }
+  foreach ($layout_positions as $region_id => $blocks) {
+    // If there are any blocks in the layout that are not in the template,
+    // add them to the default region.
+    if (!isset($form['content']['positions']['paragraph-layout-default-template'])) {
+      $form['content']['positions'][$default_region] = array(
+        '#type' => 'hidden',
+        '#default_value' => implode(',', $blocks),
+      );
+    }
+    else {
+      $form['content']['positions'][$default_region]['#default_value'] .= ',' . implode(',', $blocks);
+    }
+  }
+
+  // layout_paragraphs_set_layout_tempstore($layout);
   return $form;
 }
 
@@ -348,7 +366,6 @@ function layout_paragraphs_content_form_submit($form, &$form_state) {
 
   // @todo: How is this different than layout_paragraphs_edit_content_submit,
   // and is it ever called?
-
   // Update the block positions based on the hidden position elements.
   if (!empty($form_state['values']['content']['positions'])) {
     $new_content = array();
@@ -662,7 +679,7 @@ function layout_paragraphs_template_settings_form_submit($form, &$form_state) {
 
   $layout_paragraphs_template->save();
 
-  layout_paragraphs_tempstore_set($layout_paragraphs_template);
+  layout_paragraphs_template_tempstore_set($layout_paragraphs_template);
   cache()->delete('layout:paragraphs:config');
   backdrop_set_message(t('Layout paragraphs template "@title" saved.', array('@title' => $layout_paragraphs_template->title)));
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts/' . $form_state['values']['machine_name'] . '/configure';
@@ -709,7 +726,6 @@ function layout_paragraphs_template_configure_form($form, &$form_state, LayoutFl
   );
   $layout = new Layout($config);
 
-
   backdrop_set_title($layout_paragraphs_template->title);
 
   if (empty($form_state['flexible_template'])) {
@@ -725,7 +741,6 @@ function layout_paragraphs_template_configure_form($form, &$form_state, LayoutFl
     'path' => backdrop_get_path('module', 'layout_paragraphs') . '/plugins/renderers',
   );
   // $renderer = new LayoutRendererParagraphs($layout, $renderer_info);
-
   $renderer = layout_create_renderer('paragraphs', $layout);
   $form['content'] = array(
     '#type' => 'item',
@@ -1279,7 +1294,7 @@ function layout_paragraphs_template_change_region_style($form, &$form_state) {
   );
   $form_state['flexible_template']->rows[$form_state['original_row']]['in_progress'] = $old_row;
 
-  layout_paragraphs_tempstore_set($form_state['flexible_template']);
+  layout_paragraphs_template_tempstore_set($form_state['flexible_template']);
 
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts/' . $form_state['flexible_template_name'] . '/row/' . $form_state['original_row'] . '/select-widths';
 }
@@ -1336,7 +1351,7 @@ function layout_paragraphs_template_edit_row_form_submit($form, &$form_state) {
   $form_state['ajax_rebuild_form'] = 'layout_paragraphs_template_configure_form';
   $form_state['ajax_rebuild_args'] = array($layout_paragraphs_template);
   $form_state['ajax_update'] = array('content');
-  layout_paragraphs_tempstore_set($layout_paragraphs_template);
+  layout_paragraphs_template_tempstore_set($layout_paragraphs_template);
   layout_paragraphs_reset_caches();
 
   if (!backdrop_is_ajax()) {
@@ -1420,7 +1435,7 @@ function layout_paragraphs_template_delete_row(LayoutFlexibleTemplate $layout_pa
   $layout_paragraphs_template_name = $layout_paragraphs_template->name;
 
   unset($layout_paragraphs_template->rows[$original_row]);
-  layout_paragraphs_tempstore_set($layout_paragraphs_template);
+  layout_paragraphs_template_tempstore_set($layout_paragraphs_template);
   if (backdrop_is_ajax()) {
     $commands[] = ajax_command_remove('#flexible-row--' . $original_row);
 
@@ -1590,7 +1605,7 @@ function layout_paragraphs_get_block_info($delta = NULL) {
     );
   }
   return array(
-    'layout_paragraphs' => $blocks
+    'layout_paragraphs' => $blocks,
   );
 }
 
@@ -1616,8 +1631,7 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $form_state['layout'] = $layout;
   $template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
-  if (0 && !array_key_exists($region_name, $template_info['regions'])) {
-    // @todo: Make sure this check works.
+  if (!array_key_exists($region_name, $template_info['regions'])) {
     return MENU_NOT_FOUND;
   }
 
@@ -1648,29 +1662,7 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
       continue;
     }
     foreach ($module_blocks as $delta => $block_info) {
-      $delta_key = ($field_instance['settings']['allowed_bundles'][$delta] == -1) ? 'deselected' : 'selected';
-      // @todo: Remove the commented section below if not needed.
-      /* @var Block $parent_block */
-      /*
-      $parent_block = new BlockParagraphs($module . ':' . $delta, array());
-      $children = $parent_block->getChildren();
-      if (is_array($children)) {
-        foreach ($children as $child_id => $child_info) {
-          // Skip blocks that don't have context requirements met.
-          $required_contexts = isset($child_info['required contexts']) ? $child_info['required contexts'] : array();
-          if ($layout->hasContexts($required_contexts)) {
-            $block_list[$module . ':' . $delta . ':' . $child_id] = $child_info;
-          }
-        }
-      }
-      else {
-        $required_contexts = isset($block_info['required contexts']) ? $block_info['required contexts'] : array();
-        // Skip blocks that don't have context requirements met.
-        if ($layout->hasContexts($required_contexts)) {
-          $block_list[$module . ':' . $delta] = $block_info;
-        }
-      }
-      */
+      $delta_key = (empty($field_instance['settings']['allowed_bundles'][$delta]) || $field_instance['settings']['allowed_bundles'][$delta] == -1) ? 'deselected' : 'selected';
       $required_contexts = isset($block_info['required contexts']) ? $block_info['required contexts'] : array();
       // Skip blocks that don't have context requirements met.
       if ($layout->hasContexts($required_contexts)) {
@@ -1733,7 +1725,6 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
 
   return $output;
 }
-
 
 /**
  * Form callback; Add or edit a Paragraphs block within a Paragraphs layout.
@@ -1868,14 +1859,74 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     $layout->in_progress = NULL;
   }
 
+  layout_paragraphs_set_layout_tempstore($layout);
+  // tempstore_set('layout_paragraphs_block', $block->uuid, $block, 60 * 60 * 24 * 7);.
+}
 
-  // Save the Layout and Block/Paragraphs item to tempstore.
-  $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
-  tempstore_set('layout_paragraphs', $layout->name, $layout, $expire);
-  // tempstore_set('layout_paragraphs_block', $block->uuid, $block, $expire);
+
+/**
+ * Menu callback; Remove a block from a layout.
+ */
+function layout_paragraphs_block_remove_page(Layout $layout, Block $block, $renderer_name) {
+  if (backdrop_get_token('layout-' . $layout->name) !== $_GET['token']) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  $commands = array();
+  $layout->removeBlock($block->uuid);
+  layout_paragraphs_set_layout_tempstore($layout);
+
+  if (backdrop_is_ajax()) {
+    $commands[] = ajax_command_remove('#layout-editor-block-' . $block->uuid);
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+    backdrop_set_message(t('Block "@title" removed.', array('@title' => $block->getAdminTitle())));
+    backdrop_goto();
+  }
 }
 
 /**
+ * Menu callback; Set a block as disabled.
+ */
+function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $renderer_name) {
+  // @todo: This function hasn't been touched. When the block is disabled, it
+  // should also mark the Paragraphs item as disabled.
+  return;
+
+  if (backdrop_get_token('layout-' . $layout->name) !== $_GET['token']) {
+    return MENU_ACCESS_DENIED;
+  }
+
+  $uuid = $block->uuid;
+  $layout->content[$uuid]->status = $block->status ? BLOCK_DISABLED : BLOCK_ENABLED;
+  layout_set_layout_tempstore($layout);
+
+  $renderer = layout_create_renderer($renderer_name, $layout);
+  $replace_block = $renderer->renderBlock($block);
+
+  if (backdrop_is_ajax()) {
+    if ($message = layout_locked_message($layout, 'layout')) {
+      backdrop_set_message($message, 'warning');
+      $commands[] = ajax_command_remove('#messages');
+      $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
+    }
+
+    $commands[] = ajax_command_replace('#layout-editor-block-' . $block->uuid, $replace_block);
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+    backdrop_set_message(t('Block "@title" disabled.', array('@title' => $block->getAdminTitle())));
+    backdrop_goto('admin/structure/layouts/manage/' . $layout->name);
+  }
+
+}/**
  * AJAX callback to update the underlying layout form after updating a
  * Layout Paragraphs block.
  */
@@ -1932,7 +1983,159 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
  */
 function layout_paragraphs_locked_message($item) {
   $message = t('This form has unsaved changes. Click "@button" to make changes permanent or "Cancel" to discard changes.', array(
-      '@button' => t('Save'),
-    ));
+    '@button' => t('Save'),
+  ));
   return $message;
+}
+
+/**
+ * Helper to load paragraph blocks into a layout and update the tempstore.
+ *
+ * @param Layout $layout
+ *   The layout object to load blocks into.
+ * @param string $source
+ *   The source to load blocks from, either 'database' or 'tempstore'.
+ * @param string $lp_id
+ *   The ID of the layout paragraph to load blocks from, in the case of loading
+ *   blocks from the database.
+ *
+ * @return bool
+ *   TRUE if the source was valid and tempstore was updated, FALSE otherwise.
+ */
+function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $source = 'database', string $lp_id = '') {
+  $update_needed = TRUE;
+  $skip_tempstore_update = FALSE;
+  $layout_template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
+  reset($layout_template_info['regions']);
+  // @todo: We may be able to make this auto replacement more intuitive, e.g.
+  // if the layout has a region with the same machine name, leave it there.
+  // Right now everything flows into the first region.
+  $default_region = _layout_paragraphs_get_default_region($layout_template_info['regions'] ?? []);
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
+  switch ($source) {
+    case 'database':
+      $placed_blocks = array();
+      if (empty($lp_id)) {
+        if (is_numeric($entity_id)) {
+          $query = db_select('layout_paragraphs', 'lp')
+            ->fields('lp')
+            ->condition('lp.entity_type', $entity_type)
+            ->condition('lp.bundle', $bundle)
+            ->condition('lp.field_name', $field_name)
+            ->condition('lp.entity_id', $entity_id);
+          $result = $query->execute()->fetchAssoc();
+          $lp_id = $result['id'];
+        }
+      }
+      if (!empty($lp_id)) {
+        // Add specifically-placed blocks.
+        $query = db_select('layout_paragraphs_blocks', 'lpb')
+          ->fields('lpb')
+          ->condition('lpb.lp_id', $lp_id)
+          ->orderBy('lpb.block_index');
+        $result = $query->execute();
+        foreach ($result as $block_info) {
+          if (!empty($block_info->block_data)) {
+            $block_info->block_data = json_decode($block_info->block_data, TRUE);
+          }
+          $placed_blocks[$block_info->block_data['paragraphs_item_id']] = $block_info;
+        }
+      }
+      if (!empty($entity) && is_numeric($entity_id)) {
+        // Consider any Paragraphs items that are not explicitly placed, for example
+        // if the Layout UI was turned on after content was created with the
+        // Embedded widget.
+        $entity = entity_load($entity_type, $entity_id);
+        $paragraphs_field_values = field_get_values($entity, $field_name);
+        $orphan_block_count = 0;
+        foreach ($paragraphs_field_values as $delta => $paragraphs_field_value) {
+          $paragraph_id = $paragraphs_field_value;
+          if (!isset($placed_blocks[$paragraph_id])) {
+            $orphan_block_count++;
+            $block_info = new stdClass();
+            $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;
+            $block_info->block_index = $delta;
+            $block_info->block_data = json_encode(array(
+              'paragraphs_item_id' => $paragraph_id,
+              'layout_name' => $layout->name,
+            ));
+            $block_info->orphan = TRUE;
+            $placed_blocks[$paragraph_id] = $block_info;
+          }
+        }
+      }
+      foreach ($placed_blocks as $paragraph_id => $block_info) {
+        $region_id = $block_info->region_id ?? $default_region;
+        $block_paragraph = entity_load('paragraphs_item', $paragraph_id);
+        $paragraphs_block_key = 'layout_paragraphs:' . $block_paragraph->bundle;
+        if (!empty($block_paragraph)) {
+          $block_data = [
+            'paragraphs_item_id' => $paragraph_id,
+            'layout_name' => $layout->name,
+          ];
+          $block = new BlockParagraphs($paragraphs_block_key, $block_data);
+          if (!empty($block_paragraph->status)) {
+            // Ensure block is not disabled.
+            $block->status = TRUE;
+          }
+          else {
+            // Set block status to disabled because the paragraph is disabled.
+            $block->status = FALSE;
+          }
+        }
+        else {
+          // Set a broken block.
+          $block = new BlockBroken($paragraphs_block_key, $block_info->block_data);
+          $block->status = FALSE;
+        }
+        $layout->content[$block_info->uuid] = $block;
+        $layout->positions[$region_id][] = $block_info->uuid;
+
+        // Move the block into the correct position.
+        $position = $block_info->block_index;
+        if (is_numeric($position)) {
+          $positions = array();
+          foreach ($layout->positions[$region_id] as $n => $uuid) {
+            if ((int) $position == (int) $n) {
+              $positions[] = $block_info->uuid;
+            }
+            if ($uuid != $block_info->uuid) {
+              $positions[] = $uuid;
+            }
+          }
+          $layout->positions[$region_id] = $positions;
+        }
+      }
+      if ($orphan_block_count > 0) {
+        backdrop_set_message(t('There are @count orphaned blocks in this layout.', array('@count' => $orphan_block_count)), 'warning');
+      }
+      layout_paragraphs_set_layout_tempstore($layout);
+      break;
+
+    case 'tempstore':
+      $old_layout = tempstore_get('layout_paragraphs', $layout->name);
+      if (!empty($old_layout)) {
+        $old_layout_blocks = $old_layout->content;
+      }
+      else {
+        // There is no tempstore data, so let's try loading from the database
+        // and return that result without updating it again here.
+        $update_needed = _layout_paragraphs_add_paragraphs_to_layout($layout, 'database', $lp_id);
+        $skip_tempstore_update = TRUE;
+      }
+      break;
+
+    default:
+      $update_needed = FALSE;
+      break;
+  }
+  if ($update_needed && !$skip_tempstore_update && !empty($old_layout_blocks)) {
+    $delta = 0;
+    foreach ($old_layout_blocks as $uuid => $block) {
+      $layout->content[$uuid] = $block;
+      $layout->setBlockPosition($uuid, $default_region, $delta++);
+    }
+    layout_paragraphs_set_layout_tempstore($layout);
+  }
+  return $update_needed;
 }

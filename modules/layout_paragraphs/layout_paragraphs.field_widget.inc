@@ -39,8 +39,9 @@ function layout_paragraphs_field_widget_settings_form($field, $instance) {
     }
     $form['available_layout_templates'] = array(
       '#type' => 'checkboxes',
-      '#title' => t('Layout templates'),
+      '#title' => t('Allowed layout templates'),
       '#description' => t('Which layout template(s) should be available for this Paragraphs field?'),
+      '#description_display' => 'after',
       '#options' => $options,
       '#default_value' => (!empty($settings['available_layout_templates'])) ? $settings['available_layout_templates'] : 'default',
     );
@@ -54,7 +55,8 @@ function layout_paragraphs_field_widget_settings_form($field, $instance) {
 function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   switch ($instance['widget']['type']) {
     case 'layout_paragraphs':
-      // return paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, $form, $form_state, $delta, $element);
+      // Return paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, $form, $form_state, $delta, $element);
+      // Add the layout functionality directly to the form; return the placeholder for the Paragraphs data.
       return layout_paragraphs_edit_content($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
   }
 }
@@ -71,13 +73,13 @@ function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $inst
  * @param array $instance
  *   The field instance.
  * @param string $langcode
- *  The language associated with $items.
+ *   The language associated with $items.
  * @param array $items
- *  Array of default values for this field.
+ *   Array of default values for this field.
  * @param int $delta
- *  The order of this item in the array of subelements (0, 1, 2, etc).
+ *   The order of this item in the array of subelements (0, 1, 2, etc).
  * @param array $element
- *  A form element array containing basic properties for the widget.
+ *   A form element array containing basic properties for the widget.
  *
  * @see layout_paragraphs_menu()
  * @see layout_paragraphs_edit_content_validate()
@@ -86,9 +88,14 @@ function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $inst
  */
 function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   if ($instance['widget']['type'] == 'layout_paragraphs') {
+    $return = [];
     form_load_include($form_state, 'inc', 'layout_paragraphs', 'layout_paragraphs.admin');
     form_load_include($form_state, 'inc', 'layout_paragraphs', 'layout_paragraphs.context.admin');
     form_load_include($form_state, 'inc', 'layout', 'layout.admin');
+
+    $parents = $form['#parents'];
+    $field_name = $field['field_name'];
+    $langcode = (!empty($langcode)) ? $langcode : LANGUAGE_NONE;
 
     $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
     // $form['#attached']['css'][] = backdrop_get_path('module', 'mini_layouts') . '/css/mini-layouts.admin.css';
@@ -110,7 +117,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
     }
     else {
-      $default_template = _layout_paragraphs_determine_layout_template($entity_id, $instance['entity_type'], $instance['bundle'], $instance['field_name'], $available_templates);
+      $default_template = _layout_paragraphs_determine_layout_template($entity_id, $instance['entity_type'], $instance['bundle'], $field_name, $available_templates);
     }
     $active_templates = 0;
     foreach ($available_templates as $template_name => $template_status) {
@@ -119,6 +126,15 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         break;
       }
     }
+    $layout_name = _layout_paragraphs_get_layout_name($instance, $form['layout_paragraphs']['#entity_tempstore_id']);
+    $layout = tempstore_get('layout_paragraphs', $layout_name);
+    // Temporarily skip tempstore during testing.
+    // $hard_reload = TRUE;.
+    if (!empty($hard_reload) || empty($entity_id) || !$layout) {
+      $layout = layout_paragraphs_layout_load($layout_name);
+      $layout->locked = FALSE;
+    }
+
     $available_templates = ($active_templates) ? $available_templates : array_keys($all_templates);
     $options = [];
     if (!empty($available_templates)) {
@@ -144,6 +160,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
           '#value' => (!empty($template_name)) ? $template_name : $default_template,
           '#required' => TRUE,
         );
+        $layout->layout_template = $template_name;
       }
     }
     else {
@@ -155,16 +172,13 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       );
     }
 
-    $layout_name = _layout_paragraphs_get_layout_name($instance, $form['layout_paragraphs']['#entity_tempstore_id']);
-    if (empty($entity_id) || !($layout = tempstore_get('layout_paragraphs', $layout_name))) {
-      $layout = layout_paragraphs_layout_load($layout_name);
-      tempstore_set('layout_paragraphs', $layout_name, $layout, 604800);
-      $layout->locked = FALSE;
-    }
-
     $layout_form = $layout_form_state = [];
+    if (!$form_state['submitted']) {
+      layout_paragraphs_set_layout_tempstore($layout);
+    }
     $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
     $form['layout_paragraphs']['layout'] = $layout_content;
+    $form['layout_paragraphs']['element'] = $element;
 
     if ($entity_type == 'taxonomy_term') {
       // @todo: Figure out why this seems to be needed for terms.
@@ -175,6 +189,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $form['#submit'][] = 'taxonomy_form_term_submit';
     }
     $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
+
+    layout_paragraphs_set_layout_tempstore($layout);
+    return $return;
   }
 }
 
@@ -186,9 +203,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
  * - Saves Layout Paragraphs block positions to the database.
  *
  * @param array $form
- *  An associative array containing the structure of a portion of the form.
+ *   An associative array containing the structure of a portion of the form.
  * @param array $form_state
- *  A keyed array containing the current state of the form.
+ *   A keyed array containing the current state of the form.
  *
  * @return void
  *
@@ -196,7 +213,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
  */
 function layout_paragraphs_edit_content_submit($form, &$form_state) {
   // @todo: Ensure paragraph items are saved regularly into this field's
-  // database table as well.
+  // database table as well as saving the layout_paragraphs_blocks table. We
+  // need to make sure the data remains in the field in the usual way so that
+  // if Layout UI is disabled, the data is still there.
   $module = 'layout_paragraphs';
   $lp_id = 0;
   $layout_template = $form_state['values']['layout_paragraphs_templates'];
@@ -207,7 +226,22 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
   $entity_id = $entity->id() ?? 0;
   if (!empty($entity_id)) {
     // Update existing entity.
-    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
+    // Save new positions to the tempstore.
+    $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
+    $layout = tempstore_get('layout_paragraphs', $layout_name);
+    $layout->locked = FALSE;
+    // @todo: Do we need to consider deleted Paragraphs here?
+    $layout->positions = [];
+    foreach ($form_state['values']['content']['positions'] as $region => $uuids_string) {
+      if (!empty($uuids_string)) {
+        $layout->positions[$region] = array_filter(explode(',', $uuids_string));
+      }
+    }
+    layout_paragraphs_set_layout_tempstore($layout);
+    // Save Paragraphs block/field data to the database.
+    $langcode = $form['langcode']['#value'];
+    $values = layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
+    $form_state['values'][$field_name][$langcode] = $values;
   }
   else {
     // We need to handle insertion of new entities yet...
@@ -224,7 +258,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
       'field_instance' => $form['layout_paragraphs']['#instance'],
       'layout_template' => $layout_template,
     ];
-    tempstore_set('layout_paragraphs_field', $form['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 604800);
+    tempstore_set('layout_paragraphs_field', $form['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 60 * 60 * 24 * 7);
     return;
   }
 }

@@ -101,3 +101,32 @@
     display: none;
   }
 }
+
+/** Temporary CSS **/
+.layout-paragraphs--wrapper {
+  .layout {
+    height: auto;
+    width: 100%;
+  }
+
+  .block-content {
+    padding: 1rem;
+  }
+
+  .container,
+  .container-fluid {
+    padding-inline: 0;
+  }
+
+  .flexible-row {
+    min-height: 2rem;
+    background: #efefef;
+    margin: 0.5rem;
+    padding: 0;
+
+    .l-col {
+      border-right: white .5rem solid;
+      min-height: 2rem;
+    }
+  }
+}

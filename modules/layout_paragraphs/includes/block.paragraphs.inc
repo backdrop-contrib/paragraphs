@@ -4,6 +4,10 @@
  * A Paragraphs block will eventually allow adding a Paragraph to content
  * via the Layout Paragraphs module.
  */
+
+/**
+ *
+ */
 class BlockParagraphs extends Block {
 
   /**
@@ -89,11 +93,12 @@ class BlockParagraphs extends Block {
    * {@inheritdoc}
    */
   function getAdminPreview() {
+    $display_mode = 'paragraphs_editor_preview';
     if (!empty($this->settings['admin_description'])) {
       return filter_xss($this->settings['admin_description']);
     }
-    $output = $this->paragraphs_item->view('paragraphs_editor_preview');
-    return $output;
+    $preview_markup = entity_view($this->paragraphs_item, $display_mode);
+    return render($preview_markup);
   }
 
   /**
@@ -109,8 +114,13 @@ class BlockParagraphs extends Block {
    * @return string
    */
   function getContent() {
+    // @todo: We'll need to consider Display Modes here.
+    $display_mode = 'full';
     $content = '';
-    // @todo: load content, if any.
+    if (!empty($this->paragraphs_item)) {
+      $entity_view = entity_view($this->paragraphs_item, $display_mode);
+      $content = render($entity_view);
+    }
     return $content;
   }
 
@@ -141,7 +151,6 @@ class BlockParagraphs extends Block {
           $blocks[$machine_name] = $all_paragraphs_blocks['layout_paragraphs'][$machine_name];
         }
       }
-      // @todo: Add blocks for Paragraphs items that are on this entity.
     }
     return $blocks;
   }

@@ -131,6 +131,9 @@ function layout_paragraphs_menu() {
     'access arguments' => array('administer layout paragraphs'),
     'theme callback' => 'ajax_base_page_theme',
   );
+  // @todo: The %layout_paragraphs_instance_tempstore doesn't return a valid
+  // result on new entities, so you can't add Paragraphs blocks to them without
+  // saving them first -- fix this.
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/add-block/%/%'] = array(
     'title callback' => 'layout_paragraphs_block_add_title',
     'title arguments' => array(5, 7, 8),
@@ -152,7 +155,23 @@ function layout_paragraphs_menu() {
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_block_configure_form', 5, 8, 7),
     'file' => 'layout_paragraphs.admin.inc',
-   ) + $base;
+  ) + $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/remove-block/%/%layout_paragraphs_tempstore_block'] = array(
+    'title' => 'Remove block',
+    'load arguments' => array(5),
+    'page callback' => 'layout_paragraphs_block_remove_page',
+    'page arguments' => array(5, 8, 7),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/remove-block/%/%layout_paragraphs_tempstore_block'] += $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/toggle-block-status/%/%layout_paragraphs_tempstore_block'] = array(
+    'title' => 'Disable block',
+    'load arguments' => array(5),
+    'page callback' => 'layout_block_disable_page',
+    'page arguments' => array(5, 8, 7),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/toggle-block-status/%/%layout_paragraphs_tempstore_block'] += $base;
 
   return $items;
 }
@@ -162,10 +181,10 @@ function layout_paragraphs_menu() {
  * block from it.
  *
  * @param string $layout_block_uuid
- *  The UUID of the block to load.
+ *   The UUID of the block to load.
  *
  * @param string $layout_name
- *  The layout instance to load the block from.
+ *   The layout instance to load the block from.
  *
  */
 function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, string $layout_name) {
@@ -183,10 +202,10 @@ function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, strin
  * Menu loader to load an individual Paragraphs block from a layout instance.
  *
  * @param string $layout_block_uuid
- *  The UUID of the block to load.
+ *   The UUID of the block to load.
  *
  * @param Layout $layout
- *  The layout instance to load the block from.
+ *   The layout instance to load the block from.
  *
  */
 function layout_paragraphs_tempstore_block_retrieve(string $layout_block_uuid, Layout $layout) {
@@ -200,6 +219,19 @@ function layout_paragraphs_tempstore_block_retrieve(string $layout_block_uuid, L
   }
 
   return $block;
+}
+
+/**
+ * Helper: Save a layout instance to the tempstore.
+ *
+ * @param Layout $layout
+ *   The layout instance to save.
+ *
+ * @return void
+ */
+function layout_paragraphs_set_layout_tempstore(Layout $layout) {
+  $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
+  tempstore_set('layout_paragraphs', $layout->name, $layout, $expire);
 }
 
 /**
@@ -227,16 +259,18 @@ function layout_paragraphs_entity_delete($entity, $entity_type) {
 }
 
 /**
- * Load a Layout Paragraphs layout by name.
+ * Load a Layout Paragraphs layout from the database by name and places any
+ * specifically added Paragraphs blocks.
  *
  * @param string $layout_paragraphs_template_name
  *   The concatenated machine name of the layout template to load.
  *   Example: 'node.page.field_layout_paragraphs.123'.
  *
  * @return Layout
- *  The loaded layout object.
+ *   The loaded layout object.
  */
-function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, $reload = FALSE) {
+function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, $place_blocks = TRUE) {
+  $lp_id = '';
   module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_paragraphs_template_name);
   if (is_numeric($entity_id)) {
@@ -250,7 +284,7 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
     $template_name = $result['layout_template'];
     $lp_id = $result['id'];
   }
-  else {
+  if (empty($template_name)) {
     $template_name = 'default';
   }
   $config = array(
@@ -262,64 +296,12 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
   $layout = new Layout($config);
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $layout->setLayoutTemplate($template_name);
-
-  if (!empty($lp_id)) {
-    // Add blocks.
-    $query = db_select('layout_paragraphs_blocks', 'lpb')
-      ->fields('lpb')
-      ->condition('lpb.lp_id', $lp_id)
-      ->orderBy('lpb.block_index');
-    $result = $query->execute();
-    foreach ($result as $block_info) {
-      if (!empty($block_info->block_data)) {
-        $block_info->block_data = json_decode($block_info->block_data, TRUE);
-      }
-      // $block = layout_create_handler('block', $block_module . ':' . $block_delta);
-      $block_paragraph = entity_load('paragraphs_item', $block_info->block_data['paragraphs_item_id']);
-      $paragraphs_block_key = 'layout_paragraphs:' . $block_paragraph->bundle;
-      if (!empty($block_paragraph)) {
-        $block_data = [
-          'paragraphs_item_id' => $block_info->block_data['paragraphs_item_id'],
-          'layout_name' => $layout_paragraphs_template_name,
-        ];
-        $block = new BlockParagraphs($paragraphs_block_key, $block_data);
-        if (!empty($block_paragraph->status)) {
-          // Ensure block is not disabled.
-          $block->status = TRUE;
-        }
-        else {
-          // Set block status to disabled because the paragraph is disabled.
-          $block->status = FALSE;
-        }
-      }
-      else {
-        // Set a broken block.
-        $block = new BlockBroken($paragraphs_block_key, $block_info->block_data);
-        $block->status = FALSE;
-      }
-      $layout->content[$block_info->uuid] = $block;
-      $layout->positions[$block_info->region_id][] = $block_info->uuid;
-
-      // Move the block into the correct position.
-      $position = $block_info->block_index;
-      if (is_numeric($position)) {
-        $positions = array();
-        foreach ($layout->positions[$block_info->region_id] as $n => $uuid) {
-          if ($position == $n) {
-            $positions[] = $block->uuid;
-          }
-          if ($uuid != $block->uuid) {
-            $positions[] = $uuid;
-          }
-        }
-        $layout->positions[$block_info->region_id] = $positions;
-      }
-    }
+  if ($place_blocks && !empty($lp_id)) {
+    // @todo: Change this to 'tempstore' when we're ready.
+    _layout_paragraphs_add_paragraphs_to_layout($layout, 'tempstore', $lp_id);
   }
-
   return $layout;
 }
-
 
 /**
  * Store changes to a flexible layout template in the temporary store.
@@ -329,7 +311,7 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
  * @param string $flexible_template_type
  *   The type of flexible template to save. Defaults to 'flexible'.
  */
-function layout_paragraphs_tempstore_set(LayoutFlexibleTemplate $flexible_template) {
+function layout_paragraphs_template_tempstore_set(LayoutFlexibleTemplate $flexible_template) {
   layout_flexible_tempstore_set($flexible_template, 'paragraphs');
 }
 
@@ -359,8 +341,8 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
  * @param string $instance_name
  *   The layout name machine name of the instance to load.
  *
- * @return Layout
- *   The Layout paragraphs instance.
+ * @return Layout|false
+ *   The Layout paragraphs instance, or false if it couldn't be loaded.
  */
 function layout_paragraphs_instance_tempstore_load(string $instance_name) {
   if (empty($instance_name)) {
@@ -371,7 +353,7 @@ function layout_paragraphs_instance_tempstore_load(string $instance_name) {
     return $layout;
   }
   $layout = layout_paragraphs_layout_load($instance_name);
-  return (!empty($layout)) ? $layout : NULL;
+  return (!empty($layout)) ? $layout : FALSE;
 }
 
 /**
@@ -388,22 +370,26 @@ function layout_paragraphs_template_title_callback($template) {
  * Implements hook_theme().
  */
 function layout_paragraphs_theme() {
+  $base = array(
+    'path' => backdrop_get_path('module', 'layout_paragraphs') . '/theme',
+    'file' => 'layout_paragraphs.theme.inc',
+  );
   return array(
     'layout_paragraphs_template_info' => array(
       'variables' => array('template_info' => NULL),
-      'path' => backdrop_get_path('module', 'layout_paragraphs') . '/theme',
-      'file' => 'layout_paragraphs.theme.inc',
-    ),
+    ) + $base,
     'layout_paragraphs_template_style_option' => array(
       'variables' => array('row_style' => NULL),
-      'path' => backdrop_get_path('module', 'layout_paragraphs') . '/theme',
-      'file' => 'layout_paragraphs.theme.inc',
-    ),
+    ) + $base,
     'layout_paragraphs_template_option' => array(
       'variables' => array('template_info' => NULL),
-      'path' => backdrop_get_path('module', 'layout_paragraphs') . '/theme',
-      'file' => 'layout_paragraphs.theme.inc',
-    ),
+    ) + $base,
+    'layout_paragraphs_items' => array(
+      'variables' => array(
+        'items' => NULL,
+        'layout_name' => NULL,
+      ),
+    ) + $base,
   );
 }
 
@@ -411,7 +397,7 @@ function layout_paragraphs_theme() {
  * Helper to insert a new layout_paragraphs entry when one does not exist.
  *
  * @return int
- *  The ID of the new entry, or 0 if it was unsuccessful.
+ *   The ID of the new entry, or 0 if it was unsuccessful.
  */
 function layout_paragraphs_entity_template_insert(int $entity_id, string $entity_type, string $bundle, string $field_name, string $selected_template) {
   $lp_id = db_insert('layout_paragraphs')
@@ -432,6 +418,9 @@ function layout_paragraphs_entity_template_insert(int $entity_id, string $entity
  */
 function layout_paragraphs_layout_renderer_info() {
   $info = array(
+    'paragraphs_standard' => array(
+      'class' => 'LayoutRendererStandardParagraphs',
+    ),
     'paragraphs' => array(
       'class' => 'LayoutRendererParagraphs',
     ),
@@ -522,6 +511,7 @@ function layout_paragraphs_autoload_info() {
   return array(
     'LayoutRendererParagraphs' => 'plugins/renderers/layout_renderer_paragraphs.inc',
     'LayoutRendererEditorParagraphs' => 'plugins/renderers/layout_renderer_editor_paragraphs.inc',
+    'LayoutRendererStandardParagraphs' => 'plugins/renderers/layout_renderer_standard_paragraphs.inc',
     'BlockParagraphs' => 'includes/block.paragraphs.inc',
     'ParagraphsLayoutContext' => 'includes/paragraphs_layout_context.inc',
 
@@ -665,12 +655,26 @@ function layout_paragraphs_field_update_field($field, $prior_field, $has_data) {
 /**
  * Helper to store the selected layout template and block positions to the
  * database.
+ *
+ * @param array $field_instance
+ *   The field instance array.
+ * @param string $layout_template
+ *   The name of the layout template being used.
+ * @param int $entity_id
+ *   The entity ID of the entity being edited.
+ * @param string $layout_name
+ *   The name of the layout instance being used, if known.
+ *
+ * @return array
+ *   An array of values to be saved to the Paragraphs field data table.
  */
 function layout_paragraphs_store_field_data(array $field_instance, string $layout_template, int $entity_id, string $layout_name = '') {
+  $current_paragraphs_data = array();
   $entity_type = $field_instance['entity_type'];
   $bundle = $field_instance['bundle'];
   $field_name = $field_instance['field_name'];
   $entity = entity_load($entity_type, $entity_id);
+  $previous_paragraphs_data = (!empty($entity->{$field_name}[$entity->langcode])) ? $entity->{$field_name}[$entity->langcode] : array();
   // Check if this entity already has a layout_paragraphs entry.
   $result = db_select('layout_paragraphs', 'lp')
     ->fields('lp')
@@ -694,17 +698,26 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
     $lp_id = layout_paragraphs_entity_template_insert($entity_id, $entity_type, $bundle, $field_name, $layout_template);
   }
 
-  // @todo: Make sure this gets fired with submitted data; check layout tempstore
-  // for block positions, weights.
   if (empty($layout_name)) {
     $layout_name = _layout_paragraphs_get_layout_name($field_instance, $entity_id);
   }
   $layout = tempstore_get('layout_paragraphs', $layout_name);
+  $weight = 0;
+  // @todo: These should be calculated after the next part, when layout positions
+  // are considered.
+  foreach ($layout->content as $uuid => $block_paragraphs) {
+    $paragraphs_item_data[$uuid] = [
+      'paragraphs_item_id' => $block_paragraphs->paragraphs_item->item_id,
+      'weight' => $weight++,
+      'revision_id' => $block_paragraphs->paragraphs_item->revision_id,
+    ];
+  }
+  $paragraphs_item_weight = 0;
   foreach ($layout->positions as $region_id => $uuids) {
     foreach ($uuids as $block_index => $uuid) {
       if (!empty($uuid)) {
         // Load block with Paragraphs item attached from tempstore.
-        // $block = tempstore_get('layout_paragraphs_block', $uuid);
+        // $block = tempstore_get('layout_paragraphs_block', $uuid);.
         $block = layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
         // @todo: Error: Cannot access protected property BlockParagraphs::$paragraphs_item
         // Temporarily set it to public; decide if this is what we actually want.
@@ -713,7 +726,6 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
           $block->paragraphs_item->being_edited = FALSE;
           $block->paragraphs_item->save(TRUE);
           // @todo: Consider revisions here. Deeper testing needed for certain.
-
           $block_data = json_encode([
             'paragraphs_item_id' => $block->paragraphs_item->item_id,
             'layout_name' => _layout_paragraphs_get_layout_name($field_instance, $entity_id),
@@ -728,14 +740,32 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
           $exists = db_query('SELECT count(uuid) FROM {layout_paragraphs_blocks} WHERE uuid = :uuid', array(':uuid' => $uuid))->fetchField();
           $primary_key = ($exists) ? ['uuid'] : [];
           backdrop_write_record('layout_paragraphs_blocks', $block_info, $primary_key);
+          $paragraphs_item_data[$uuid]['weight'] = $paragraphs_item_weight++;
         }
       }
     }
   }
-
-  tempstore_clear('layout_paragraphs', $layout_name);
+  // Compare the data to see if it has changed.
+  foreach ($paragraphs_item_data as $uuid => $item_data) {
+    $current_paragraphs_data[$item_data['weight']] = [
+      'value' => $item_data['paragraphs_item_id'],
+      'revision_id' => $item_data['revision_id'],
+      'weight' => $item_data['weight'],
+    ];
+  }
+  ksort($current_paragraphs_data);
+  if (0 && $previous_paragraphs_data != $current_paragraphs_data) {
+    // Allow saving the new weights to the field data.
+    // @todo: There may be a better way to do this.
+    layout_paragraphs_set_layout_tempstore($layout);
+  }
+  // tempstore_clear('layout_paragraphs', $layout_name);.
+  return $current_paragraphs_data;
 }
 
+/**
+ *
+ */
 function layout_paragraphs_entity_insert($entity, $entity_type) {
   if (!empty($entity->content['layout_instance_tempstore_id'])) {
     $tempstore_id = $entity->content['layout_instance_tempstore_id'] ?? $entity->id();
@@ -747,13 +777,20 @@ function layout_paragraphs_entity_insert($entity, $entity_type) {
 }
 
 /**
+ *
+ */
+function layout_paragraphs_entity_update($entity, $entity_type) {
+  $pause = 1;
+}
+
+/**
  * Helper: return a field instance based on a Layout Paragraphs layout name.
  *
  * @param string $layout_name
- *  The name of the layout to get the field instance for.
+ *   The name of the layout to get the field instance for.
  *
  * @return array
- *  The field instance array, or an empty array if not found.
+ *   The field instance array, or an empty array if not found.
  */
 function _layout_paragraphs_get_field_instance(string $layout_name) {
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
@@ -768,14 +805,14 @@ function _layout_paragraphs_get_field_instance(string $layout_name) {
  * Helper: return a Layout Paragraphs layout name based on a field instance.
  *
  * @param array $field_instance
- *  The field instance array.
+ *   The field instance array.
  * @param int|string $entity_id
- *  The entity ID of the layout in question, or a temporary UUID string if no
- *  entity has been saved yet and no entity ID exists.
+ *   The entity ID of the layout in question, or a temporary UUID string if no
+ *   entity has been saved yet and no entity ID exists.
  *
  * @return string
- *  The name of the layout based on the field instance for, or an empty string
- *  if unsuccessful.
+ *   The name of the layout based on the field instance for, or an empty string
+ *   if unsuccessful.
  */
 function _layout_paragraphs_get_layout_name(array $field_instance, int|string $entity_id) {
   if (empty($field_instance['entity_type'])
@@ -792,7 +829,7 @@ function _layout_paragraphs_get_layout_name(array $field_instance, int|string $e
  * Helper: Get the LP Id based on the layout name.
  *
  * @param string $layout_name
- * The name of the layout to get the LP ID for.
+ *   The name of the layout to get the LP ID for.
  *
  * @return int
  *
@@ -811,4 +848,43 @@ function _layout_paragraphs_get_lp_id(string $layout_name) {
   $lp_id = $query->execute()->fetchField();
 
   return (!empty($lp_id) && is_numeric($lp_id)) ? $lp_id : 0;
+}
+
+/**
+ * Helper: Get the layout template based on the layout name.
+ *
+ * @param string $layout_name
+ *   The name of the layout to get the LP ID for.
+ *
+ * @return string
+ *
+ */
+function _layout_paragraphs_get_layout_template(string $layout_name) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  if (empty($entity_type) || empty($bundle) || empty($field_name) || empty($entity_id)) {
+    return 0;
+  }
+  $query = db_select('layout_paragraphs', 'lp')
+    ->fields('lp', array('layout_template'))
+    ->condition('lp.entity_type', $entity_type)
+    ->condition('lp.bundle', $bundle)
+    ->condition('lp.field_name', $field_name)
+    ->condition('lp.entity_id', $entity_id);
+  $layout_template = $query->execute()->fetchField();
+
+  return (!empty($layout_template)) ? $layout_template : 'default';
+}
+
+/**
+ * Helper: Get the default region from an array of regions.
+ *
+ * @param array $regions
+ *   The array, keyed by region names, to get the default region from.
+ *
+ * @return string
+ *   The default region name.
+ */
+function _layout_paragraphs_get_default_region(array $regions) {
+  $default_region = (!empty($regions['paragraphs-layout-default-template--0'])) ? 'paragraphs-layout-default-template--0' : key($regions);
+  return $default_region;
 }
