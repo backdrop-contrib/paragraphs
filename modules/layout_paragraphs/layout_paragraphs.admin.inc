@@ -176,7 +176,7 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
     // Special case due to mismatch between entity type and form key.
     $entity = $form_state['term'];
   }
-  $entity_id = (!empty($entity->id())) ? $entity->id() : '';
+  $entity_id = (!empty($entity->id())) ? $entity->id() : $form_state['layout_paragraphs']['#entity_tempstore_id'];
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
   // load the old layout and process all regions/blocks to new layout.
@@ -189,13 +189,13 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
   );
   $new_layout = new Layout($config);
   $new_layout->setContexts('paragraphs', layout_paragraphs_context());
-  // @todo: Change this second argument to 'tempstore' when we are ready.
   _layout_paragraphs_add_paragraphs_to_layout($new_layout, 'tempstore');
   // $layout_renderer = layout_get_renderer_info('paragraphs_editor');
   // $renderer = new LayoutRendererEditorParagraphs($new_layout, $layout_renderer);
   $layout_form = $layout_form_state = [];
   $form_element['layout'] = layout_paragraphs_content_form($layout_form, $layout_form_state, $new_layout, 'paragraphs_editor');
   $form_element['layout']['#layout']->renderer_name = 'paragraphs_editor';
+  layout_paragraphs_set_layout_tempstore($form_element['layout']['#layout']);
   return $form_element;
 }
 
@@ -1627,6 +1627,12 @@ function layout_paragraphs_block_add_title($layout, $renderer_name, $region_name
  * Menu callback; Display a list of new Paragraph blocks to be added to a layout.
  */
 function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $region_name, $paragraphs_block_key = NULL) {
+  // Ensure the latest version of the layout is loaded, e.g. in case of an
+  // Ajax template change.
+  $tempstore_layout = layout_paragraphs_tempstore_load($layout->name);
+  if ($tempstore_layout) {
+    $layout = $tempstore_layout;
+  }
   /* @var Layout $layout */
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $form_state['layout'] = $layout;

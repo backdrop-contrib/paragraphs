@@ -112,7 +112,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $form['layout_paragraphs']['#field'] = $field;
     $form['layout_paragraphs']['#instance'] = $instance;
     $form['layout_paragraphs']['#entity'] = $element['#entity'];
-    $form['layout_paragraphs']['#entity_tempstore_id'] = (!empty($entity_id)) ? $entity_id : (new Uuid())->generate();
+    if (empty($form_state['layout_paragraphs']['#entity_tempstore_id'])) {
+      $form_state['layout_paragraphs']['#entity_tempstore_id'] = (!empty($entity_id)) ? $entity_id : (new Uuid())->generate();
+    }
     if (!empty($form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'])) {
       $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
     }
@@ -126,11 +128,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         break;
       }
     }
-    $layout_name = _layout_paragraphs_get_layout_name($instance, $form['layout_paragraphs']['#entity_tempstore_id']);
+    $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
     $layout = tempstore_get('layout_paragraphs', $layout_name);
-    // Temporarily skip tempstore during testing.
-    // $hard_reload = TRUE;.
-    if (!empty($hard_reload) || empty($entity_id) || !$layout) {
+    if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
     }
@@ -253,12 +253,12 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
       $entity_id = $form_state['values']['tid'] ?? 0;
     }
 
-    $form_state['values']['content']['layout_instance_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'];
+    $form_state['values']['content']['layout_instance_tempstore_id'] = $form_state['layout_paragraphs']['#entity_tempstore_id'];
     $insert_data = [
       'field_instance' => $form['layout_paragraphs']['#instance'],
       'layout_template' => $layout_template,
     ];
-    tempstore_set('layout_paragraphs_field', $form['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 60 * 60 * 24 * 7);
+    tempstore_set('layout_paragraphs_field', $form_state['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 60 * 60 * 24 * 7);
     return;
   }
 }

@@ -131,9 +131,6 @@ function layout_paragraphs_menu() {
     'access arguments' => array('administer layout paragraphs'),
     'theme callback' => 'ajax_base_page_theme',
   );
-  // @todo: The %layout_paragraphs_instance_tempstore doesn't return a valid
-  // result on new entities, so you can't add Paragraphs blocks to them without
-  // saving them first -- fix this.
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance_tempstore/add-block/%/%'] = array(
     'title callback' => 'layout_paragraphs_block_add_title',
     'title arguments' => array(5, 7, 8),
@@ -235,6 +232,18 @@ function layout_paragraphs_set_layout_tempstore(Layout $layout) {
 }
 
 /**
+ * Helper: Get a layout instance from the tempstore.
+ *
+ * @param string $layout_name
+ *   The layout name of the instance to load.
+ *
+ * @return Layout|false
+ */
+function layout_paragraphs_get_layout_tempstore(string $layout_name) {
+  return tempstore_get('layout_paragraphs', $layout_name);
+}
+
+/**
  * Implements hook_entity_delete().
  *
  * Remove layout_paragraphs entries when the entity is deleted.
@@ -297,7 +306,6 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $layout->setLayoutTemplate($template_name);
   if ($place_blocks && !empty($lp_id)) {
-    // @todo: Change this to 'tempstore' when we're ready.
     _layout_paragraphs_add_paragraphs_to_layout($layout, 'tempstore', $lp_id);
   }
   return $layout;
@@ -348,12 +356,16 @@ function layout_paragraphs_instance_tempstore_load(string $instance_name) {
   if (empty($instance_name)) {
     return NULL;
   }
-  $layout = layout_paragraphs_tempstore_load($instance_name);
+  $layout = layout_paragraphs_get_layout_tempstore($instance_name);
   if (!empty($layout)) {
     return $layout;
   }
   $layout = layout_paragraphs_layout_load($instance_name);
-  return (!empty($layout)) ? $layout : FALSE;
+  if (!empty($layout)) {
+    layout_paragraphs_set_layout_tempstore($layout);
+    return $layout;
+  }
+  return FALSE;
 }
 
 /**
