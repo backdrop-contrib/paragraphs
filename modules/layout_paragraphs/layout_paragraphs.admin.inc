@@ -1978,6 +1978,9 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   $commands[] = ajax_command_remove('#messages');
   $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
 
+  // Update the layout's tempstore.
+  layout_paragraphs_set_layout_tempstore($layout);
+
   return array(
     '#type' => 'ajax',
     '#commands' => $commands,
