@@ -185,7 +185,7 @@ function layout_paragraphs_menu() {
  *
  */
 function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, string $layout_name) {
-  $layout = tempstore_get('layout_paragraphs', $layout_name);
+  $layout = layout_paragraphs_instance_tempstore_load($layout_name);
   if (empty($layout)) {
     return FALSE;
   }
@@ -275,10 +275,18 @@ function layout_paragraphs_entity_delete($entity, $entity_type) {
  *   The concatenated machine name of the layout template to load.
  *   Example: 'node.page.field_layout_paragraphs.123'.
  *
+ * @param bool $place_blocks
+ *  Whether to place blocks in the layout.
+ *
+ * @param string $source
+ *  The source of the layout, either 'tempstore' or 'database'. We need to be
+ *  able to specify so that we don't end up in an infinite loop, e.g. from
+ *  within layout_paragraphs_instance_tempstore_load().
+ *
  * @return Layout
  *   The loaded layout object.
  */
-function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, $place_blocks = TRUE) {
+function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, bool $place_blocks = TRUE, string $source = 'tempstore') {
   $lp_id = '';
   module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_paragraphs_template_name);
@@ -306,7 +314,7 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $layout->setLayoutTemplate($template_name);
   if ($place_blocks && !empty($lp_id)) {
-    _layout_paragraphs_add_paragraphs_to_layout($layout, 'tempstore', $lp_id);
+    _layout_paragraphs_add_paragraphs_to_layout($layout, $source, $lp_id);
   }
   return $layout;
 }
@@ -360,7 +368,7 @@ function layout_paragraphs_instance_tempstore_load(string $instance_name) {
   if (!empty($layout)) {
     return $layout;
   }
-  $layout = layout_paragraphs_layout_load($instance_name);
+  $layout = layout_paragraphs_layout_load($instance_name, TRUE, 'database');
   if (!empty($layout)) {
     layout_paragraphs_set_layout_tempstore($layout);
     return $layout;
@@ -713,23 +721,12 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
   if (empty($layout_name)) {
     $layout_name = _layout_paragraphs_get_layout_name($field_instance, $entity_id);
   }
-  $layout = tempstore_get('layout_paragraphs', $layout_name);
-  $weight = 0;
-  // @todo: These should be calculated after the next part, when layout positions
-  // are considered.
-  foreach ($layout->content as $uuid => $block_paragraphs) {
-    $paragraphs_item_data[$uuid] = [
-      'paragraphs_item_id' => $block_paragraphs->paragraphs_item->item_id,
-      'weight' => $weight++,
-      'revision_id' => $block_paragraphs->paragraphs_item->revision_id,
-    ];
-  }
+  $layout = layout_paragraphs_instance_tempstore_load($layout_name);
   $paragraphs_item_weight = 0;
   foreach ($layout->positions as $region_id => $uuids) {
     foreach ($uuids as $block_index => $uuid) {
       if (!empty($uuid)) {
         // Load block with Paragraphs item attached from tempstore.
-        // $block = tempstore_get('layout_paragraphs_block', $uuid);.
         $block = layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
         // @todo: Error: Cannot access protected property BlockParagraphs::$paragraphs_item
         // Temporarily set it to public; decide if this is what we actually want.
@@ -737,10 +734,11 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
           $block->paragraphs_item->setHostEntity($entity_type, $entity);
           $block->paragraphs_item->being_edited = FALSE;
           $block->paragraphs_item->save(TRUE);
+          // @todo: Check to see if this needs to be saved before saving.
           // @todo: Consider revisions here. Deeper testing needed for certain.
           $block_data = json_encode([
             'paragraphs_item_id' => $block->paragraphs_item->item_id,
-            'layout_name' => _layout_paragraphs_get_layout_name($field_instance, $entity_id),
+            'layout_name' => $layout_name,
           ]);
           $block_info = [
             'lp_id' => $lp_id,
@@ -752,26 +750,29 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
           $exists = db_query('SELECT count(uuid) FROM {layout_paragraphs_blocks} WHERE uuid = :uuid', array(':uuid' => $uuid))->fetchField();
           $primary_key = ($exists) ? ['uuid'] : [];
           backdrop_write_record('layout_paragraphs_blocks', $block_info, $primary_key);
-          $paragraphs_item_data[$uuid]['weight'] = $paragraphs_item_weight++;
+          $paragraphs_item_data[$uuid] = [
+            'paragraphs_item_id' => $block->paragraphs_item->item_id,
+            'weight' => $paragraphs_item_weight++,
+            'revision_id' => $block->paragraphs_item->revision_id,
+          ];
         }
       }
     }
   }
   // Compare the data to see if it has changed.
   foreach ($paragraphs_item_data as $uuid => $item_data) {
-    $current_paragraphs_data[$item_data['weight']] = [
-      'value' => $item_data['paragraphs_item_id'],
-      'revision_id' => $item_data['revision_id'],
-      'weight' => $item_data['weight'],
-    ];
+    if (!empty($item_data['paragraphs_item_id'])) {
+      $current_paragraphs_data[$item_data['weight'] . '-' . $item_data['paragraphs_item_id']] = [
+        'value' => $item_data['paragraphs_item_id'],
+        'revision_id' => $item_data['revision_id'],
+        'weight' => $item_data['weight'],
+      ];
+    }
   }
   ksort($current_paragraphs_data);
-  if (0 && $previous_paragraphs_data != $current_paragraphs_data) {
-    // Allow saving the new weights to the field data.
-    // @todo: There may be a better way to do this.
+  if ($previous_paragraphs_data != $current_paragraphs_data) {
     layout_paragraphs_set_layout_tempstore($layout);
   }
-  // tempstore_clear('layout_paragraphs', $layout_name);.
   return $current_paragraphs_data;
 }
 
@@ -785,6 +786,7 @@ function layout_paragraphs_entity_insert($entity, $entity_type) {
     $layout_name = _layout_paragraphs_get_layout_name($insert_data['field_instance'], $tempstore_id);
     layout_paragraphs_store_field_data($insert_data['field_instance'], $insert_data['layout_template'], $entity->id(), $layout_name);
     tempstore_clear('layout_paragraphs_field', $tempstore_id);
+    tempstore_clear('layout_paragraphs', $layout_name);
   }
 }
 
@@ -792,7 +794,12 @@ function layout_paragraphs_entity_insert($entity, $entity_type) {
  *
  */
 function layout_paragraphs_entity_update($entity, $entity_type) {
-  $pause = 1;
+  if (!empty($entity->content['layout_name'])) {
+    $layout = layout_paragraphs_instance_tempstore_load($entity->content['layout_name']);
+    $instance = _layout_paragraphs_get_field_instance($entity->content['layout_name']);
+    layout_paragraphs_store_field_data($instance, $layout->layout_template, $entity->id(), $entity->content['layout_name']);
+    tempstore_clear('layout_paragraphs', $layout_name);
+  }
 }
 
 /**
