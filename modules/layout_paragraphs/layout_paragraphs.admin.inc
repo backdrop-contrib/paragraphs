@@ -160,7 +160,6 @@ function layout_paragraphs_select_template_after_build($element, $form_state) {
 function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
   $new_template_name = $form_state['values']['layout_paragraphs_templates'];
   $form_element = $form['layout_paragraphs'];
-  $field = $form_element['select_template']['#field'];
   $templates = &$form_element['select_template']['layout_paragraphs_templates'];
   $templates['#default_value'] = $new_template_name;
   foreach (element_children($templates) as $template_name) {
@@ -224,10 +223,15 @@ function layout_paragraphs_context() {
  * @ingroup forms
  */
 function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = NULL) {
-  $layout->setContexts('paragraphs', layout_paragraphs_context());
   if (!isset($form_state['layout'])) {
     $form_state['layout'] = $layout;
   }
+  /* @var Layout $layout */
+  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  if (!$layout) {
+    $layout = $form_state['layout'];
+  }
+  $layout->setContexts('paragraphs', layout_paragraphs_context());
   if ($renderer_name) {
     $renderer = layout_create_renderer($renderer_name, $layout);
   }
@@ -239,8 +243,6 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
     $form_state['renderer'] = $renderer;
   }
 
-  /* @var Layout $layout */
-  $layout = $form_state['layout'];
   /* @var LayoutRendererEditorParagraphs $renderer */
   $renderer = $form_state['renderer'];
 
@@ -335,7 +337,10 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
  */
 function layout_paragraphs_content_form_validate($form, &$form_state) {
   /* @var Layout $layout */
-  $layout = $form_state['layout'];
+  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  if (!$layout) {
+    $layout = $form_state['layout'];
+  }
 
   // Ensure that no block is positioned more than once. This is merely a sanity
   // check, it should not occur within the normal interface.
@@ -1827,7 +1832,10 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   /* @var BlockParagraphs $block */
   $block = $form_state['block'];
   /* @var Layout $layout */
-  $layout = $form_state['layout'];
+  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  if (!$layout) {
+    $layout = $form_state['layout'];
+  }
   /* @var LayoutStyle $style */
   $style = $form_state['style'];
   /* @var LayoutRendererStandard $renderer */
@@ -1866,7 +1874,6 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   }
 
   layout_paragraphs_set_layout_tempstore($layout);
-  // tempstore_set('layout_paragraphs_block', $block->uuid, $block, 60 * 60 * 24 * 7);.
 }
 
 
@@ -1938,7 +1945,10 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  */
 function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   /* @var Layout $layout */
-  $layout = $form_state['layout'];
+  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  if (!$layout) {
+    $layout = $form_state['layout'];
+  }
   /* @var Block $block */
   $block = $form_state['block'];
   /* @var LayoutRendererStandard $renderer */
@@ -1977,6 +1987,9 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   }
   $commands[] = ajax_command_remove('#messages');
   $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
+
+  // Update the layout's tempstore.
+  layout_paragraphs_set_layout_tempstore($layout);
 
   return array(
     '#type' => 'ajax',
@@ -2119,7 +2132,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
       break;
 
     case 'tempstore':
-      $old_layout = tempstore_get('layout_paragraphs', $layout->name);
+      $old_layout = layout_paragraphs_instance_tempstore_load($layout->name);
       if (!empty($old_layout)) {
         $old_layout_blocks = $old_layout->content;
       }

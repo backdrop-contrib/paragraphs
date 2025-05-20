@@ -129,7 +129,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       }
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
-    $layout = tempstore_get('layout_paragraphs', $layout_name);
+    $layout = layout_paragraphs_instance_tempstore_load($layout_name);
     if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
@@ -228,7 +228,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     // Update existing entity.
     // Save new positions to the tempstore.
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
-    $layout = tempstore_get('layout_paragraphs', $layout_name);
+    $layout = layout_paragraphs_instance_tempstore_load($layout_name);
     $layout->locked = FALSE;
     // @todo: Do we need to consider deleted Paragraphs here?
     $layout->positions = [];
@@ -240,6 +240,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     layout_paragraphs_set_layout_tempstore($layout);
     // Save Paragraphs block/field data to the database.
     $langcode = $form['langcode']['#value'];
+    $form_state['values']['content']['layout_name'] = $layout_name;
     $values = layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
     $form_state['values'][$field_name][$langcode] = $values;
   }
