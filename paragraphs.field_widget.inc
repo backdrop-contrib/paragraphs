@@ -220,7 +220,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
         'weight' => $weight,
       );
 
-      /* @var $entity_shell ParagraphsItemEntity */
+      /** @var $entity_shell ParagraphsItemEntity */
       $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
       $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
