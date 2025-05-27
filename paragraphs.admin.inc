@@ -38,25 +38,25 @@ function paragraphs_admin_bundle_overview() {
       // Manage fields.
       $operations['manage_fields'] = array(
         'title' => t('Manage fields'),
-        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/fields',
+        'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/fields',
       );
 
       // Display fields.
       $operations['manage_display'] = array(
         'title' => t('Manage display'),
-        'href' => 'admin/structure/paragraphs/' . $type_url_str . '/display',
+        'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/display',
       );
     }
 
     // Manage bundle.
     $operations['edit_type'] = array(
       'title' => t('Configure'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/edit',
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/edit',
     );
     // Clone bundle.
     $operations['clone_type'] = array(
-      'title' => t('clone'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/clone',
+      'title' => t('Clone'),
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/clone',
     );
 
     // Manage permissions if module enabled.
@@ -72,7 +72,7 @@ function paragraphs_admin_bundle_overview() {
     // Delete bundle.
     $operations['delete_type'] = array(
       'title' => t('Delete'),
-      'href' => 'admin/structure/paragraphs/' . $type_url_str . '/delete',
+      'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/delete',
     );
 
     $row['operations'] = array(

@@ -1,0 +1,140 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function paragraphs_library_schema() {
+  $schema = array();
+
+  // This table will hold Paragraphs library item entities.
+  $schema['paragraphs_library_item'] = array(
+    'description' => 'The base table for Paragraphs library item entities.',
+    'fields' => array(
+      'paragraphs_library_id' => array(
+        'description' => 'The primary identifier for the Paragraphs library item.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'type' => array(
+        'description' => 'The type (bundle) of this Paragraphs library item.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'description' => 'The title of the Paragraphs library item.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'A description of the Paragraphs library item.',
+        'type' => 'text',
+      ),
+      'uid' => array(
+        'description' => 'ID of Backdrop account that created this Paragraphs library item.',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'created' => array(
+        'description' => 'The Unix timestamp when the Paragraphs library item was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'changed' => array(
+        'description' => 'The Unix timestamp when the Paragraphs library item was most recently saved.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('paragraphs_library_id'),
+  );
+
+  // This table will hold bundle definitions for paragraphs_library_item
+  // entities. An alternative way to do this is to use the module Entity Plus
+  // CMI to store these definitions as config files.
+  $schema['paragraphs_library_type'] = array(
+    'description' => 'Stores information about all bundles of Paragraphs library item entities.',
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'not null' => TRUE,
+        'description' => 'Primary Key: Unique Paragraphs library item type ID.',
+      ),
+      'type' => array(
+        'description' => 'The machine-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+      ),
+      'label' => array(
+        'description' => 'The human-readable name of this type.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'A brief description of this type.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'medium',
+        'translatable' => TRUE,
+      ),
+      'status' => array( // This is currently not in use.
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0x01,
+        'size' => 'tiny',
+        'description' => 'The exportable status of the entity.',
+      ),
+      'module' => array(
+        'description' => 'The name of the providing module if the entity has been defined in code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('id'),
+    'unique keys' => array(
+      'type' => array('type'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function paragraphs_library_install() {
+  user_role_grant_permissions(BACKDROP_AUTHENTICATED_ROLE, array(
+    // Grant viewing permision to authenticated users.
+    'view paragraphs_library entities',
+  ));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function paragraphs_library_uninstall() {
+  // Remove the view showing Paragraphs library item entities.
+  $config = config('views.view.paragraphs_library');
+  $config->delete();
+
+  // Get all Paragraphs library types/bundles.
+  $query = db_select('paragraphs_library_type', 'b');
+  $query->addField('b', 'type');
+  $bundles = $query->execute()->fetchCol(0);
+  foreach ($bundles as $bundle) {
+    // Instruct field.module to remove fields attached to these bundles.
+    field_attach_delete_bundle('paragraphs_library_item', $bundle);
+  }
+  menu_rebuild();
+}
+

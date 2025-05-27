@@ -1,0 +1,611 @@
+<?php
+
+/**
+ * Implements hook_config_info().
+ */
+function paragraphs_library_config_info() {
+  $prefixes['paragraphs_library.type'] = array(
+    'name_key' => 'type',
+    'label_key' => 'label',
+    'group' => t('Paragraphs library types'),
+  );
+  return $prefixes;}
+
+/**
+ * Implements hook_entity_info().
+ */
+function paragraphs_library_entity_info() {
+  $entity_info = array(
+    'paragraphs_library_item' => array(
+      'label' => t('Paragraphs library item'),
+      'plural label' => t('Paragraphs library items'),
+      'entity class' => 'ParagraphsLibraryItem',
+      'controller class' => 'ParagraphsLibraryItemController',
+      'base table' => 'paragraphs_library_item',
+      'fieldable' => TRUE,
+      'entity keys' => array(
+        'id' => 'paragraphs_library_id',
+        'bundle' => 'type',
+        'label' => 'title',
+      ),
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
+      'bundles' => array(),
+      'view modes' => array(
+        // Provide a new view mode.
+        'paragraphs_library_item' => array(
+          'label' => 'Paragraphs library item',
+          'custom settings' => FALSE // Use the default settings.
+        )
+      ),
+      'module' => 'paragraphs_library',
+
+      // While this key is not defined in hook_entity_info(), we use it for
+      // convenience, to provide an easier way to check access outside the class.
+      'access callback' => 'paragraphs_library_access',
+
+      // This controller is used to display non Field API extra fields.
+      'extra fields controller class' => 'EntityDefaultExtraFieldsController',
+
+      // By including 'admin ui' we are telling Entity UI to create menu items
+      // for viewing, adding, editing and deleting paragraphs_library entities
+      'admin ui' => array(
+        'path' => 'paragraphs-library',
+        'controller class' => 'EntityBundleableUIController',
+        // Indicates the name of the file that contains the edit/add and delete forms
+        // These forms must be named paragraphs_library_form etc.
+        'file' => 'paragraphs_library.admin.inc',
+        // For the autoloaders used in the menu items.
+        'menu wildcard' => '%paragraphs_library_item',
+       ),
+
+       // This tells Entity Plus to make the text entered by the user in the
+       // entity properties (e.g. title) available to i18n_string for translations.
+       'i18n controller class' => 'EntityDefaultI18nStringController',
+    ),
+  );
+
+  // Bundles must provide a human readable name so we can create help and error
+  // messages, and the path to attach Field admin pages to.
+  // node_type_cache_reset();
+  foreach (paragraphs_library_type_load() as $type) {
+    $entity_info['paragraphs_library_item']['bundles'][$type->type] = array(
+      'label' => $type->label,
+      'admin' => array(
+        'path' => 'admin/structure/paragraphs/library/types/%paragraphs_library_type',
+        'real path' => 'admin/structure/paragraphs/library/types/' . str_replace('_', '-', $type->type),
+        'bundle argument' => 5,
+        'access arguments' => array('administer paragraphs_library types'),
+      ),
+    );
+  }
+
+  return $entity_info;
+}
+
+/**
+ * Implements hook.autoload_info().
+ */
+function paragraphs_library_autoload_info() {
+  return array(
+    'ParagraphsLibraryItem' => 'paragraphs_library.class.inc',
+    'ParagraphsLibraryType' => 'paragraphs_library.class.inc',
+    'ParagraphsLibraryItemController' => 'paragraphs_library.controller.inc',
+    'ParagraphsLibraryTypeController' =>  'paragraphs_library.controller.inc',
+    'views_handler_field_paragraphs_library_link_edit' => 'views/views_handler_field_paragraphs_library_link_edit.inc',
+    'views_handler_field_paragraphs_library_link' => 'views/views_handler_field_paragraphs_library_link.inc',
+    'views_handler_field_paragraphs_library_link_delete' => 'views/views_handler_field_paragraphs_library_link_delete.inc',
+  );
+}
+
+/**
+ * Implements hook_menu().
+ *
+ */
+function paragraphs_library_menu() {
+  $items = array();
+
+  $items['admin/content/paragraphs/library/add'] = array(
+    'title' => t('Create a Paragraphs library item'),
+    'description' => t('Create a new item for reuse in the Paragraphs library.'),
+    'page callback' => 'paragraphs_library_type_choice',
+    'access arguments' => array('create paragraphs_library_item entities'),
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  // Create paths to create Paragraphs library entities for each type.
+  foreach (paragraphs_library_type_load() as $type_name => $info) {
+    $items['admin/content/paragraphs/library/add/' . $type_name] = array(
+      'title' => t('Add a %type Paragraphs library item', array('%type' => $info->label)),
+      'page callback' => 'paragraphs_library_item_add',
+      'page arguments' => array($type_name),
+      'access arguments' => array('create paragraphs_library_item entities'),
+      'type' => MENU_CALLBACK,
+    );
+  }
+
+  $items['paragraphs-library/%paragraphs_library_item'] = array(
+    'title' => t('View a Paragraphs library item'),
+    'description' => t('View a saved Paragraphs library item.'),
+    'page callback' => 'paragraphs_library_item_view',
+    'page arguments' => array(1),
+    'access arguments' => array('view paragraphs_library_item entities'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+
+  $items['paragraphs-library/%paragraphs_library_item/edit'] = array(
+    'title' => t('Edit a Paragraphs library item'),
+    'description' => t('Edit a saved Paragraphs library item.'),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_library_item_form', 1),
+    'access arguments' => array('edit paragraphs_library_item entities'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  $items['paragraphs-library/%paragraphs_library_item/delete'] = array(
+    'title' => t('Delete a Paragraphs library item'),
+    'description' => t('Delete a Paragraphs library item.'),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_library_item_delete_form', 1),
+    'access arguments' => array('edit paragraphs_library_item entities'),
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  // Paragraphs library administration paths.
+  $items['admin/structure/paragraphs/library/types'] = array(
+    'title' => t('Paragraphs library types'),
+    'description' => t('List all types of Paragraphs library items.'),
+    'page callback' => 'paragraphs_library_type_view',
+    'access arguments' => array('administer paragraphs_library types'),
+    'file' => 'paragraphs_library.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/structure/paragraphs/library/types/add'] = array(
+    'title' => t('Add a Paragraphs library type'),
+    'description' => t('Form to create a Paragraphs library type.'),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('paragraphs_library_type_create_form'),
+    'access arguments' => array('administer paragraphs_library types'),
+    'file' => 'paragraphs_library.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+
+  $items['admin/structure/paragraphs/library/types/%paragraphs_library_type'] = array(
+    'title' => t('Paragraphs library type info'),
+    'title callback' => 'paragraphs_library_type_page_title',
+    'title arguments' => array(5),
+    'description' => t('Provides info about a Paragraphs library item type. This is where you will also find the Manage field and Manage display tabs.'),
+    'page callback' => 'paragraphs_library_type',
+    'page arguments' => array(5),
+    'file' => 'paragraphs_library.admin.inc',
+    'access arguments' => array('administer paragraphs_library types'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  // This item is here to create the "Info" tab.
+  $items['admin/structure/paragraphs/library/types/%paragraphs_library_type/info'] = array(
+    'title' => t('Paragraphs library type info'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'file' => 'paragraphs_library.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function paragraphs_library_theme($existing, $type, $theme, $path) {
+  $items = array();
+
+  $items['paragraphs_library_item'] = array(
+    'render element' => 'element',
+    'template' => 'paragraphs-library-item',
+    'path' => $path . '/theme',
+    'file' => 'paragraphs_library.theme.inc',
+    'attached' => [
+      'css' => [
+        $path . '/css/paragraphs-library-item.css',
+      ],
+    ]
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function paragraphs_library_admin_paths() {
+  $paths = array(
+    'paragraphs-library/*' => TRUE,
+    'paragraphs-library/*/edit' => TRUE,
+    'paragraphs-library/*/delete' => TRUE,
+  );
+  return $paths;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function paragraphs_library_permission() {
+  $permissions = array(
+    'administer paragraphs_library types' => array(
+      'title' => t('Administer Paragraphs Library types'),
+      'description' => t('Allows users to configure Paragraphs Library types and their fields.'),
+      'restrict access' => TRUE,
+    ),
+    'create paragraphs_library_item entities' => array(
+      'title' => t('Create Paragraphs library items'),
+      'description' => t('Allows users to create Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ),
+    'view own paragraphs_library_item entities' => array(
+      'title' => t('View own Paragraphs library items'),
+      'description' => t('Allows users to view own Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ),
+    'view paragraphs_library_item entities' => array(
+      'title' => t('View Paragraphs library items'),
+      'description' => t('Allows users to view Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ),
+    'edit any paragraphs_library_item entities' => array(
+      'title' => t('Edit any Paragraphs library items'),
+      'description' => t('Allows users to edit any Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ),
+    'edit own paragraphs_library_item entities' => array(
+      'title' => t('Edit own Paragraphs library items'),
+      'description' => t('Allows users to edit own Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ),
+  );
+
+  return $permissions;
+}
+
+/**
+ * Displays a list of bundles to choose from, to create a new paragraphs_library_item.
+ */
+function paragraphs_library_type_choice() {
+  $all_bundles = paragraphs_library_type_load();
+  $items = array();
+  foreach ($all_bundles as $bundle_info) {
+    $items[] = l($bundle_info->label, 'admin/content/paragraphs/library/add/' . $bundle_info->type);
+  }
+  return theme('item_list', array('items' => $items));
+}
+
+/**
+ * Form builder to edit paragraphs_library_items.
+ */
+function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryItem $paragraphs_library_item = NULL) {
+  // Cache the paragraphs_library_item object in $form_state for later retrieval.
+  $form_state['paragraphs_library_item'] = $paragraphs_library_item;
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Admin label'),
+    '#description' => t('By default this will only show in the administrative interfaces as an identifier for this library item.'),
+    '#required' => TRUE,
+    '#default_value' => $paragraphs_library_item ? $paragraphs_library_item->label() : '',
+  );
+
+  // Attaches Field API field widgets in this bundle to the form.
+  field_attach_form('paragraphs_library_item', $paragraphs_library_item, $form, $form_state);
+
+  $form['actions'] = array(
+    '#type' => 'actions',
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save'),
+    ),
+  );
+
+  return $form;
+}
+
+/**
+ * Submit handler for the paragraphs_library_item form.
+ *
+ * Saves the paragraphs_library_item and its fields.
+ */
+function paragraphs_library_item_form_submit($form, &$form_state) {
+  // Retrieve the cached paragraphs_library_item.
+  $paragraphs_library_item = $form_state['paragraphs_library_item'];
+  $paragraphs_library_item->title = $form_state['values']['title'];
+  if (empty($paragraphs_library_item->created)) {
+    // If this this is a new paragraphs_library_item, assign a created date.
+    $paragraphs_library_item->created = REQUEST_TIME;
+  }
+
+  // Call this to attach the submitted field values to the paragraphs_library_item entity.
+  field_attach_submit('paragraphs_library_item', $paragraphs_library_item, $form, $form_state);
+
+  $paragraphs_library_item->save();
+  backdrop_set_message(t('The paragraphs_library_item has been saved'));
+  $form_state['redirect'] = 'paragraphs-library/' . $paragraphs_library_item->id();
+}
+
+/**
+ * Page callback: Provides the Paragraphs library item submission form.
+ *
+ * @param string $type
+ *   The Paragraphs library item type for the submission.
+ *
+ * @return
+ *   Returns a Paragraphs library item submission form.
+ *
+ * @see paragraphs_library_menu()
+ */
+function paragraphs_library_item_add(string $type) {
+  global $user;
+
+  $types = paragraphs_library_type_load();
+  $paragraphs_library_item = entity_create('paragraphs_library_item', array(
+    'uid' => $user->uid,
+    'title' => (isset($user->name) ? $user->name : ''),
+    'type' => $type,
+    'langcode' => LANGUAGE_NONE,
+  ));
+  backdrop_set_title(t('Create @title', array('@title' => t($types[$type]->label))), PASS_THROUGH);
+  $output = backdrop_get_form('paragraphs_library_item_form', $paragraphs_library_item);
+
+  return $output;
+}
+
+/**
+ * Confirm form to delete a paragraphs_library_item.
+ */
+function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibraryItem $paragraphs_library_item) {
+  // Send the paragraphs_library_item ID as a value field to the form.
+  $form['paragraphs_library_item_id'] = array(
+    '#type' => 'value',
+    '#value' => $paragraphs_library_item->id(),
+  );
+  $paragraphs_library_item_uri = entity_uri('paragraphs_library_item', $paragraphs_library_item);
+  return confirm_form(
+    $form,
+    t('Are you sure you want to delete paragraphs_library_item %title?', array('%title' => check_plain($paragraphs_library_item->label()))),
+    'admin/content/paragraphs/library',
+    t('This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel')
+  );
+  return $form;
+}
+
+function paragraphs_library_item_delete_form_submit($form, &$form_state) {
+  $paragraphs_library_item_id = $form_state['values']['paragraphs_library_item_id'];
+  $paragraphs_library_item = entity_load('paragraphs_library_item', $paragraphs_library_item_id);
+  entity_delete_multiple('paragraphs_library_item', array($paragraphs_library_item_id));
+  backdrop_set_message(t('Paragraphs library item %title has been deleted.', array('%title' => check_plain($paragraphs_library_item->label()))));
+  $form_state['redirect'] = 'paragraphs_library_item';
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ *
+ * This hook provides property definitions for metadata wrappers and views.
+ */
+function paragraphs_library_entity_property_info_alter(&$info) {
+  $properties = &$info['paragraphs_library_info']['properties'];
+
+  $properties['title'] = array(
+    'label' => t('Title'),
+    'type' => 'text',
+    'description' => t('The title of the paragraphs_library.'),
+    'setter callback' => 'entity_plus_property_verbatim_set',
+    'schema field' => 'title',
+    // Tell i18n_string that this property is translatable.
+    'translatable' => TRUE,
+    'i18n string' => TRUE,
+  );
+
+  $properties['created'] = array(
+    'label' => t("Date created"),
+    'type' => 'date',
+    'description' => t("The date the paragraphs_library was posted."),
+    'setter callback' => 'entity_plus_property_verbatim_set',
+    'setter permission' => 'administer paragraphs_library entities',
+    'schema field' => 'created',
+  );
+
+  $properties['changed'] = array(
+    'label' => t("Date changed"),
+    'type' => 'date',
+    'schema field' => 'changed',
+    'setter callback' => 'entity_plus_property_verbatim_set',
+    'description' => t("The date the paragraphs_library was most recently updated."),
+  );
+
+  $properties['uid'] = array(
+    'label' => t("Author"),
+    'type' => 'user',
+    'description' => t("The author of the paragraphs_library."),
+    'setter callback' => 'entity_plus_property_verbatim_set',
+    'setter permission' => 'administer paragraphs_library entities',
+    'required' => TRUE,
+    'schema field' => 'uid',
+  );
+
+  // Tell i18n_string that these properties are translatable.
+  $info['paragraphs_library_type']['properties']['label']['translatable'] = TRUE;
+  $info['paragraphs_library_type']['properties']['label']['i18n string'] = TRUE;
+  $info['paragraphs_library_type']['properties']['description']['translatable'] = TRUE;
+  $info['paragraphs_library_type']['properties']['description']['i18n string'] = TRUE;
+}
+
+/*******************************************************************************
+ ********************************* ParagraphsLibraryItem API's *****************
+ ******************************************************************************/
+
+/**
+ * Access callback for paragraphs_library.
+ */
+function paragraphs_library_access($op, ?EntityInterface $paragraphs_library_item = NULL, $account = NULL, $entity_type = NULL) {
+  global $user;
+  if (!isset($account)) {
+    $account = $user;
+  }
+  switch ($op) {
+    case 'create':
+      return user_access('administer paragraphs_library entities', $account)
+          || user_access('create paragraphs_library entities', $account);
+      break;
+    case 'view':
+      return user_access('administer paragraphs_library entities', $account)
+          || user_access('view paragraphs_library entities', $account)
+          || (user_access('view own paragraphs_library entities', $account) && ($paragraphs_library_item->uid == $account->uid));
+      break;
+
+    case 'update':
+    case 'edit':
+    case 'delete':
+      return user_access('administer paragraphs_library entities')
+          || user_access('edit any paragraphs_library entities')
+          || (user_access('edit own paragraphs_library entities') && ($paragraphs_library_item->uid == $account->uid));
+      break;
+  }
+  return FALSE;
+}
+
+/**
+ * Load a paragraphs_library.
+ */
+function paragraphs_library_item_load($paragraphs_library_id, $reset = FALSE) {
+  $entities = paragraphs_library_item_load_multiple(array($paragraphs_library_id), array(), $reset);
+  return reset($entities);
+}
+
+/**
+ * Load multiple paragraphs_library entities based on certain conditions.
+ */
+function paragraphs_library_item_load_multiple($paragraphs_library_ids = array(), $conditions = array(), $reset = FALSE) {
+  return entity_load_multiple('paragraphs_library_item', $paragraphs_library_ids, $conditions, $reset);
+}
+
+/**
+ * Save paragraphs_library.
+ */
+function paragraphs_library_item_save($paragraphs_library_item) {
+  return entity_plus_save('paragraphs_library_item', $paragraphs_library_item);
+}
+
+/**
+ * Delete single paragraphs_library.
+ */
+function paragraphs_library_item_delete($paragraphs_library_item) {
+  entity_delete_multiple('paragraphs_library_item', array(entity_plus_id('paragraphs_library_item', $paragraphs_library_item)));
+}
+
+/**
+ * Delete multiple paragraphs_library entities.
+ */
+function paragraphs_library_item_delete_multiple($paragraphs_library_ids) {
+  entity_delete_multiple('paragraphs_library_item', $paragraphs_library_ids);
+}
+
+/**
+ * Displays a Paragraphs library item.
+ */
+function paragraphs_library_item_view($paragraphs_library_item) {
+  backdrop_set_title(check_plain($paragraphs_library_item->label()));
+  $paragraphs_library_item_view = entity_view($paragraphs_library_item);
+  return $paragraphs_library_item_view;
+}
+
+/**
+ * Implements hook_views_api().
+ *
+ * This hook will help Backdrop discover the custom handlers in the /views folder
+ */
+function paragraphs_library_views_api() {
+  return array(
+    'api' => '3.0',
+    'path' => backdrop_get_path('module', 'paragraphs_library').'/views',
+  );
+}
+
+/**
+ * Implements hook_field_extra_fields().
+ *
+ * This exposes the "extra fields" (usually properties that can be configured
+ * as if they were fields) of the entity as pseudo-fields
+ * so that they get handled by the Entity and Field core functionality.
+ */
+function paragraphs_library_field_extra_fields() {
+  $extra_fields = array();
+
+  $display['title'] = array(
+    'weight' => -10,
+    'label' => t('Title'),
+    'description' => t('The title of the Paragraphs library item.'),
+  );
+
+  $form['title'] = array(
+    'weight' => -10,
+    'label' => t('Title'),
+    'description' => t('The title of the Paragraphs library item.'),
+  );
+
+  $display['uid'] = array(
+    'label' => t("Author"),
+    'weight' => -11,
+    'description' => t("The author of the Paragraphs library item."),
+  );
+
+  $display['created'] = array(
+    'label' => t("Date created"),
+    'weight' => 0,
+    'description' => t("The date the Paragraphs library item was posted."),
+  );
+
+  $display['changed'] = array(
+    'label' => t("Date changed"),
+    'weight' => 1,
+    'description' => t("The date the Paragraphs library item was changed."),
+  );
+
+  return $extra_fields;
+}
+
+/**
+ * Implements template_proprocess_entity_plus_property().
+ *
+ * This is used to convert the Date created and Date changed properties into
+ * a proper date format. Ideally this would be done via UI, but Entity Plus
+ * or Backdrop do not provide a way to do this for properties through the
+ * Manage fields tab.
+ */
+function paragraphs_library_preprocess_entity_plus_property(&$variables) {
+  if ($variables['property_name'] == 'created' || $variables['property_name'] == 'changed') {
+    $variables['content'] = format_date($variables['content']);
+  }
+}
+
+/**
+ * Loads and returns type/bundle information for Paragraphs library items.
+ *
+ * @param string|FALSE $type
+ *   This is the machine name of the bundle as defined in the entity_info. By
+ *   default 'default'. FALSE returns an array of all bundles.
+ *
+ * @param object|array
+ *   Either a stdClass object with bundle info (machine name and label) or an
+ *   array of such objects if $type is FALSE.
+ */
+function paragraphs_library_type_load($type = FALSE) {
+  // Since this function is called very often, use a static cache.
+  $all_types = &backdrop_static(__FUNCTION__, array());
+  if (empty($all_types)) {
+    $configs = config_get_names_with_prefix('paragraphs_library.type.');
+    foreach ($configs as $config_name) {
+      $config = config($config_name);
+      $all_types[$config->get('type')] = (object) $config->get();
+    }
+  }
+  return empty($type) ? $all_types : (!empty($all_types[$type]) ? $all_types[$type] : FALSE);
+}
