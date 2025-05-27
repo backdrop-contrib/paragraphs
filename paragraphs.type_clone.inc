@@ -213,7 +213,7 @@ function paragraphs_admin_bundle_clone_create_form_submit(array $form, array &$f
         )
       );
       // Redirect to the paragraph types list.
-      $form_state['redirect'] = 'admin/structure/paragraphs';
+      $form_state['redirect'] = 'admin/structure/paragraphs/types';
     }
     else {
       batch_set($batch);
@@ -436,5 +436,5 @@ function paragraphs_type_clone_finished($success, array $results, array $operati
   }
 
   // Redirect to the paragraph types list.
-  backdrop_goto('admin/structure/paragraphs');
+  backdrop_goto('admin/structure/paragraphs/types');
 }

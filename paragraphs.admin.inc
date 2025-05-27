@@ -309,10 +309,10 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   }
   elseif ($status == SAVED_NEW) {
     backdrop_set_message(t('The Paragraph type %name has been added.', $t_args));
-    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs'));
+    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs/types/'));
   }
 
-  $form_state['redirect'] = 'admin/structure/paragraphs';
+  $form_state['redirect'] = 'admin/structure/paragraphs/types';
 }
 
 /**
@@ -330,7 +330,7 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
 function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $bundle) {
   if (!$bundle) {
     backdrop_set_message(t('Could not load Paragraph type'), 'error');
-    backdrop_goto('admin/structure/paragraphs');
+    backdrop_goto('admin/structure/paragraphs/types');
   }
 
   $form['type'] = array(
@@ -345,7 +345,7 @@ function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $b
   $message = t('Are you sure you want to delete the Paragraph type %bundle?', array('%bundle' => $bundle->name));
   $caption = '<p>' . t('This action cannot be undone. Content using this Paragraph type will be broken.') . '</p>';
 
-  return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs', filter_xss_admin($caption), t('Delete'));
+  return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs/types', filter_xss_admin($caption), t('Delete'));
 }
 
 /**
@@ -365,7 +365,7 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
   backdrop_set_message(t('The Paragraph type %name has been deleted.', $t_args));
   watchdog('paragraphs', 'Deleted Paragraph type %name.', $t_args, WATCHDOG_NOTICE);
 
-  $form_state['redirect'] = 'admin/structure/paragraphs';
+  $form_state['redirect'] = 'admin/structure/paragraphs/types';
 }
 
 /**
