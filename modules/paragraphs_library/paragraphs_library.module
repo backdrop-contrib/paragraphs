@@ -36,32 +36,29 @@ function paragraphs_library_entity_info() {
         // Provide a new view mode.
         'paragraphs_library_item' => array(
           'label' => 'Paragraphs library item',
-          'custom settings' => FALSE // Use the default settings.
-        )
+          'custom settings' => FALSE, // Use the default settings.
+        ),
       ),
       'module' => 'paragraphs_library',
 
       // While this key is not defined in hook_entity_info(), we use it for
-      // convenience, to provide an easier way to check access outside the class.
+      // convenience, providing an easier way to check access outside the class.
       'access callback' => 'paragraphs_library_access',
 
       // This controller is used to display non Field API extra fields.
       'extra fields controller class' => 'EntityDefaultExtraFieldsController',
 
       // By including 'admin ui' we are telling Entity UI to create menu items
-      // for viewing, adding, editing and deleting paragraphs_library entities
+      // for viewing, adding, editing and deleting paragraphs_library entities.
       'admin ui' => array(
         'path' => 'paragraphs-library',
         'controller class' => 'EntityBundleableUIController',
-        // Indicates the name of the file that contains the edit/add and delete forms
-        // These forms must be named paragraphs_library_form etc.
         'file' => 'paragraphs_library.admin.inc',
-        // For the autoloaders used in the menu items.
         'menu wildcard' => '%paragraphs_library_item',
        ),
 
-       // This tells Entity Plus to make the text entered by the user in the
-       // entity properties (e.g. title) available to i18n_string for translations.
+       // This tells Entity Plus to make the text entered in the entity
+       // properties (e.g. title) available to i18n_string for translations.
        'i18n controller class' => 'EntityDefaultI18nStringController',
     ),
   );

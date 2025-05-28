@@ -208,7 +208,9 @@ function paragraphs_admin_bundle_form_validate(array $form, array &$form_state) 
     // 'theme' conflicts with theme_node_form().
     // '0' is invalid, since elsewhere we check it using empty().
     if (in_array($bundle->bundle, array('0', 'theme'))) {
-      form_set_error('type', t("Invalid machine-readable name. Enter a name other than %invalid.", array('%invalid' => $bundle->bundle)));
+      form_set_error('type', t("Invalid machine-readable name. Enter a name other than %invalid.", array(
+        '%invalid' => $bundle->bundle,
+      )));
     }
   }
 

@@ -109,7 +109,7 @@ function paragraphs_library_delete_form($form, &$form_state, $paragraphs_library
   // Always provide entity id in the same form key as in the entity edit form.
   $form['paragraphs_library_type_id'] = array(
     '#type' => 'value',
-    '#value' => entity_plus_id('paragraphs_library_item' , $paragraphs_library_item),
+    '#value' => entity_plus_id('paragraphs_library_item', $paragraphs_library_item),
   );
   $paragraphs_library_item_uri = $paragraphs_library_item->uri();
   return confirm_form($form,
@@ -207,7 +207,10 @@ function paragraphs_library_type_view() {
   foreach ($all_types as $type_info) {
     $items[] = l($type_info->label, 'admin/structure/paragraphs/library/types/' . $type_info->type);
   }
-  return theme('item_list', array('items' => $items, 'title' => t('Available types')));
+  return theme('item_list', array(
+    'items' => $items,
+    'title' => t('Available types'),
+  ));
 }
 
 /**

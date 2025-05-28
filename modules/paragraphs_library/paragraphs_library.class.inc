@@ -1,17 +1,19 @@
 <?php
+/**
+ * @file
+ * Defines a Paragraphs Library class.
+ */
 
 /**
- * Defines a basic entity plus class.
- *
- * This class extends the core Entity class. It must define many of the undefined
- * methods in the original class and interface
+ * This class extends the core Entity class. It must define many of the
+ * undefined methods in the original class and interface.
  */
 class ParagraphsLibraryItem extends Entity {
 
-  protected $entityType; // Stores the entity type
-  protected $entityInfo; // Stores the info provided in hook_entity_info() for this entity
+  protected $entityType; // Stores the entity type.
+  protected $entityInfo; // Stores the info provided in hook_entity_info().
   protected $idKey; // The key where entity id is stored.
-  protected $wrapper; // Stores the entitiy_metadata_wrapper for this entity
+  protected $wrapper; // Stores the entitiy_metadata_wrapper for this entity.
 
   /**
    * Overrides Entity construct method to accept entityType.
@@ -40,7 +42,7 @@ class ParagraphsLibraryItem extends Entity {
    * Returns the entity_info for the entity
    *
    * @return array
-   *  The entity_info as defined in hook_entity_info().
+   *   The entity_info as defined in hook_entity_info().
    */
   public function entityInfo() {
     return $this->entityInfo;
@@ -178,8 +180,9 @@ class ParagraphsLibraryItem extends Entity {
   /**
    * Returns a translated string if the module Internationalization exists.
    *
-   * This method was part of D7's Entity API class, but was removed in bAckdrop's
-   * Entity class. It is mostly used to provide translations for entity properties.
+   * This method was part of D7's Entity API class, but was removed in
+   * Backdrop's Entity class. It is mostly used to provide translations for
+   * entity properties.
    */
   public function getTranslation($property, $langcode = NULL) {
     $all_info = entity_plus_get_all_property_info($this->entityType);
@@ -192,9 +195,10 @@ class ParagraphsLibraryItem extends Entity {
       }
       elseif (!empty($property_info['i18n string']) && module_exists('i18n_string')) {
         // This option requires the module i18n_string to be enabled. It also
-        // requires that the flag 'i18n string` be TRUE in hook_entity_property_info().
-       $name = $this->entityInfo['module'] . ':' . $this->entityType . ':' . $this->id() . ':' . $property;
-       return entity_plus_i18n_string($name, $this->$property, $langcode);
+        // requires that the flag 'i18n string' be TRUE in
+        // hook_entity_property_info().
+        $name = $this->entityInfo['module'] . ':' . $this->entityType . ':' . $this->id() . ':' . $property;
+        return entity_plus_i18n_string($name, $this->$property, $langcode);
       }
     }
     return $this->$property;
@@ -211,7 +215,7 @@ class ParagraphsLibraryItem extends Entity {
  */
 class ParagraphsLibraryType extends Entity {
 
-  protected $entityInfo; // stores the info provided in hook_entity_info() for this entity.
+  protected $entityInfo; // Stores the info provided in hook_entity_info().
   protected $idKey; // Stores the key where the id is stored.
   protected $nameKey; // Stores the key where the name of the entity is stored.
 
