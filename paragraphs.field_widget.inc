@@ -220,7 +220,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
         'weight' => $weight,
       );
 
-      /** @var $entity_shell ParagraphsItemEntity */
+      /** @var ParagraphsItemEntity $entity_shell */
       $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
       $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
@@ -265,7 +265,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
         if ($add_mode == 'button') {
           foreach ($select_bundles as $machine_name => $bundle) {
 
-            /* @var $entity_shell ParagraphsItemEntity */
+            /** @var ParagraphsItemEntity $entity_shell */
             $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
             $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
             $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
@@ -455,7 +455,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $being_edited_paragraph = FALSE;
     }
 
-    /* @var $paragraphs_item ParagraphsItemEntity */
+    /** @var ParagraphsItemEntity $paragraphs_item */
     $paragraphs_item = $field_state['entity'][$delta];
     $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
   }
@@ -466,14 +466,13 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
 
     // Show an empty collection if we have no existing one or it does not load.
     if (empty($paragraphs_item) && $bundle) {
-      /* @var $paragraphs_item ParagraphsItemEntity */
+      /** @var ParagraphsItemEntity $paragraphs_item */
       $paragraphs_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
       $paragraphs_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
     }
     if (!empty($paragraphs_item)) {
-      /* @var $paragraphs_item ParagraphsItemEntity */
       $paragraphs_item->setHostEntity($element['#host_entity_type'], $element['#host_entity'], $langcode, FALSE);
 
       if ($force_open) {

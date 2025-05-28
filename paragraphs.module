@@ -1692,9 +1692,12 @@ function paragraphs_modules_uninstalled($modules) {
 /**
  * Access callback for separate edit/sort/delete form.
  *
- * @var ParagraphsItemEntity $paragraphs_item
+ * @param ParagraphsItemEntity $paragraphs_item
+ *  The paragraphs item entity to check access for.
+ *
+ * @return bool
  */
-function paragraphs_modal_admin_access($paragraphs_item) {
+function paragraphs_modal_admin_access(ParagraphsItemEntity $paragraphs_item) {
   $paragraphs_item->hostEntity();
   $host_entity_type = $paragraphs_item->hostEntityType();
   $instance = $paragraphs_item->instanceInfo();
@@ -1867,7 +1870,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
         'weight' => $weight,
       );
 
-      /* @var $entity_shell ParagraphsItemEntity */
+      /** @var ParagraphsItemEntity $entity_shell */
       $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
       $entity_shell->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
 

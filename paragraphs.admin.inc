@@ -857,7 +857,7 @@ function paragraphs_modal_admin_add_form($form, &$form_state, $mode, $paragraphs
     'bundle' => $paragraphs_bundle->bundle,
     'field_name' => $field_name,
   ));
-  /** @var $new_paragraph ParagraphsItemEntity */
+  /** @var ParagraphsItemEntity $new_paragraph */
   $new_paragraph->setHostEntity($host_entity_type, $host_entity, $host_entity->langcode, FALSE);
   $new_paragraph->position = $new_paragraph_position;
 
