@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Paragraphs library module theme functions.
@@ -17,8 +16,6 @@ function template_preprocess_paragraphs_library_item(&$variables) {
 
   list(, , $bundle) = entity_extract_ids($paragraphs_library_item_type, $paragraphs_library_item);
   $variables['bundle'] = $bundle;
-
-  // $paragraphs_library_item_id = entity_plus_id($paragraphs_library_item_type, $paragraphs_library_item);
 
   $variables['title'] = check_plain(entity_label($paragraphs_library_item_type, $paragraphs_library_item));
 
@@ -51,7 +48,7 @@ function template_preprocess_paragraphs_library_item(&$variables) {
     $variables[$element_type][$key] = $variables['element'][$key];
   }
   if ($variables['view_mode'] == 'paragraphs_library_item') {
-    $variables['url'] = false;
+    $variables['url'] = FALSE;
   }
   // Make the field variables available with the appropriate language.
   field_attach_preprocess($paragraphs_library_item_type, $paragraphs_library_item, $variables['content'], $variables);

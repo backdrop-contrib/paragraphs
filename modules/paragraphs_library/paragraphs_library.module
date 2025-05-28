@@ -367,7 +367,6 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
     '#type' => 'value',
     '#value' => $paragraphs_library_item->id(),
   ];
-  $paragraphs_library_item_uri = entity_uri('paragraphs_library_item', $paragraphs_library_item);
   return confirm_form(
     $form,
     t('Are you sure you want to delete paragraphs_library_item %title?', ['%title' => check_plain($paragraphs_library_item->label())]),
@@ -376,7 +375,6 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
     t('Delete'),
     t('Cancel')
   );
-  return $form;
 }
 
 /**

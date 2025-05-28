@@ -37,20 +37,18 @@
     <h2<?php (empty($title_attributes)) ? '' : print backdrop_attributes($title_attributes); ?>>
       <?php if ($url) : ?>
         <a href="<?php print $url; ?>"><?php print $title; ?></a>
-      <?php else: ?>
+      <?php else : ?>
         <?php print $title; ?>
       <?php endif; ?>
     </h2>
   <?php endif; ?>
 
   <div class="content"<?php (empty($content_attributes)) ? '' : print backdrop_attributes($content_attributes); ?>>
-    <?php if ($page): ?>
+    <?php if ($page) : ?>
       <div class="paragraphs-library-item--properties">
           <?php print render($property); ?>
       </div>
     <?php endif; ?>
-    <?php
-      print render($content);
-    ?>
+    <?php print render($content); ?>
   </div>
 </div>
