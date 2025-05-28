@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Paragraphs library hook implementations and other functions.
+ */
 
 /**
  * Implements hook_config_info().
@@ -9,7 +13,8 @@ function paragraphs_library_config_info() {
     'label_key' => 'label',
     'group' => t('Paragraphs library types'),
   );
-  return $prefixes;}
+  return $prefixes;
+}
 
 /**
  * Implements hook_entity_info().
@@ -55,11 +60,11 @@ function paragraphs_library_entity_info() {
         'controller class' => 'EntityBundleableUIController',
         'file' => 'paragraphs_library.admin.inc',
         'menu wildcard' => '%paragraphs_library_item',
-       ),
+      ),
 
-       // This tells Entity Plus to make the text entered in the entity
-       // properties (e.g. title) available to i18n_string for translations.
-       'i18n controller class' => 'EntityDefaultI18nStringController',
+      // This tells Entity Plus to make the text entered in the entity
+      // properties (e.g. title) available to i18n_string for translations.
+      'i18n controller class' => 'EntityDefaultI18nStringController',
     ),
   );
 
@@ -181,7 +186,7 @@ function paragraphs_library_menu() {
 
   // This item is here to create the "Info" tab.
   $items['admin/structure/paragraphs/library/types/%paragraphs_library_type/info'] = array(
-    'title' => t('Paragraphs library type info'),
+    'title' => t('Info'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'paragraphs_library.admin.inc',
   );
@@ -330,7 +335,7 @@ function paragraphs_library_item_form_submit($form, &$form_state) {
  * @param string $type
  *   The Paragraphs library item type for the submission.
  *
- * @return
+ * @return array
  *   Returns a Paragraphs library item submission form.
  *
  * @see paragraphs_library_menu()
@@ -372,6 +377,11 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
   return $form;
 }
 
+/**
+ * Submit handler for the paragraphs_library_item delete form.
+ *
+ * Deletes the paragraphs_library_item and displays a message.
+ */
 function paragraphs_library_item_delete_form_submit($form, &$form_state) {
   $paragraphs_library_item_id = $form_state['values']['paragraphs_library_item_id'];
   $paragraphs_library_item = entity_load('paragraphs_library_item', $paragraphs_library_item_id);
@@ -584,23 +594,25 @@ function paragraphs_library_preprocess_entity_plus_property(&$variables) {
 /**
  * Loads and returns type/bundle information for Paragraphs library items.
  *
- * @param string|FALSE $type
+ * @param string $type
  *   This is the machine name of the bundle as defined in the entity_info. By
- *   default 'default'. FALSE returns an array of all bundles.
+ *   default 'default'. If empty, returns an array of all bundles.
  *
- * @param object|array
+ * @return object|array|FALSE
  *   Either a stdClass object with bundle info (machine name and label) or an
- *   array of such objects if $type is FALSE.
+ *   array of such objects if $type is not specified. If $type is specified
+ *   and does not exist, FALSE is returned.
  */
-function paragraphs_library_type_load($type = FALSE) {
+function paragraphs_library_type_load(string $type = '') {
   // Since this function is called very often, use a static cache.
   $all_types = &backdrop_static(__FUNCTION__, array());
   if (empty($all_types)) {
+    $all_types = [];
     $configs = config_get_names_with_prefix('paragraphs_library.type.');
     foreach ($configs as $config_name) {
       $config = config($config_name);
       $all_types[$config->get('type')] = (object) $config->get();
     }
   }
-  return empty($type) ? $all_types : (!empty($all_types[$type]) ? $all_types[$type] : FALSE);
+  return empty($type) ? $all_types : $all_types[$type] ?? FALSE;
 }

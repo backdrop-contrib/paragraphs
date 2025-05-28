@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * Paragraphs library install and update hooks.
+ */
 
 /**
  * Implements hook_schema().
