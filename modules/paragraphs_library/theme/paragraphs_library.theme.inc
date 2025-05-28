@@ -34,7 +34,7 @@ function template_preprocess_paragraphs_library_item(&$variables) {
     $variables['page'] = $uri && !empty($uri['path']) && $uri['path'] == $_GET['q'];
   }
 
-  $variables['content'] = array();
+  $variables['content'] = [];
   $library_item_properties = [
     'title',
     'created',

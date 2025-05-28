@@ -18,7 +18,7 @@ class ParagraphsLibraryItem extends Entity {
   /**
    * Overrides Entity construct method to accept entityType.
    */
-  public function __construct(array $values = array(), $entityType = NULL) {
+  public function __construct(array $values = [], $entityType = NULL) {
     if (empty($entityType)) {
       throw new Exception('Cannot create an instance of Entity without a specified entity type.');
     }
@@ -92,10 +92,10 @@ class ParagraphsLibraryItem extends Entity {
    * an alternative is to define a uri callback in hook_entity_info().
    */
   public function uri() {
-    return array(
+    return [
       'path' => 'paragraphs-library/' . $this->id(),
-      'options' => array(),
-    );
+      'options' => [],
+    ];
   }
 
   /**
@@ -103,7 +103,7 @@ class ParagraphsLibraryItem extends Entity {
    */
   public static function createAccess($bundle = NULL, $account = NULL) {
     global $user;
-    $rights = &backdrop_static('paragraphs_library_access', array());
+    $rights = &backdrop_static('paragraphs_library_access', []);
 
     // If no user object is supplied, the access check is for the current user.
     if (empty($account)) {
@@ -129,7 +129,7 @@ class ParagraphsLibraryItem extends Entity {
    */
   public function access($op, $account = NULL) {
     global $user;
-    $rights = &backdrop_static('paragraphs_library_access', array());
+    $rights = &backdrop_static('paragraphs_library_access', []);
 
     if ($op == 'create') {
       return self::createAccess($this->bundle(), $account);
@@ -173,7 +173,7 @@ class ParagraphsLibraryItem extends Entity {
   public function delete() {
     $id = $this->id();
     if (isset($id)) {
-      entity_get_controller($this->entityType)->delete(array($id));
+      entity_get_controller($this->entityType)->delete([$id]);
     }
   }
 
