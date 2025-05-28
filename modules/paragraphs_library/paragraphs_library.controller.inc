@@ -1,5 +1,12 @@
 <?php
+/**
+ * @file
+ * Paragraphs Library Item controller information.
+ */
 
+/**
+ * Define a controller class for the Paragraphs Library Item.
+ */
 class ParagraphsLibraryItemController extends EntityPlusController {
 
   /**
@@ -27,30 +34,5 @@ class ParagraphsLibraryItemController extends EntityPlusController {
     $build = parent::buildContent($entity, $view_mode, $langcode, $content);
     $build['#theme'] = 'paragraphs_library_item';
     return $build;
-  }
-}
-
-class ParagraphsLibraryTypeController extends EntityPlusControllerExportable {
-
-  /**
-   * This method is called when we use entity_create(). It provides defaults
-   * for the entity properties.
-   */
-   public function create(array $values = array()) {
-    $values += array(
-      'label' => '',
-      'description' => '',
-    );
-    return parent::create($values);
-  }
-
-  /**
-   * Save ParagraphsLibrary Type.
-   */
-  public function save($entity, ?DatabaseTransaction $transaction = NULL) {
-    // Rebuild menu registry. We do not call menu_rebuild directly, but set
-    // state that indicates rebuild in the end.
-    state_set('menu_rebuild_needed', TRUE);
-    return parent::save($entity, $transaction);
   }
 }

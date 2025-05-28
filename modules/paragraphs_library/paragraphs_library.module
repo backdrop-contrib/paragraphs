@@ -87,9 +87,7 @@ function paragraphs_library_entity_info() {
 function paragraphs_library_autoload_info() {
   return array(
     'ParagraphsLibraryItem' => 'paragraphs_library.class.inc',
-    'ParagraphsLibraryType' => 'paragraphs_library.class.inc',
     'ParagraphsLibraryItemController' => 'paragraphs_library.controller.inc',
-    'ParagraphsLibraryTypeController' =>  'paragraphs_library.controller.inc',
     'views_handler_field_paragraphs_library_link_edit' => 'views/views_handler_field_paragraphs_library_link_edit.inc',
     'views_handler_field_paragraphs_library_link' => 'views/views_handler_field_paragraphs_library_link.inc',
     'views_handler_field_paragraphs_library_link_delete' => 'views/views_handler_field_paragraphs_library_link_delete.inc',

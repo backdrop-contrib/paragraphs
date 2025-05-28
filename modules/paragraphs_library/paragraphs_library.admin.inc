@@ -214,19 +214,6 @@ function paragraphs_library_type_view() {
 }
 
 /**
- * Helper to save a Paragraphs library type.
- */
-function paragraphs_library_type_save(ParagraphsLibraryType $paragraphs_library_type) {
-  // Save the Paragraphs library type configuration.
-  $config = config('paragraphs_library.type.' . $paragraphs_library_type->type);
-  $config->set('label', $paragraphs_library_type->label);
-  $config->save();
-
-  // Notify Field API of the new bundle.
-  field_attach_create_bundle('paragraphs_library_item', $paragraphs_library_type->type);
-}
-
-/**
  * Form to create a new Paragraphs library item type.
  */
 function paragraphs_library_type_create_form($form, &$form_state, ?Object $paragraphs_library_type = NULL) {
