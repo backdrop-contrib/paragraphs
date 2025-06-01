@@ -389,9 +389,9 @@ function layout_paragraphs_template_title_callback($template) {
 /**
  * Implements hook_theme().
  */
-function layout_paragraphs_theme() {
+function layout_paragraphs_theme($existing, $type, $theme, $path) {
   $base = array(
-    'path' => backdrop_get_path('module', 'layout_paragraphs') . '/theme',
+    'path' => $path . '/theme',
     'file' => 'layout_paragraphs.theme.inc',
   );
   return array(
@@ -411,6 +411,31 @@ function layout_paragraphs_theme() {
       ),
     ) + $base,
   );
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ *
+ * Ensure the flexible layout template is registered, whether or not it is
+ * being used in core layouts.
+ */
+function layout_paragraphs_theme_registry_alter(&$theme_registry) {
+  if (!isset($theme_registry['layout__flexible'])) {
+    $theme_registry['layout__flexible'] = array(
+      'variables' => array(
+        'content' => NULL,
+        'settings' => NULL,
+        'layout' => NULL,
+        'layout_template_info' => NULL,
+        'renderer' => NULL,
+        'attributes' => array(),
+        'admin' => FALSE,
+      ),
+    'template' => 'layout--flexible',
+    'path' => backdrop_get_path('module', 'layout') . '/templates',
+    'base hook' => 'layout',
+    );
+  }
 }
 
 /**
@@ -794,10 +819,11 @@ function layout_paragraphs_entity_insert($entity, $entity_type) {
  *
  */
 function layout_paragraphs_entity_update($entity, $entity_type) {
-  if (!empty($entity->content['layout_name'])) {
-    $layout = layout_paragraphs_instance_tempstore_load($entity->content['layout_name']);
-    $instance = _layout_paragraphs_get_field_instance($entity->content['layout_name']);
-    layout_paragraphs_store_field_data($instance, $layout->layout_template, $entity->id(), $entity->content['layout_name']);
+  $layout_name = $entity->content['layout_name'] ?? '';
+  if (!empty($layout_name)) {
+    $layout = layout_paragraphs_instance_tempstore_load($layout_name);
+    $instance = _layout_paragraphs_get_field_instance($layout_name);
+    layout_paragraphs_store_field_data($instance, $layout->layout_template, $entity->id(), $layout_name);
     tempstore_clear('layout_paragraphs', $layout_name);
   }
 }
