@@ -107,7 +107,7 @@ function paragraphs_library_menu() {
   $items = [];
 
   $items['admin/content/paragraphs/library/add'] = [
-    'title' => t('Create a Paragraphs library item'),
+    'title' => t('Add library item'),
     'description' => t('Create a new item for reuse in the Paragraphs library.'),
     'page callback' => 'paragraphs_library_type_choice',
     'access arguments' => ['create paragraphs_library_item entities'],
@@ -166,30 +166,43 @@ function paragraphs_library_menu() {
     'title' => t('Add a Paragraphs library type'),
     'description' => t('Form to create a Paragraphs library type.'),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => ['paragraphs_library_type_create_form'],
+    'page arguments' => ['paragraphs_library_type_form', NULL],
     'access arguments' => ['administer paragraphs_library types'],
     'file' => 'paragraphs_library.admin.inc',
     'type' => MENU_LOCAL_ACTION,
   ];
 
   $items['admin/structure/paragraphs/library/types/%paragraphs_library_type'] = [
-    'title' => t('Paragraphs library type info'),
+    'title' => t('Paragraphs library type'),
     'title callback' => 'paragraphs_library_type_page_title',
     'title arguments' => [5],
-    'description' => t('Provides info about a Paragraphs library item type. This is where you will also find the Manage field and Manage display tabs.'),
-    'page callback' => 'paragraphs_library_type',
-    'page arguments' => [5],
+    'description' => t('Provides an edit form for a Paragraphs library item type. This is where you will also find the Manage field and Manage display tabs.'),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['paragraphs_library_type_form', 5],
     'file' => 'paragraphs_library.admin.inc',
     'access arguments' => ['administer paragraphs_library types'],
     'type' => MENU_NORMAL_ITEM,
   ];
 
   // This item is here to create the "Info" tab.
-  $items['admin/structure/paragraphs/library/types/%paragraphs_library_type/info'] = [
-    'title' => t('Info'),
+  $items['admin/structure/paragraphs/library/types/%paragraphs_library_type/configure'] = [
+    'title' => t('Configure'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'paragraphs_library.admin.inc',
   ];
+
+  $items['admin/structure/paragraphs/library/types/%paragraphs_library_type/delete'] = [
+    'title' => t('Delete library type'),
+    'title callback' => 'paragraphs_library_type_page_title',
+    'title arguments' => [5],
+    'description' => t('Provides a delete form for a Paragraphs library item type.'),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['paragraphs_library_type_delete_form', 5],
+    'file' => 'paragraphs_library.admin.inc',
+    'access arguments' => ['administer paragraphs_library types'],
+    'type' => MENU_NORMAL_ITEM,
+  ];
+
   return $items;
 }
 
@@ -271,10 +284,10 @@ function paragraphs_library_permission() {
  * paragraphs_library_item.
  */
 function paragraphs_library_type_choice() {
-  $all_bundles = paragraphs_library_type_load();
+  $library_types = paragraphs_library_type_load();
   $items = [];
-  foreach ($all_bundles as $bundle_info) {
-    $items[] = l($bundle_info->label, 'admin/content/paragraphs/library/add/' . $bundle_info->type);
+  foreach ($library_types as $library_type_info) {
+    $items[] = l($library_type_info->label, 'admin/content/paragraphs/library/add/' . $library_type_info->type);
   }
   return theme('item_list', ['items' => $items]);
 }
@@ -291,7 +304,7 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
     '#title' => t('Admin label'),
     '#description' => t('By default this will only show in the administrative interfaces as an identifier for this library item.'),
     '#required' => TRUE,
-    '#default_value' => $paragraphs_library_item ? $paragraphs_library_item->label() : '',
+    '#default_value' => (!$paragraphs_library_item->is_new) ? $paragraphs_library_item->label() : '',
   ];
 
   // Attaches Field API field widgets in this bundle to the form.
@@ -599,20 +612,25 @@ function paragraphs_library_preprocess_entity_plus_property(&$variables) {
  *   This is the machine name of the bundle as defined in the entity_info. By
  *   default 'default'. If empty, returns an array of all bundles.
  *
+ * @param bool $reset
+ *  If TRUE, the static cache is reset and the bundles are reloaded from
+ *  configuration.
+ *
  * @return object|array|FALSE
  *   Either a stdClass object with bundle info (machine name and label) or an
  *   array of such objects if $type is not specified. If $type is specified
  *   and does not exist, FALSE is returned.
  */
-function paragraphs_library_type_load(string $type = '') {
+function paragraphs_library_type_load(string $type = '', bool $reset = FALSE) {
   // Since this function is called very often, use a static cache.
   $all_types = &backdrop_static(__FUNCTION__, []);
-  if (empty($all_types)) {
+  if (empty($all_types) || $reset) {
     $all_types = [];
     $configs = config_get_names_with_prefix('paragraphs_library.type.');
     foreach ($configs as $config_name) {
       $config = config($config_name);
-      $all_types[$config->get('type')] = (object) $config->get();
+      $type_str = strtr($config->get('type'), array('_' => '-'));
+      $all_types[$type_str] = (object) $config->get();
     }
   }
   return empty($type) ? $all_types : $all_types[$type] ?? FALSE;

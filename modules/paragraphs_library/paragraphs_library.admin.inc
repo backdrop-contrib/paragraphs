@@ -203,42 +203,103 @@ function paragraphs_library_multiple_delete_confirm_submit($form, &$form_state) 
  */
 function paragraphs_library_type_view() {
   $all_types = paragraphs_library_type_load();
-  $items = [];
-  foreach ($all_types as $type_info) {
-    $items[] = l($type_info->label, 'admin/structure/paragraphs/library/types/' . $type_info->type);
+  $field_ui = module_exists('field_ui');
+  $page = [];
+  $rows = [];
+  $operations = [];
+
+  $header = array(
+    t('Label'),
+    t('Description'),
+    t('Operations'),
+  );
+  foreach ($all_types as $library_type) {
+
+    $type_url_str = strtr($library_type->type, array('_' => '-'));
+    $row = array(theme('label_machine_name__paragraphs', array(
+      'label' => $library_type->label,
+      'machine_name' => $library_type->bundle,
+    )));
+    $row['description'] = $library_type->description;
+
+    // Manage library type.
+    $operations['edit_type'] = array(
+      'title' => t('Configure'),
+      'href' => 'admin/structure/paragraphs/library/types/' . $type_url_str . '/edit',
+    );
+
+    if ($field_ui) {
+      // Manage fields.
+      $operations['manage_fields'] = array(
+        'title' => t('Manage fields'),
+        'href' => 'admin/structure/paragraphs/library/types/' . $type_url_str . '/fields',
+      );
+
+      // Display fields.
+      $operations['manage_display'] = array(
+        'title' => t('Manage display'),
+        'href' => 'admin/structure/paragraphs/library/types/' . $type_url_str . '/display',
+      );
+    }
+
+    // Delete bundle.
+    $operations['delete_type'] = array(
+      'title' => t('Delete'),
+      'href' => 'admin/structure/paragraphs/library/types/' . $type_url_str . '/delete',
+    );
+
+    $row['operations'] = array(
+      'data' => array(
+        '#type' => 'dropbutton',
+        '#links' => $operations,
+      ),
+    );
+
+    $rows[$library_type->type] = $row;
   }
-  return theme('item_list', [
-    'items' => $items,
-    'title' => t('Available types'),
-  ]);
+
+  // Sort rows by type.
+  ksort($rows);
+
+  // Render paragraphs library type table.
+  $page['paragraphs_library_type_table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+    '#empty' => t('No library types have been defined yet.'),
+  );
+
+  return $page;
 }
 
 /**
  * Form to create a new Paragraphs library item type.
  */
-function paragraphs_library_type_create_form($form, &$form_state, ?Object $paragraphs_library_type = NULL) {
+function paragraphs_library_type_form($form, &$form_state, ?Object $paragraphs_library_type = NULL) {
   $form['label'] = [
     '#type' => 'textfield',
     '#title' => t('Paragraphs library type name'),
+    '#description' => !empty($paragraphs_library_type) ? t('Machine name: @type', ['@type' => $paragraphs_library_type->type]) : '',
     '#required' => TRUE,
     '#default_value' => !empty($paragraphs_library_type->label) ? $paragraphs_library_type->label : '',
   ];
-  $form['type'] = [
-    '#type' => 'machine_name',
-    '#title' => 'Paragraphs library type machine name',
-    '#maxlegth' => 21,
-    '#required' => TRUE,
-    '#machine_name' => [
-      'exists' => 'paragraphs_library_type_exists',
-      'source' => ['label'],
-    ],
-    '#disabled' => !empty($paragraphs_library_type),
-  ];
+  if (empty($paragraphs_library_type)) {
+    $form['type'] = [
+      '#type' => 'machine_name',
+      '#title' => 'Paragraphs library type machine name',
+      '#maxlength' => 21,
+      '#required' => TRUE,
+      '#machine_name' => [
+        'exists' => 'paragraphs_library_type_exists',
+        'source' => ['label'],
+      ],
+    ];
+  }
   $form['actions'] = [
     '#type' => 'actions',
     'submit' => [
       '#type' => 'submit',
-      '#value' => t('Create'),
+      '#value' => !empty($paragraphs_library_type) ? t('Save library type') : t('Create library type'),
     ],
   ];
   return $form;
@@ -255,7 +316,7 @@ function paragraphs_library_type_exists($value) {
 /**
  * Paragraphs library type form submit handler.
  */
-function paragraphs_library_type_create_form_submit($form, &$form_state) {
+function paragraphs_library_type_form_submit($form, &$form_state) {
   $config = config('paragraphs_library.type.' . $form_state['values']['type']);
   $config->set('label', $form_state['values']['label']);
   $config->set('type', $form_state['values']['type']);
@@ -272,6 +333,45 @@ function paragraphs_library_type_create_form_submit($form, &$form_state) {
 }
 
 /**
+ * Confirm form to delete a paragraphs_library_type.
+ */
+function paragraphs_library_type_delete_form($form, &$form_state, Object $paragraphs_library_type) {
+  // Send the paragraphs_library_item ID as a value field to the form.
+  $form['paragraphs_library_type'] = [
+    '#type' => 'value',
+    '#value' => $paragraphs_library_type->type,
+  ];
+  return confirm_form(
+    $form,
+    t('Are you sure you want to delete library type %title?', ['%title' => check_plain($paragraphs_library_type->label)]),
+    'admin/structure/paragraphs/library/types/',
+    t('This action cannot be undone.'),
+    t('Delete'),
+    t('Cancel')
+  );
+}
+
+/**
+ * Submit handler for the paragraphs_library_type delete form.
+ *
+ * Deletes the paragraphs_library_type and displays a message.
+ */
+function paragraphs_library_type_delete_form_submit($form, &$form_state) {
+  $library_type_name = strtr($form_state['values']['paragraphs_library_type'], array('_' => '-'));
+  $library_type = paragraphs_library_type_load($library_type_name);
+  if (is_object($library_type)) {
+    field_attach_delete_bundle('paragraphs_library_type', $library_type->type);
+    $config = config('paragraphs_library.type.' . $library_type->type);
+    $config->delete();
+    paragraphs_library_type_load('', TRUE);
+    entity_info_cache_clear();
+    state_set('menu_rebuild_needed', TRUE);
+  }
+  backdrop_set_message(t('Paragraphs library type %title has been deleted.', ['%title' => check_plain($paragraphs_library_type->label)]));
+  $form_state['redirect'] = 'admin/structure/paragraphs/library/types';
+}
+
+/**
  * Title callback for Paragraphs library item type administration pages.
  *
  * This is used by the Field API to show the name of the bundle when we click on
@@ -279,21 +379,4 @@ function paragraphs_library_type_create_form_submit($form, &$form_state) {
  */
 function paragraphs_library_type_page_title($paragraphs_library_type) {
   return $paragraphs_library_type->label;
-}
-
-/**
- * Displays a simple page with the bundle information for a specific bundle.
- *
- * This page serves as a base path for Field API to display the Manage fields
- * and Manage displays tabs for the bundle.
- */
-function paragraphs_library_type($paragraphs_library_type) {
-  backdrop_set_title(t('Paragraphs library type information for @paragraphs_library_type', ['@paragraphs_library_type' => $paragraphs_library_type->label]));
-  $output['bundle_label'] = [
-    '#markup' => '<div><strong>Paragraphs library type label: </strong>' . $paragraphs_library_type->label,
-  ];
-  $output['bundle_machine_name'] = [
-    '#markup' => '<div><strong>Paragraphs library type machine name: </strong>' . $paragraphs_library_type->type,
-  ];
-  return $output;
 }
