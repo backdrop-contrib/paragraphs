@@ -613,8 +613,8 @@ function paragraphs_library_preprocess_entity_plus_property(&$variables) {
  *   default 'default'. If empty, returns an array of all bundles.
  *
  * @param bool $reset
- *  If TRUE, the static cache is reset and the bundles are reloaded from
- *  configuration.
+ *   If TRUE, the static cache is reset and the bundles are reloaded from
+ *   configuration.
  *
  * @return object|array|FALSE
  *   Either a stdClass object with bundle info (machine name and label) or an
