@@ -214,7 +214,6 @@ function paragraphs_library_type_view() {
     t('Operations'),
   );
   foreach ($all_types as $library_type) {
-
     $type_url_str = strtr($library_type->type, array('_' => '-'));
     $row = array(theme('label_machine_name__paragraphs', array(
       'label' => $library_type->label,
@@ -369,14 +368,4 @@ function paragraphs_library_type_delete_form_submit($form, &$form_state) {
   }
   backdrop_set_message(t('Paragraphs library type %title has been deleted.', ['%title' => check_plain($paragraphs_library_type->label)]));
   $form_state['redirect'] = 'admin/structure/paragraphs/library/types';
-}
-
-/**
- * Title callback for Paragraphs library item type administration pages.
- *
- * This is used by the Field API to show the name of the bundle when we click on
- * Manage fields or Manage displays
- */
-function paragraphs_library_type_page_title($paragraphs_library_type) {
-  return $paragraphs_library_type->label;
 }

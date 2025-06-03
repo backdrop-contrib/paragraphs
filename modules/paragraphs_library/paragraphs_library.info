@@ -8,4 +8,3 @@ dependencies[] = paragraphs
 dependencies[] = entity_plus
 dependencies[] = entity_token
 dependencies[] = entity_ui
-dependencies[] = entityreference_view_widget

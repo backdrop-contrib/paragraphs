@@ -22,65 +22,13 @@
         "title_multiple": "Library item",
         "default_edit_mode": "open",
         "default_edit_mode_override": "1",
-        "add_mode": "select",
+        "add_mode": "button",
         "modal_admin": 0,
         "allowed_bundles": {
-            "block": -1,
-            "collapsed_text": -1,
-            "display_file": -1,
-            "display_remote_file": -1,
-            "display_remote_video": -1,
-            "embedded_view": -1,
-            "files_for_downloading": -1,
-            "from_library": -1,
-            "full_html": -1,
-            "image_text": -1,
-            "policy_item": -1,
-            "stanford_carousel_section": -1,
-            "step_all_litho_training": -1,
-            "step_contact_trainer": -1,
-            "step_freeform_text": -1,
-            "step_lagunita_links": -1,
-            "step_online_course_fixed": -1,
-            "step_online_training_dry_etching": -1,
-            "step_read_op": -1,
-            "step_shadowing": -1,
-            "step_shadowing_fixed": -1,
-            "step_text_with_internal_link": -1,
-            "step_training_calendar": -1,
-            "svg_image": -1,
-            "svg_image_text": -1,
-            "table": -1,
-            "view": -1
+            "from_library": -1
         },
         "bundle_weights": {
-            "block": "2",
-            "collapsed_text": "3",
-            "display_file": "4",
-            "display_remote_file": "5",
-            "display_remote_video": "6",
-            "embedded_view": "7",
-            "files_for_downloading": "8",
-            "from_library": "9",
-            "full_html": "10",
-            "image_text": "11",
-            "policy_item": "12",
-            "stanford_carousel_section": "13",
-            "step_all_litho_training": "14",
-            "step_contact_trainer": "15",
-            "step_freeform_text": "16",
-            "step_lagunita_links": "17",
-            "step_online_course_fixed": "18",
-            "step_online_training_dry_etching": "19",
-            "step_read_op": "20",
-            "step_shadowing": "21",
-            "step_shadowing_fixed": "22",
-            "step_text_with_internal_link": "23",
-            "step_training_calendar": "24",
-            "svg_image": "25",
-            "svg_image_text": "26",
-            "table": "27",
-            "view": "28"
+            "from_library": "-2"
         },
         "user_register_form": false
     },
@@ -88,17 +36,11 @@
         "default": {
             "label": "hidden",
             "type": "paragraphs_view",
+            "weight": "0",
             "settings": {
-                "view_mode": "full",
-                "field_wrappers": {
-                    "field_wrapper": "-",
-                    "label_wrapper": "-",
-                    "item_wrapper": "-",
-                    "field_wrapper_class": ""
-                }
+                "view_mode": "full"
             },
-            "module": "paragraphs",
-            "weight": 0
+            "module": "paragraphs"
         },
         "paragraphs_library_item": {
             "label": "hidden",

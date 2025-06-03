@@ -285,7 +285,11 @@ function paragraphs_library_permission() {
  */
 function paragraphs_library_type_choice() {
   $library_types = paragraphs_library_type_load();
+  if (count($library_types) == 1) {
+    backdrop_goto('admin/content/paragraphs/library/add/' . reset($library_types)->type);
+  }
   $items = [];
+  backdrop_set_title(t('Select Paragraphs library type'), PASS_THROUGH);
   foreach ($library_types as $library_type_info) {
     $items[] = l($library_type_info->label, 'admin/content/paragraphs/library/add/' . $library_type_info->type);
   }
@@ -365,7 +369,7 @@ function paragraphs_library_item_add(string $type) {
     'type' => $type,
     'langcode' => LANGUAGE_NONE,
   ]);
-  backdrop_set_title(t('Create @title', ['@title' => t($types[$type]->label)]), PASS_THROUGH);
+  backdrop_set_title(t('Add a %type library item', ['%type' => t($types[$type]->label)]), PASS_THROUGH);
   $output = backdrop_get_form('paragraphs_library_item_form', $paragraphs_library_item);
 
   return $output;
@@ -634,4 +638,14 @@ function paragraphs_library_type_load(string $type = '', bool $reset = FALSE) {
     }
   }
   return empty($type) ? $all_types : $all_types[$type] ?? FALSE;
+}
+
+/**
+ * Title callback for Paragraphs library item type administration pages.
+ *
+ * This is used by the Field API to show the name of the bundle when we click on
+ * Manage fields or Manage displays
+ */
+function paragraphs_library_type_page_title($paragraphs_library_type) {
+  return $paragraphs_library_type->label;
 }

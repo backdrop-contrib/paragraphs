@@ -7,17 +7,14 @@
     "label": "Reusable paragraph",
     "widget": {
         "weight": "1",
-        "type": "entityreference_view_widget",
-        "module": "entityreference_view_widget",
+        "type": "entityreference_autocomplete",
+        "module": "entityreference",
         "active": 1,
         "settings": {
-            "view": "paragraphs_library|entityreference_view_widget_1",
-            "pass_argument": 1,
-            "close_modal": 1,
-            "allow_duplicates": 0,
-            "rendered_entity": 0,
-            "view_mode": "paragraphs_library_item",
-            "pass_arguments": ""
+            "match_operator": "CONTAINS",
+            "size": "60",
+            "hide_ids": 0,
+            "path": ""
         }
     },
     "description": "",
