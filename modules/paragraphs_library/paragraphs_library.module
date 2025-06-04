@@ -582,7 +582,7 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
  * @param ParagraphsLibraryItem $library_item
  *   The library item to check.
  * @param string $op
- *   (optional) The specific operation being checked. Defaults to 'view.'
+ *   (optional) The specific operation being checked. Defaults to 'view'.
  * @param User $account
  *   (optional) A user object representing the user for whom the operation is
  *   to be performed. Determines access for a user other than the current user.
@@ -831,16 +831,16 @@ function paragraphs_library_item_view($library_item) {
  *
  * @param ParagraphsLibraryItem $library_item
  *   The Paragraphs library item to display.
- * @param $message
+ * @param bool $message
  *   (optional) A flag which sets a page title relevant to the revision being
  *   viewed.
  *
- * @return
+ * @return array
  *   A $page element suitable for use by backdrop_render().
  *
  * @see paragraphs_library_menu()
  */
-function paragraphs_library_show(ParagraphsLibraryItem $library_item, $message = FALSE) {
+function paragraphs_library_show(ParagraphsLibraryItem $library_item, bool $message = FALSE) {
   if ($message) {
     backdrop_set_title(t('Revision of %title from %date', array(
       '%title' => $library_item->title,
@@ -1072,7 +1072,7 @@ function paragraphs_library_item_revision_overview(ParagraphsLibraryItem $librar
  * @param ParagraphsLibraryItem $library_item
  *   The library item entity.
  *
- * @return
+ * @return array
  *   An associative array keyed by library item revision number.
  */
 function paragraphs_library_revision_list(ParagraphsLibraryItem $library_item) {
