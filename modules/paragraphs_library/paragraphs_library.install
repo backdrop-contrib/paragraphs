@@ -59,57 +59,6 @@ function paragraphs_library_schema() {
     'primary key' => ['paragraphs_library_id'],
   ];
 
-  // This table will hold bundle definitions for paragraphs_library_item
-  // entities. An alternative way to do this is to use the module Entity Plus
-  // CMI to store these definitions as config files.
-  $schema['paragraphs_library_type'] = [
-    'description' => 'Stores information about all bundles of Paragraphs library item entities.',
-    'fields' => [
-      'id' => [
-        'type' => 'serial',
-        'not null' => TRUE,
-        'description' => 'Primary Key: Unique Paragraphs library item type ID.',
-      ],
-      'type' => [
-        'description' => 'The machine-readable name of this type.',
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-      ],
-      'label' => [
-        'description' => 'The human-readable name of this type.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ],
-      'description' => [
-        'description' => 'A brief description of this type.',
-        'type' => 'text',
-        'not null' => TRUE,
-        'size' => 'medium',
-        'translatable' => TRUE,
-      ],
-      'status' => [ // This is currently not in use.
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0x01,
-        'size' => 'tiny',
-        'description' => 'The exportable status of the entity.',
-      ],
-      'module' => [
-        'description' => 'The name of the providing module if the entity has been defined in code.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => FALSE,
-      ],
-    ],
-    'primary key' => ['id'],
-    'unique keys' => [
-      'type' => ['type'],
-    ],
-  ];
-
   return $schema;
 }
 
@@ -132,12 +81,12 @@ function paragraphs_library_uninstall() {
   $config->delete();
 
   // Get all Paragraphs library types/bundles.
-  $query = db_select('paragraphs_library_type', 'b');
-  $query->addField('b', 'type');
-  $bundles = $query->execute()->fetchCol(0);
-  foreach ($bundles as $bundle) {
-    // Instruct field.module to remove fields attached to these bundles.
-    field_attach_delete_bundle('paragraphs_library_item', $bundle);
+  include_once backdrop_get_path('module', 'paragraphs_library') . '/paragraphs_library.module';
+  $library_types = paragraphs_library_type_load();
+  foreach ($library_types as $library_type) {
+    // Instruct field.module to remove fields attached to these library types.
+    field_attach_delete_bundle('paragraphs_library_item', $library_type);
   }
+
   menu_rebuild();
 }

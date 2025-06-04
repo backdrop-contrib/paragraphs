@@ -450,12 +450,6 @@ function paragraphs_library_entity_property_info_alter(&$info) {
     'required' => TRUE,
     'schema field' => 'uid',
   ];
-
-  // Tell i18n_string that these properties are translatable.
-  $info['paragraphs_library_type']['properties']['label']['translatable'] = TRUE;
-  $info['paragraphs_library_type']['properties']['label']['i18n string'] = TRUE;
-  $info['paragraphs_library_type']['properties']['description']['translatable'] = TRUE;
-  $info['paragraphs_library_type']['properties']['description']['i18n string'] = TRUE;
 }
 
 /*******************************************************************************
