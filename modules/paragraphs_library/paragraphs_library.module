@@ -581,18 +581,18 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
  *
  * @param ParagraphsLibraryItem $library_item
  *   The library item to check.
- * @param $op
+ * @param string $op
  *   (optional) The specific operation being checked. Defaults to 'view.'
- * @param object $account
+ * @param User $account
  *   (optional) A user object representing the user for whom the operation is
  *   to be performed. Determines access for a user other than the current user.
  *
- * @return
+ * @return bool
  *   TRUE if the operation may be performed, FALSE otherwise.
  *
  * @see paragraphs_library_menu()
  */
-function _paragraphs_library_revision_access(ParagraphsLibraryItem $library_item, $op = 'view', $account = NULL) {
+function _paragraphs_library_revision_access(ParagraphsLibraryItem $library_item, string $op = 'view', User $account = NULL) {
   $access = &backdrop_static(__FUNCTION__, array());
 
   $map = array(
@@ -682,8 +682,15 @@ function paragraphs_library_revision_revert_confirm_submit($form, &$form_state) 
 
   $library_item->save();
 
-  watchdog('content', '@type: reverted %title revision %revision.', array('@type' => $library_item->type, '%title' => $library_item->title, '%revision' => $library_item->vid));
-  backdrop_set_message(t('Library item %title has been reverted back to the revision from %revision-date.', array('%title' => $library_item->title, '%revision-date' => format_date($original_revision_timestamp))));
+  watchdog('content', '@type: reverted %title revision %revision.', array(
+    '@type' => $library_item->type,
+    '%title' => $library_item->title,
+    '%revision' => $library_item->vid,
+  ));
+  backdrop_set_message(t('Library item %title has been reverted back to the revision from %revision-date.', array(
+    '%title' => $library_item->title,
+    '%revision-date' => format_date($original_revision_timestamp),
+  )));
   $form_state['redirect'] = 'admin/content/paragraphs/library/' . $library_item->id() . '/revisions';
 }
 
@@ -692,10 +699,10 @@ function paragraphs_library_revision_revert_confirm_submit($form, &$form_state) 
  *
  * This form prevents against CSRF attacks.
  *
- * @param $library_item
- *   The library item revision ID.
+ * @param ParagraphsLibraryItem $library_item
+ *   The library item revision object.
  *
- * @return
+ * @return array
  *   An array as expected by backdrop_render().
  *
  * @see paragraphs_library_menu()
@@ -703,9 +710,11 @@ function paragraphs_library_revision_revert_confirm_submit($form, &$form_state) 
  *
  * @ingroup forms
  */
-function paragraphs_library_revision_delete_confirm($form, $form_state, $library_item) {
+function paragraphs_library_revision_delete_confirm($form, $form_state, ParagraphsLibraryItem $library_item) {
   $form['#library_item'] = $library_item;
-  return confirm_form($form, t('Are you sure you want to delete the revision from %revision-date?', array('%revision-date' => format_date($library_item->revision_timestamp))), 'admin/content/paragraphs/library/' . $library_item->id() . '/revisions', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
+  return confirm_form($form, t('Are you sure you want to delete the revision from %revision-date?', array(
+    '%revision-date' => format_date($library_item->revision_timestamp),
+  )), 'admin/content/paragraphs/library/' . $library_item->id() . '/revisions', t('This action cannot be undone.'), t('Delete'), t('Cancel'));
 }
 
 /**
@@ -715,8 +724,15 @@ function paragraphs_library_revision_delete_confirm_submit($form, &$form_state) 
   $library_item = $form['#library_item'];
   paragraphs_library_revision_delete($library_item->vid);
 
-  watchdog('content', '@type: deleted %title revision %revision.', array('@type' => $library_item->type, '%title' => $library_item->title, '%revision' => $library_item->vid));
-  backdrop_set_message(t('Revision from %revision-date %title has been deleted.', array('%revision-date' => format_date($library_item->revision_timestamp), '%title' => $library_item->title)));
+  watchdog('content', '@type: deleted %title revision %revision.', array(
+    '@type' => $library_item->type,
+    '%title' => $library_item->title,
+    '%revision' => $library_item->vid,
+  ));
+  backdrop_set_message(t('Revision from %revision-date %title has been deleted.', array(
+    '%revision-date' => format_date($library_item->revision_timestamp),
+    '%title' => $library_item->title,
+  )));
   $form_state['redirect'] = 'admin/content/paragraphs/library/' . $library_item->id();
   if (db_query('SELECT COUNT(revision_id) FROM {paragraphs_library_item_revision} WHERE item_id = :item_id', array(':item_id' => $library_item->id()))->fetchField() > 1) {
     $form_state['redirect'] .= '/revisions';
@@ -727,7 +743,7 @@ function paragraphs_library_revision_delete_confirm_submit($form, &$form_state) 
  * Load a paragraphs library item.
  *
  * @param int $library_item_id
- *   The ID of the library item to load.
+ *   (optional) The ID of the library item to load.
  * @param int $revision_id
  *   (optional) The revision ID to load. If NULL, the active revision is loaded.
  * @param bool $reset
@@ -777,16 +793,15 @@ function paragraphs_library_item_delete_multiple($library_item_ids) {
 /**
  * Deletes a library item revision.
  *
- * @param $revision_id
+ * @param int $revision_id
  *   The revision ID to delete.
  *
- * @return
- *   TRUE if the revision deletion was successful.
+ * @return bool
+ *   TRUE if the revision deletion was successful, FALSE otherwise.
  */
-function paragraphs_library_revision_delete($revision_id) {
+function paragraphs_library_revision_delete(int $revision_id) {
   if ($revision = paragraphs_library_item_load(NULL, $revision_id)) {
     // Prevent deleting the active revision.
-    $library_item = paragraphs_library_item_load($revision->id());
     if ($revision->isActiveRevision()) {
       return FALSE;
     }
@@ -827,11 +842,17 @@ function paragraphs_library_item_view($library_item) {
  */
 function paragraphs_library_show(ParagraphsLibraryItem $library_item, $message = FALSE) {
   if ($message) {
-    backdrop_set_title(t('Revision of %title from %date', array('%title' => $library_item->title, '%date' => format_date($library_item->timestamp))), PASS_THROUGH);
+    backdrop_set_title(t('Revision of %title from %date', array(
+      '%title' => $library_item->title,
+      '%date' => format_date($library_item->timestamp),
+    )), PASS_THROUGH);
   }
 
-  // For markup consistency with other pages, use entity_view_multiple() rather than entity_view().
-  $library_items = entity_view_multiple('paragraphs_library_item', array($library_item->id() => $library_item), 'full');
+  // For markup consistency with other pages, use entity_view_multiple() rather
+  // than entity_view().
+  $library_items = entity_view_multiple('paragraphs_library_item', array(
+    $library_item->id() => $library_item,
+  ), 'full');
 
   return $library_items;
 }
