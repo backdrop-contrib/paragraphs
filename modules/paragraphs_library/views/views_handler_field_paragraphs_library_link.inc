@@ -16,7 +16,7 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
    */
   public function construct() {
     parent::construct();
-    $this->additional_fields['paragraphs_library_id'] = 'paragraphs_library_id';
+    $this->additional_fields['item_id'] = 'item_id';
   }
 
   /**
@@ -77,7 +77,7 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
    * {@inheritdoc}
    */
   public function render($values) {
-    $value = $this->get_value($values, 'paragraphs_library_id');
+    $value = $this->get_value($values, 'item_id');
     return $this->render_link($this->sanitize_value($value), $values);
   }
 

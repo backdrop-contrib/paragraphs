@@ -13,7 +13,48 @@ class ParagraphsLibraryItem extends Entity {
   protected $entityType; // Stores the entity type.
   protected $entityInfo; // Stores the info provided in hook_entity_info().
   protected $idKey; // The key where entity id is stored.
-  protected $wrapper; // Stores the entitiy_metadata_wrapper for this entity.
+  protected $wrapper; // Stores the entity_metadata_wrapper for this entity.
+
+  /**
+   * The library item revision ID.
+   *
+   * @var integer
+   */
+  public $revision_id;
+
+  /**
+   * Indicates whether this is a new library item revision.
+   *
+   * This is used primarily during saving the library item.
+   *
+   * @var boolean
+   */
+  public $is_new_revision = FALSE;
+
+  /**
+   * Indicates whether this is the active library item revision.
+   *
+   * The active revision of a library item is the one loaded when no specific
+   * revision has been specified. Only active revisions are saved to the library
+   * item table.
+   *
+   * @var boolean
+   */
+  public $is_active_revision = TRUE;
+
+  /**
+   * The library item revision creation timestamp.
+   *
+   * @var integer
+   */
+  public $revision_timestamp;
+
+  /**
+   * The library item revision author's user ID.
+   *
+   * @var integer
+   */
+  public $revision_uid;
 
   /**
    * Overrides Entity construct method to accept entityType.
@@ -59,7 +100,7 @@ class ParagraphsLibraryItem extends Entity {
    * {@inheritdoc}
    */
   public function bundle() {
-    return $this->{$this->entityInfo['entity keys']['type']};
+    return $this->{$this->entityInfo['entity keys']['bundle']};
   }
 
   /**
@@ -93,7 +134,7 @@ class ParagraphsLibraryItem extends Entity {
    */
   public function uri() {
     return [
-      'path' => 'paragraphs-library/' . $this->id(),
+      'path' => 'admin/content/paragraphs/library/' . $this->id(),
       'options' => [],
     ];
   }
@@ -202,6 +243,13 @@ class ParagraphsLibraryItem extends Entity {
       }
     }
     return $this->$property;
+  }
+
+  /**
+   * Overrides Backdrop\entity\Entity::getRevisionId().
+   */
+  public function getRevisionId() {
+    return $this->revision_id;
   }
 
 }

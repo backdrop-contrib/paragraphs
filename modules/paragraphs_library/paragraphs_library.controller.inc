@@ -35,4 +35,21 @@ class ParagraphsLibraryItemController extends EntityPlusController {
     $build['#theme'] = 'paragraphs_library_item';
     return $build;
   }
+
+  /**
+   * Saves an entity revision.
+   *
+   * @param Entity $entity
+   *   Entity revision to save.
+   */
+  protected function saveRevision($entity) {
+    $entity->default_revision = TRUE;
+    $entity->timestamp = REQUEST_TIME;
+    if (!isset($entity->revision_uid)) {
+      $entity->uid = $GLOBALS['user']->uid;
+    }
+
+    // Call the parent method to save the entity.
+    parent::saveRevision($entity);
+  }
 }

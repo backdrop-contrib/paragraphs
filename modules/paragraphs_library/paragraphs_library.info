@@ -5,6 +5,7 @@ package = Paragraphs
 backdrop = 1.x
 
 dependencies[] = paragraphs
+dependencies[] = entityreference
 dependencies[] = entity_plus
 dependencies[] = entity_token
 dependencies[] = entity_ui

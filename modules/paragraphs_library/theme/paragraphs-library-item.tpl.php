@@ -33,7 +33,7 @@
  */
 ?>
 <div class="<?php print implode(' ', $classes); ?>"<?php (empty($attributes)) ? '' : print backdrop_attributes($attributes); ?>>
-  <?php if (!$page) : ?>
+  <?php if (!$page && !empty($title)) : ?>
     <h2<?php (empty($title_attributes)) ? '' : print backdrop_attributes($title_attributes); ?>>
       <?php if ($url) : ?>
         <a href="<?php print $url; ?>"><?php print $title; ?></a>

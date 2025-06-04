@@ -14,12 +14,21 @@ function paragraphs_library_schema() {
   $schema['paragraphs_library_item'] = [
     'description' => 'The base table for Paragraphs library item entities.',
     'fields' => [
-      'paragraphs_library_id' => [
+      'item_id' => [
         'description' => 'The primary identifier for the Paragraphs library item.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
       ],
+      // Defaults to NULL in order to avoid a brief period of potential
+      // deadlocks on the index.
+      'revision_id' => array(
+        'description' => 'The primary identifier for this version.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => FALSE,
+        'default' => NULL,
+      ),
       'type' => [
         'description' => 'The type (bundle) of this Paragraphs library item.',
         'type' => 'varchar',
@@ -33,10 +42,6 @@ function paragraphs_library_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-      ],
-      'description' => [
-        'description' => 'A description of the Paragraphs library item.',
-        'type' => 'text',
       ],
       'uid' => [
         'description' => 'ID of Backdrop account that created this Paragraphs library item.',
@@ -56,8 +61,74 @@ function paragraphs_library_schema() {
         'default' => 0,
       ],
     ],
-    'primary key' => ['paragraphs_library_id'],
+    'primary key' => ['item_id'],
   ];
+
+  $schema['paragraphs_library_item_revision'] = array(
+    'description' => 'Stores information about each saved version of a Paragraphs library item.',
+    'fields' => array(
+      'item_id' => array(
+        'description' => 'The Paragraphs library item this version belongs to.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'revision_id' => array(
+        'description' => 'The primary identifier for this version.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'description' => 'The {users}.uid that created this version.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'title' => array(
+        'description' => 'The title of this version.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'log' => array(
+        'description' => 'The log entry explaining the changes in this version.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'default' => '',
+      ),
+      'timestamp' => array(
+        'description' => 'A Unix timestamp indicating when this version was created.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'status' => array(
+        'description' => 'Boolean indicating whether the Paragraphs library item (at the time of this revision) is published (visible to non-administrators).',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 1,
+      ),
+    ),
+    'indexes' => array(
+      'item_id' => array('item_id'),
+      'uid' => array('uid'),
+    ),
+    'primary key' => array('revision_id'),
+    'foreign keys' => array(
+      'versioned_paragraphs_library_item' => array(
+        'table' => 'paragraphs_library_item',
+        'columns' => array('item_id' => 'item_id'),
+      ),
+      'version_author' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+  );
 
   return $schema;
 }

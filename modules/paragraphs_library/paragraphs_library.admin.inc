@@ -5,118 +5,21 @@
  */
 
 /**
- * Entity Form.
- */
-function paragraphs_library_form($form, &$form_state, $paragraphs_library_item) {
-  $form_state['paragraphs_library_item'] = $paragraphs_library_item;
-
-  $form['title'] = [
-    '#type' => 'textfield',
-    '#required' => TRUE,
-    '#title' => t('Title'),
-    '#default_value' => $paragraphs_library_item->title,
-  ];
-
-  $form['uid'] = [
-    '#type' => 'value',
-    '#value' => $paragraphs_library_item->uid,
-  ];
-
-  $form['type'] = [
-    '#type' => 'value',
-    '#value' => $paragraphs_library_item->type,
-  ];
-
-  if (!(isset($paragraphs_library_item->is_new) && $paragraphs_library_item->is_new)) {
-    $form['paragraphs_library_id'] = [
-      '#type' => 'value',
-      '#value' => $paragraphs_library_item->paragraphs_library_id,
-    ];
-  }
-
-  field_attach_form('paragraphs_library_item', $paragraphs_library_item, $form, $form_state);
-
-  $submit = [];
-  if (!empty($form['#submit'])) {
-    $submit += $form['#submit'];
-  }
-
-  $form['actions'] = [
-    '#weight' => 100,
-  ];
-
-  $form['actions']['submit'] = [
-    '#type' => 'submit',
-    '#value' => t('Save Paragraphs library item'),
-    '#submit' => $submit + ['paragraphs_library_form_submit'],
-  ];
-
-  // Show Delete button if we edit paragraphs_library.
-  $paragraphs_library_id = entity_plus_id('paragraphs_library_item', $paragraphs_library_item);
-  if (!empty($paragraphs_library_id) && paragraphs_library_access('edit', $paragraphs_library_item)) {
-    $paragraphs_library_item_uri = $paragraphs_library_item->uri();
-    $form['actions']['delete'] = [
-      '#type' => 'link',
-      '#title' => t('Delete'),
-      '#href' => $paragraphs_library_item_uri['path'] . '/delete',
-      '#options' => [
-        'query' => isset($_GET['destination']) ? backdrop_get_destination() : [],
-        'attributes' => [
-          'class' => [
-            'button',
-            'button-secondary',
-            'form-delete',
-          ],
-        ],
-      ],
-      '#weight' => 15,
-    ];
-  }
-
-  $form['#validate'][] = 'paragraphs_library_form_validate';
-
-  return $form;
-}
-
-/**
- * Entity validation handler.
- *
- * Validates the paragraphs library item form.
- */
-function paragraphs_library_form_validate($form, &$form_state) {
-  entity_form_field_validate('paragraphs_library_item', $form, $form_state);
-}
-
-/**
- * Entity submit handler.
- */
-function paragraphs_library_form_submit($form, &$form_state) {
-  $paragraphs_library_item = $form_state['paragraphs_library_item'];
-  entity_form_submit_build_entity('paragraphs_library_item', $paragraphs_library_item, $form, $form_state);
-  paragraphs_library_item_save($paragraphs_library_item);
-  $paragraphs_library_item_uri = $paragraphs_library_item->uri();
-  $form_state['redirect'] = $paragraphs_library_item_uri['path'];
-  backdrop_set_message(t('Paragraphs library item  %title saved.', [
-    '%title' => entity_label('paragraphs_library_item', $paragraphs_library_item),
-  ]));
-}
-
-/**
  * Delete confirmation form.
  */
-function paragraphs_library_delete_form($form, &$form_state, $paragraphs_library_item) {
-  $form_state['paragraphs_library_item'] = $paragraphs_library_item;
+function paragraphs_library_delete_form($form, &$form_state, $library_item) {
+  $form_state['paragraphs_library_item'] = $library_item;
   // Always provide entity id in the same form key as in the entity edit form.
   $form['paragraphs_library_type_id'] = [
     '#type' => 'value',
-    '#value' => entity_plus_id('paragraphs_library_item', $paragraphs_library_item),
+    '#value' => entity_plus_id('paragraphs_library_item', $library_item),
   ];
-  $paragraphs_library_item_uri = $paragraphs_library_item->uri();
+  $library_item_uri = $library_item->uri();
   return confirm_form($form,
     t('Are you sure you want to delete Paragraphs library item %title?', [
-      '%title' => entity_label('paragraphs_library_item', $paragraphs_library_item),
+      '%title' => entity_label('paragraphs_library_item', $library_item),
     ]),
-    $paragraphs_library_item_uri['path'],
+    $library_item_uri['path'],
     t('This action cannot be undone.'),
     t('Delete'),
     t('Cancel')
@@ -127,11 +30,11 @@ function paragraphs_library_delete_form($form, &$form_state, $paragraphs_library
  * Delete form submit handler.
  */
 function paragraphs_library_delete_form_submit($form, &$form_state) {
-  $paragraphs_library_item = $form_state['paragraphs_library_item'];
-  paragraphs_library_item_delete($paragraphs_library_item);
+  $library_item = $form_state['paragraphs_library_item'];
+  paragraphs_library_item_delete($library_item);
 
   backdrop_set_message(t('Paragraphs library item  %title deleted.', [
-    '%title' => entity_label('paragraphs_library_item', $paragraphs_library_item),
+    '%title' => entity_label('paragraphs_library_item', $library_item),
   ]));
 
   $form_state['redirect'] = '<front>';
@@ -142,22 +45,22 @@ function paragraphs_library_delete_form_submit($form, &$form_state) {
  * and bulk operation.
  */
 function paragraphs_library_multiple_delete_confirm($form, &$form_state) {
-  if (isset($form_state['paragraphs_library_ids'])) {
-    $paragraphs_library_ids = $form_state['paragraphs_library_ids'];
+  if (isset($form_state['item_ids'])) {
+    $library_item_ids = $form_state['item_ids'];
   }
   elseif (isset($_SESSION['paragraphs_library_delete_action']['timestamp']) && (REQUEST_TIME - $_SESSION['paragraphs_library_delete_action']['timestamp'] < 6000)) {
-    $paragraphs_library_ids = $_SESSION['paragraphs_library_delete_action']['paragraphs_library_ids'];
-    $form_state['paragraphs_library_ids'] = $paragraphs_library_ids;
+    $library_item_ids = $_SESSION['paragraphs_library_delete_action']['item_ids'];
+    $form_state['item_ids'] = $library_item_ids;
     $form_state['cache'] = TRUE;
     unset($_SESSION['paragraphs_library_delete_action']);
   }
   else {
-    $paragraphs_library_ids = [];
+    $library_item_ids = [];
   }
 
   $form['#tree'] = TRUE;
 
-  if (empty($paragraphs_library_ids)) {
+  if (empty($library_item_ids)) {
     $destination = isset($_GET['destination']) ? $_GET['destination'] : '<front>';
     $form['empty']['#markup'] = '<p>' . t('Return to the <a href="!url">front page</a>.', [
       '!url' => url($destination),
@@ -171,11 +74,11 @@ function paragraphs_library_multiple_delete_confirm($form, &$form_state) {
     '#items' => [],
   ];
 
-  $rows = db_query('SELECT paragraphs_library_id, title FROM {paragraphs_library} WHERE paragraphs_library_id IN (:paragraphs_library_ids)', [':paragraphs_library_ids' => $paragraphs_library_ids])->fetchAllKeyed();
-  foreach ($rows as $paragraphs_library_id => $title) {
-    $form['paragraphs_library_entities'][$paragraphs_library_id] = [
+  $rows = db_query('SELECT item_id, title FROM {paragraphs_library} WHERE item_id IN (:item_ids)', [':item_ids' => $library_item_ids])->fetchAllKeyed();
+  foreach ($rows as $library_item_id => $title) {
+    $form['paragraphs_library_entities'][$library_item_id] = [
       '#type' => 'hidden',
-      '#value' => $paragraphs_library_id,
+      '#value' => $library_item_id,
     ];
     $form['paragraphs_library_list']['#items'][] = check_plain($title);
   }
@@ -217,7 +120,7 @@ function paragraphs_library_type_view() {
     $type_url_str = strtr($library_type->type, array('_' => '-'));
     $row = array(theme('label_machine_name__paragraphs', array(
       'label' => $library_type->label,
-      'machine_name' => $library_type->bundle,
+      'machine_name' => $library_type->type,
     )));
     $row['description'] = $library_type->description;
 
@@ -294,6 +197,19 @@ function paragraphs_library_type_form($form, &$form_state, ?Object $paragraphs_l
       ],
     ];
   }
+  else {
+    $form['type'] = [
+      '#type' => 'value',
+      '#value' => $paragraphs_library_type->type,
+    ];
+  }
+  $form['description'] = [
+    '#type' => 'textarea',
+    '#title' => t('Description'),
+    '#description' => t('A short description of this Paragraphs library type.'),
+    '#description_display' => 'after',
+    '#default_value' => !empty($paragraphs_library_type->description) ? $paragraphs_library_type->description : '',
+  ];
   $form['actions'] = [
     '#type' => 'actions',
     'submit' => [
@@ -319,6 +235,7 @@ function paragraphs_library_type_form_submit($form, &$form_state) {
   $config = config('paragraphs_library.type.' . $form_state['values']['type']);
   $config->set('label', $form_state['values']['label']);
   $config->set('type', $form_state['values']['type']);
+  $config->set('description', $form_state['values']['description']);
   $config->save();
 
   // Notify Field API of the new bundle.

@@ -186,7 +186,7 @@
                         "empty_zero": 0,
                         "hide_alter_empty": 1,
                         "link_to_entity": 0,
-                        "display": "label",
+                        "display": "view",
                         "view_mode": "paragraphs_library_item",
                         "bypass_access": 0
                     },
@@ -506,7 +506,7 @@
                             "edit_paragraphs_library": "edit_paragraphs_library",
                             "replicate_ui_link": "replicate_ui_link",
                             "delete_paragraphs_library": "delete_paragraphs_library",
-                            "paragraphs_library_id": 0,
+                            "item_id": 0,
                             "changed": 0,
                             "title": 0,
                             "rendered_entity": 0,
@@ -542,10 +542,10 @@
                     "caption": "",
                     "summary": "",
                     "columns": {
-                        "paragraphs_library_id": "paragraphs_library_id"
+                        "item_id": "item_id"
                     },
                     "info": {
-                        "paragraphs_library_id": {
+                        "item_id": {
                             "sortable": 0,
                             "default_sort_order": "asc",
                             "align": "",
@@ -1093,7 +1093,7 @@
                             "edit_paragraphs_library": "edit_paragraphs_library",
                             "replicate_ui_link": "replicate_ui_link",
                             "delete_paragraphs_library": "delete_paragraphs_library",
-                            "paragraphs_library_id": 0,
+                            "item_id": 0,
                             "changed": 0,
                             "title": 0,
                             "rendered_entity": 0,

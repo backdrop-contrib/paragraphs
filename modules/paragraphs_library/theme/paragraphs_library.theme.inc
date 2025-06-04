@@ -9,17 +9,17 @@
  */
 function template_preprocess_paragraphs_library_item(&$variables) {
   $variables['view_mode'] = $variables['element']['#view_mode'];
-  $paragraphs_library_item_type = $variables['element']['#entity_plus_type'];
-  $variables['entity_type'] = $paragraphs_library_item_type;
-  $paragraphs_library_item = $variables['element']['#entity'];
-  $variables[$paragraphs_library_item_type] = $paragraphs_library_item;
+  $library_item_type = $variables['element']['#entity_plus_type'];
+  $variables['entity_type'] = $library_item_type;
+  $library_item = $variables['element']['#entity'];
+  $variables[$library_item_type] = $library_item;
 
-  list(, , $bundle) = entity_extract_ids($paragraphs_library_item_type, $paragraphs_library_item);
+  list(, , $bundle) = entity_extract_ids($library_item_type, $library_item);
   $variables['bundle'] = $bundle;
 
-  $variables['title'] = check_plain(entity_label($paragraphs_library_item_type, $paragraphs_library_item));
+  $variables['title'] = ($variables['view_mode'] != 'paragraphs_library_item') ? check_plain(entity_label($library_item_type, $library_item)) : '';
 
-  $uri = entity_uri($paragraphs_library_item_type, $paragraphs_library_item);
+  $uri = entity_uri($library_item_type, $library_item);
   $variables['url'] = $uri && !empty($uri['path']) ? url($uri['path'], $uri['options']) : FALSE;
 
   if (isset($variables['element']['#page'])) {
@@ -37,6 +37,7 @@ function template_preprocess_paragraphs_library_item(&$variables) {
     'created',
     'changed',
     'uid',
+    'revision_id',
   ];
   $fullpage = ($uri['path'] == current_path());
   foreach (element_children($variables['element']) as $key) {
@@ -51,5 +52,5 @@ function template_preprocess_paragraphs_library_item(&$variables) {
     $variables['url'] = FALSE;
   }
   // Make the field variables available with the appropriate language.
-  field_attach_preprocess($paragraphs_library_item_type, $paragraphs_library_item, $variables['content'], $variables);
+  field_attach_preprocess($library_item_type, $library_item, $variables['content'], $variables);
 }
