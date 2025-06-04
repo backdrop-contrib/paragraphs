@@ -21,10 +21,10 @@ class views_handler_field_paragraphs_library_link_delete extends views_handler_f
     }
 
     $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "paragraphs-library/$data/delete";
+    $this->options['alter']['path'] = "admin/content/paragraphs/library/$data/delete";
     $this->options['alter']['query'] = backdrop_get_destination();
 
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('delete');
+    $text = !empty($this->options['text']) ? $this->options['text'] : t('Delete');
     return $text;
   }
 }

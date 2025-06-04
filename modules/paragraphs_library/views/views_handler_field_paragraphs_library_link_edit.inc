@@ -18,9 +18,9 @@ class views_handler_field_paragraphs_library_link_edit extends views_handler_fie
     if ($data && user_access('edit any paragraphs_library entities')) {
       $this->options['alter']['make_link'] = TRUE;
 
-      $text = !empty($this->options['text']) ? $this->options['text'] : t('edit');
+      $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');
 
-      $this->options['alter']['path'] = "paragraphs-library/$data/edit";
+      $this->options['alter']['path'] = "admin/content/paragraphs/library/$data/edit";
       $this->options['alter']['query'] = backdrop_get_destination();
 
       return $text;

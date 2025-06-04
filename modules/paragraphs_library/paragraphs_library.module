@@ -56,7 +56,7 @@ function paragraphs_library_entity_info() {
       // By including 'admin ui' we are telling Entity UI to create menu items
       // for viewing, adding, editing and deleting paragraphs_library entities.
       'admin ui' => [
-        'path' => 'paragraphs-library',
+        'path' => 'admin/content/paragraphs/library',
         'controller class' => 'EntityBundleableUIController',
         'file' => 'paragraphs_library.admin.inc',
         'menu wildcard' => '%paragraphs_library_item',
@@ -125,31 +125,42 @@ function paragraphs_library_menu() {
     ];
   }
 
-  $items['paragraphs-library/%paragraphs_library_item'] = [
-    'title' => t('View a Paragraphs library item'),
+  $items['admin/content/paragraphs/library/%paragraphs_library_item'] = [
+    'title callback' => 'paragraphs_library_item_page_title',
+    'title arguments' => [4],
     'description' => t('View a saved Paragraphs library item.'),
     'page callback' => 'paragraphs_library_item_view',
-    'page arguments' => [1],
+    'page arguments' => [4],
+    'access arguments' => ['view paragraphs_library_item entities'],
+  ];
+
+  $items['admin/content/paragraphs/library/%paragraphs_library_item/view'] = [
+    'title' => t('View'),
+    'page callback' => 'paragraphs_library_item_view',
+    'page arguments' => [4],
     'access arguments' => ['view paragraphs_library_item entities'],
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
   ];
 
-  $items['paragraphs-library/%paragraphs_library_item/edit'] = [
-    'title' => t('Edit a Paragraphs library item'),
+  $items['admin/content/paragraphs/library/%paragraphs_library_item/edit'] = [
+    'title' => t('Edit'),
     'description' => t('Edit a saved Paragraphs library item.'),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => ['paragraphs_library_item_form', 1],
+    'page arguments' => ['paragraphs_library_item_form', 4],
     'access arguments' => ['edit paragraphs_library_item entities'],
     'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
   ];
 
-  $items['paragraphs-library/%paragraphs_library_item/delete'] = [
-    'title' => t('Delete a Paragraphs library item'),
+  $items['admin/content/paragraphs/library/%paragraphs_library_item/delete'] = [
+    'title' => t('Delete'),
     'description' => t('Delete a Paragraphs library item.'),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => ['paragraphs_library_item_delete_form', 1],
+    'page arguments' => ['paragraphs_library_item_delete_form', 4],
     'access arguments' => ['edit paragraphs_library_item entities'],
     'type' => MENU_LOCAL_TASK,
+    'weight' => 20,
   ];
 
   // Paragraphs library administration paths.
@@ -225,18 +236,6 @@ function paragraphs_library_theme($existing, $type, $theme, $path) {
   ];
 
   return $items;
-}
-
-/**
- * Implements hook_admin_paths().
- */
-function paragraphs_library_admin_paths() {
-  $paths = [
-    'paragraphs-library/*' => TRUE,
-    'paragraphs-library/*/edit' => TRUE,
-    'paragraphs-library/*/delete' => TRUE,
-  ];
-  return $paths;
 }
 
 /**
@@ -345,7 +344,7 @@ function paragraphs_library_item_form_submit($form, &$form_state) {
 
   $paragraphs_library_item->save();
   backdrop_set_message(t('The paragraphs_library_item has been saved'));
-  $form_state['redirect'] = 'paragraphs-library/' . $paragraphs_library_item->id();
+  $form_state['redirect'] = 'admin/content/paragraphs/library/' . $paragraphs_library_item->id();
 }
 
 /**
@@ -386,9 +385,9 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
   ];
   return confirm_form(
     $form,
-    t('Are you sure you want to delete paragraphs_library_item %title?', ['%title' => check_plain($paragraphs_library_item->label())]),
+    t('Are you sure you want to delete library item %title?', ['%title' => check_plain($paragraphs_library_item->label())]),
     'admin/content/paragraphs/library',
-    t('This action cannot be undone.'),
+    t('This action cannot be undone and will affect all potential uses of this shared item throughout the site.'),
     t('Delete'),
     t('Cancel')
   );
@@ -404,7 +403,6 @@ function paragraphs_library_item_delete_form_submit($form, &$form_state) {
   $paragraphs_library_item = entity_load('paragraphs_library_item', $paragraphs_library_item_id);
   entity_delete_multiple('paragraphs_library_item', [$paragraphs_library_item_id]);
   backdrop_set_message(t('Paragraphs library item %title has been deleted.', ['%title' => check_plain($paragraphs_library_item->label())]));
-  $form_state['redirect'] = 'paragraphs_library_item';
 }
 
 /**
@@ -641,10 +639,15 @@ function paragraphs_library_type_load(string $type = '', bool $reset = FALSE) {
 }
 
 /**
- * Title callback for Paragraphs library item type administration pages.
- *
- * This is used by the Field API to show the name of the bundle when we click on
- * Manage fields or Manage displays
+ * Title callback for Paragraphs library item administration pages.
+ */
+function paragraphs_library_item_page_title($paragraphs_library_item) {
+  return $paragraphs_library_item->title ? $paragraphs_library_item->title : t('Paragraphs library item @id', ['@id' => $paragraphs_library_item->id()]);
+}
+
+
+/**
+ * Title callback for Paragraphs library type administration pages.
  */
 function paragraphs_library_type_page_title($paragraphs_library_type) {
   return $paragraphs_library_type->label;

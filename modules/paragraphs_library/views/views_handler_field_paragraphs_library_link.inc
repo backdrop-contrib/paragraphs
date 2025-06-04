@@ -28,6 +28,10 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
       'default' => '',
       'translatable' => TRUE,
     ];
+    $options['path_only'] = [
+      'default' => FALSE,
+      'translatable' => FALSE,
+    ];
     return $options;
   }
 
@@ -35,10 +39,21 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
    * {@inheritdoc}
    */
   public function options_form(&$form, &$form_state) {
+    $form['path_only'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Path only'),
+      '#default_value' => !empty($this->options['path_only']) ? $this->options['path_only'] : FALSE,
+      '#description' => t('If checked, the path will be returned without being made into a link.'),
+    ];
     $form['text'] = [
       '#type' => 'textfield',
       '#title' => t('Text to display'),
       '#default_value' => $this->options['text'],
+      '#states' => [
+        'visible' => [
+          ':input[name="options[path_only]"]' => ['checked' => FALSE],
+        ],
+      ],
     ];
     parent::options_form($form, $form_state);
   }
@@ -70,12 +85,18 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
    * Helper to render the link
    */
   public function render_link($data, $values) {
-    $text = !empty($this->options['text']) ? $this->options['text'] : t('view');
+    $path_only = !empty($this->options['path_only']) ? $this->options['path_only'] : FALSE;
+    $this->options['alter']['make_link'] = !$path_only;
 
-    $this->options['alter']['make_link'] = TRUE;
-    $this->options['alter']['path'] = "paragraphs-library/" . $data;
+    if ($path_only) {
+      return "admin/content/paragraphs/library/" . $data;
+    }
+    else {
+      $text = !empty($this->options['text']) ? $this->options['text'] : t('View');
+      $this->options['alter']['path'] = "admin/content/paragraphs/library/" . $data;
 
-    return $text;
+      return $text;
+    }
   }
 
 }
