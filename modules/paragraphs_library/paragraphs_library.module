@@ -114,7 +114,8 @@ function paragraphs_library_menu() {
     'title' => t('Add library item'),
     'description' => t('Create a new item for reuse in the Paragraphs library.'),
     'page callback' => 'paragraphs_library_type_choice',
-    'access arguments' => ['create paragraphs_library_item entities'],
+    'access callback' => 'paragraphs_library_access',
+    'access arguments' => array('create'),
     'type' => MENU_LOCAL_ACTION,
   ];
 
@@ -124,7 +125,8 @@ function paragraphs_library_menu() {
       'title' => t('Add a %type Paragraphs library item', ['%type' => $info->label]),
       'page callback' => 'paragraphs_library_item_add',
       'page arguments' => [$type_name],
-      'access arguments' => ['create paragraphs_library_item entities'],
+      'access callback' => 'paragraphs_library_access',
+      'access arguments' => array('create'),
       'type' => MENU_CALLBACK,
     ];
   }
@@ -150,7 +152,8 @@ function paragraphs_library_menu() {
     'description' => t('Edit a saved Paragraphs library item.'),
     'page callback' => 'backdrop_get_form',
     'page arguments' => ['paragraphs_library_item_form', 4],
-    'access arguments' => ['edit paragraphs_library_item entities'],
+    'access callback' => 'paragraphs_library_access',
+    'access arguments' => array('update', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 10,
   ];
@@ -159,7 +162,8 @@ function paragraphs_library_menu() {
     'description' => t('Delete a Paragraphs library item.'),
     'page callback' => 'backdrop_get_form',
     'page arguments' => ['paragraphs_library_item_delete_form', 4],
-    'access arguments' => ['edit paragraphs_library_item entities'],
+    'access callback' => 'paragraphs_library_access',
+    'access arguments' => array('delete', 4),
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   ];
