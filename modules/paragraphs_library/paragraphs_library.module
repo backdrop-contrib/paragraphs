@@ -42,10 +42,13 @@ function paragraphs_library_entity_info() {
       ],
       'bundles' => [],
       'view modes' => [
-        // Provide a new view mode.
         'paragraphs_library_item' => [
-          'label' => 'Paragraphs library item',
-          'custom settings' => FALSE, // Use the default settings.
+          'label' => 'Paragraphs library item preview',
+          'custom settings' => FALSE,
+        ],
+        'full' => [
+          'label' => 'Full',
+          'custom settings' => TRUE,
         ],
       ],
       'module' => 'paragraphs_library',
@@ -167,6 +170,16 @@ function paragraphs_library_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 20,
   ];
+  $items['admin/content/paragraphs/library/%paragraphs_library_item/usage'] = array(
+    'title' => t('Usage'),
+    'description' => t('View usage details for a Paragraphs library item.'),
+    'page callback' => 'paragraphs_library_item_usage_listing',
+    'page arguments' => [4],
+    'access callback' => 'paragraphs_library_access',
+    'access arguments' => array('update', 4),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 25,
+  );
   $items['admin/content/paragraphs/library/%paragraphs_library_item/revisions'] = array(
     'title' => 'Revisions',
     'page callback' => 'paragraphs_library_item_revision_overview',
@@ -496,6 +509,90 @@ function paragraphs_library_item_delete_form_submit($form, &$form_state) {
   $library_item = entity_load('paragraphs_library_item', $library_item_id);
   entity_delete_multiple('paragraphs_library_item', [$library_item_id]);
   backdrop_set_message(t('Paragraphs library item %title has been deleted.', ['%title' => check_plain($library_item->label())]));
+}
+
+/**
+ * Page callback for listing the usage of a Paragraphs library item.
+ */
+function paragraphs_library_item_usage_listing($paragraphs_library_item) {
+  $field_name = 'field_reusable_paragraph';
+  $target_id = $paragraphs_library_item->id();
+  $field_info = field_info_field($field_name);
+  foreach ($field_info['bundles'] as $entity_type => $bundles) {
+    foreach ($bundles as $bundle) {
+      $query = db_select('field_revision_' . $field_name, 'f')
+        ->fields('f', ['entity_id', 'revision_id'])
+        ->condition('f.' . $field_name . '_target_id', $target_id)
+        ->condition('f.bundle', $bundle)
+        ->condition('f.entity_type', $entity_type);
+      $result = $query->execute();
+      if ($result->rowCount() > 0) {
+        foreach ($result as $row) {
+          $items[$entity_type . ':' . $row->entity_id][] = [
+            'entity_type' => $entity_type,
+            'bundle' => $bundle,
+            'entity_id' => $row->entity_id,
+            'revision_id' => $row->revision_id,
+          ];
+        }
+      }
+    }
+  }
+  $headers = [
+    t('Used in'),
+    t('Entity ID'),
+    t('Entity type'),
+    t('Bundle'),
+    t('Number of revisions/uses'),
+    t('Status'),
+  ];
+  foreach ($items as $key => $item) {
+    $status = '';
+    $first = reset($item);
+    $entity_type = $first['entity_type'];
+    $entity_id = $first['entity_id'];
+    $entity_label = entity_get_info($entity_type)['label'];
+    $entity = entity_load($entity_type, $entity_id);
+    $uri = $entity->uri();
+
+    if ($entity_type == 'paragraphs_item') {
+      $host_entity = $entity->hostEntity();
+      if ($host_entity) {
+        $label = $host_entity->label();
+        $entity_type = $host_entity->entityType();
+        $entity_bundle = $host_entity->bundle();
+        $entity_label = entity_get_info($entity_type)['label'];
+        $entity_id = $host_entity->id();
+        $uri = $host_entity->uri();
+        $status = 'Paragraph item: ' . _paragraphs_library_get_status_label($entity->status) . '<br>' . $entity_label . ': ' . _paragraphs_library_get_status_label($host_entity->status);
+      }
+    }
+    else {
+      $status .= $entity_label . ': ' . _paragraphs_library_get_status_label($entity->status);
+    }
+    if ($entity) {
+      $rows[] = [
+        'data' => [
+          l($label, $uri['path']),
+          $entity_id,
+          $entity_label,
+          $entity_bundle,
+          count($item),
+          $status,
+        ],
+      ];
+    }
+  }
+  $pause = 1;
+  return [
+    '#theme' => 'table',
+    '#header' => $headers,
+    '#rows' => $rows ?? [],
+    '#empty' => t('No usage found for this Paragraphs library item.'),
+    '#attached' => [
+      'library' => ['paragraphs_library/paragraphs_library_usage'],
+    ],
+  ];
 }
 
 /**
@@ -1098,4 +1195,22 @@ function paragraphs_library_gin_content_form_paths() {
   ];
 
   return $paths;
+}
+
+/**
+ * Helper function to return a label for a given status code.
+ *
+ * @param int $status
+ *   The status code to get the label for.
+ *
+ * @return string
+ *   The label corresponding to the status code.
+ */
+function _paragraphs_library_get_status_label(int $status) {
+  $status_labels = [
+    1 => t('Published'),
+    0 => t('Unpublished'),
+  ];
+
+  return isset($status_labels[$status]) ? $status_labels[$status] : t('Unknown');
 }
