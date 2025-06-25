@@ -39,6 +39,13 @@ class BlockParagraphs extends Block {
   protected $host_entity_id;
 
   /**
+   * Whether this block is orphaned.
+   *
+   * @var bool
+   */
+  protected $is_orphaned;
+
+  /**
    * {@inheritdoc}
    */
   function __construct($plugin_name, array $data) {
@@ -48,6 +55,7 @@ class BlockParagraphs extends Block {
       'admin_label' => '',
       'admin_description' => '',
     );
+    $this->is_orphaned = !empty($data['orphan']);
 
     // $this->host_entity_id = end(preg_split('/./', $data['layout_name']));
     $this->field_instance = _layout_paragraphs_get_field_instance($data['layout_name']);
@@ -70,23 +78,24 @@ class BlockParagraphs extends Block {
    *  Sets title text on draggable block panel in Layout builder.
    */
   function getAdminTitle() {
+    $suffix = $this->is_orphaned ? ' (' . t('orphaned') . ')' : '';
     if (!empty($this->settings['admin_label'])) {
       // If a custom admin title was added in the block itself, use it first.
-      return check_plain($this->settings['admin_label']);
+      return check_plain($this->settings['admin_label']) . $suffix;
     }
     else {
       // Otherwise, try for a title from the particular Paragraphs bundle.
       if (!empty($this->bundle->name)) {
-        return $this->bundle->name;
+        return $this->bundle->name . $suffix;
       }
     }
     if (!empty($this->field_instance['settings']['title'])) {
       // Still nothing? We'll try the general field instance title.
-      return $this->field_instance['settings']['title'];
+      return $this->field_instance['settings']['title'] . $suffix;
     }
 
     // Last resort: use the default Paragraphs title.
-    return PARAGRAPHS_DEFAULT_TITLE;
+    return PARAGRAPHS_DEFAULT_TITLE . $suffix;
   }
 
   /**

@@ -223,15 +223,13 @@ function layout_paragraphs_context() {
  * @ingroup forms
  */
 function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = NULL) {
-  if (!isset($form_state['layout'])) {
-    $form_state['layout'] = $layout;
-  }
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
-  if (!$layout) {
-    $layout = $form_state['layout'];
+  $layout_tempstore = layout_paragraphs_instance_tempstore_load($layout->name);
+  if (is_a($layout_tempstore, 'Layout')) {
+    $layout = $layout_tempstore;
   }
   $layout->setContexts('paragraphs', layout_paragraphs_context());
+  $form_state['layout'] = $layout;
   if ($renderer_name) {
     $renderer = layout_create_renderer($renderer_name, $layout);
   }
@@ -273,27 +271,6 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
 
   $form['content'] = array('#tree' => TRUE);
   $form['content']['block'] = array('#tree' => TRUE);
-  /*
-  $layout_tempstore = tempstore_get('layout_paragraphs', $layout->name);
-  foreach ($layout_tempstore->positions as $region_id => $block_uuids) {
-    foreach ($block_uuids as $block_uuid) {
-      // Make sure the block is in the content array.
-      if (!isset($layout->content[$block_uuid])) {
-        $layout->content[$block_uuid] = $layout_tempstore->content[$block_uuid];
-      }
-      // Make sure the block is in the positions array.
-      $safe_region = (isset($layout->positions[$region_id])) ? $region_id : 'paragraph-layout-default-template';
-      if (!in_array($block_uuid, $layout->positions[$safe_region])) {
-        $layout->positions[$safe_region][] = $block_uuid;
-      }
-       $layout->positions[$safe_region] = array_unique( $layout->positions[$safe_region]);
-    }
-  }
-  $renderer->layout = $layout;
-  */
-  // @todo: This is a hack to get the layout to render correctly. It can
-  // probably be improved.
-  // $renderer->layout->content = $form['content']['positions'];
   $form['content']['display'] = array(
     '#markup' => $renderer->render(),
   );
@@ -333,32 +310,6 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
 }
 
 /**
- * Validate the layout settings form.
- */
-function layout_paragraphs_content_form_validate($form, &$form_state) {
-  /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
-  if (!$layout) {
-    $layout = $form_state['layout'];
-  }
-
-  // Ensure that no block is positioned more than once. This is merely a sanity
-  // check, it should not occur within the normal interface.
-  $all_uuids = array();
-  foreach ($layout->positions as $uuids) {
-    foreach ($uuids as $uuid) {
-      if (in_array($uuid, $all_uuids)) {
-        form_error($form['content']['positions'], t('The "@block" block has incorrectly been positioned multiple times. This may indicate an incorrectly saved layout configuration.', array('@block' => $layout->content[$uuid]->getAdminTitle())));
-      }
-      $all_uuids[] = $uuid;
-    }
-  }
-
-  // Let the layout do any specific validations.
-  $layout->formValidate($form, $form_state);
-}
-
-/**
  * Handle form submission of the display content editor.
  *
  * This reads the location of the various blocks from the form, which will
@@ -390,12 +341,6 @@ function layout_paragraphs_content_form_submit($form, &$form_state) {
     }
     $layout->content = $new_content;
     $layout->positions = $new_positions;
-  }
-
-  // Save title settings.
-  if (isset($form_state['values']['title_display'])) {
-    $layout->settings['title'] = $form_state['values']['title'];
-    $layout->settings['title_display'] = $form_state['values']['title_display'];
   }
 
   // Let layouts save their own settings if needed.
@@ -2026,10 +1971,10 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
   $skip_tempstore_update = FALSE;
   $orphan_block_count = 0;
   $layout_template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
-  reset($layout_template_info['regions']);
   // @todo: We may be able to make this auto replacement more intuitive, e.g.
   // if the layout has a region with the same machine name, leave it there.
   // Right now everything flows into the first region.
+  reset($layout_template_info['regions']);
   $default_region = _layout_paragraphs_get_default_region($layout_template_info['regions'] ?? []);
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
   switch ($source) {
@@ -2061,7 +2006,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
           $placed_blocks[$block_info->block_data['paragraphs_item_id']] = $block_info;
         }
       }
-      if (!empty($entity) && is_numeric($entity_id)) {
+      if (!empty($entity_id) && is_numeric($entity_id)) {
         // Consider any Paragraphs items that are not explicitly placed, for example
         // if the Layout UI was turned on after content was created with the
         // Embedded widget.
@@ -2069,15 +2014,17 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         $paragraphs_field_values = field_get_values($entity, $field_name);
         foreach ($paragraphs_field_values as $delta => $paragraphs_field_value) {
           $paragraph_id = $paragraphs_field_value;
-          if (!isset($placed_blocks[$paragraph_id])) {
+          if (!isset($placed_blocks[$paragraph_id]) || empty($placed_blocks[$paragraph_id]->region_id)) {
             $orphan_block_count++;
             $block_info = new stdClass();
-            $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;
+            // $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;
+            $block_info->uuid = (new Uuid())->generate();
             $block_info->block_index = $delta;
             $block_info->block_data = json_encode(array(
               'paragraphs_item_id' => $paragraph_id,
               'layout_name' => $layout->name,
             ));
+            $block_info->region_id = $default_region;
             $block_info->orphan = TRUE;
             $placed_blocks[$paragraph_id] = $block_info;
           }
@@ -2092,6 +2039,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
             'paragraphs_item_id' => $paragraph_id,
             'layout_name' => $layout->name,
             'uuid' => $block_info->uuid,
+            'orphan' => !empty($block_info->orphan),
           ];
           $block = new BlockParagraphs($paragraphs_block_key, $block_data);
           if (!empty($block_paragraph->status)) {
@@ -2113,17 +2061,21 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
 
         // Move the block into the correct position.
         $position = $block_info->block_index;
+        $temp_previous_positions = $layout->positions[$region_id] ?? array();
         if (is_numeric($position)) {
-          $positions = array();
+          $reordered_positions = array();
           foreach ($layout->positions[$region_id] as $n => $uuid) {
             if ((int) $position == (int) $n) {
-              $positions[] = $block_info->uuid;
+              $reordered_positions[] = $block_info->uuid;
             }
-            if ($uuid != $block_info->uuid) {
-              $positions[] = $uuid;
+            if (!in_array($uuid, $reordered_positions)) {
+              $reordered_positions[] = $uuid;
             }
           }
-          $layout->positions[$region_id] = $positions;
+          $layout->positions[$region_id] = $reordered_positions;
+        }
+        if (count($reordered_positions) != count($temp_previous_positions)) {
+          $somethings_wrong = TRUE;
         }
       }
       if ($orphan_block_count > 0) {

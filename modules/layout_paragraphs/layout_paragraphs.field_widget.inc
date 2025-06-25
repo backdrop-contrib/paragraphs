@@ -186,11 +186,38 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $form['#submit'] = [];
       $form['#submit'][] = 'taxonomy_form_term_submit';
     }
+    $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
     $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
 
     layout_paragraphs_set_layout_tempstore($layout);
     return $return;
   }
+}
+
+/**
+ * Validate the layout settings form.
+ */
+function layout_paragraphs_edit_content_validate($form, &$form_state) {
+  /* @var Layout $layout */
+  $layout = layout_paragraphs_instance_tempstore_load($form['layout_paragraphs']['layout']['#layout']->name);
+  if (!$layout) {
+    $layout = $form['layout_paragraphs']['layout']['#layout'];
+  }
+
+  // Ensure that no block is positioned more than once. This is merely a sanity
+  // check, it should not occur within the normal interface.
+  $all_uuids = array();
+  foreach ($layout->positions as $uuids) {
+    foreach ($uuids as $uuid) {
+      if (in_array($uuid, $all_uuids)) {
+        form_error($form['content']['positions'], t('The "@block" item has incorrectly been positioned multiple times. This may indicate an incorrectly saved layout configuration.', array('@block' => $layout->content[$uuid]->getAdminTitle())));
+      }
+      $all_uuids[] = $uuid;
+    }
+  }
+
+  // Let the layout do any specific validations.
+  $layout->formValidate($form, $form_state);
 }
 
 /**
@@ -236,11 +263,11 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
       }
     }
     layout_paragraphs_set_layout_tempstore($layout);
-    // Save Paragraphs block/field data to the database.
     $langcode = $form['langcode']['#value'];
     $form_state['values']['content']['layout_name'] = $layout_name;
-    $values = layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
-    $form_state['values'][$field_name][$langcode] = $values;
+    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
+    // @todo: Save traditional Paragraphs field data to the database.
+    // $form_state['values'][$field_name][$langcode] = $values;
   }
   else {
     // We need to handle insertion of new entities yet...
