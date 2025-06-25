@@ -80,6 +80,12 @@ function layout_paragraphs_schema() {
         'default' => 0,
         'description' => t('The layout paragraph ID.'),
       ),
+      'paragraphs_item_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The Paragraphs item ID.'),
+      ),
       'uuid' => array(
         'type' => 'varchar',
         'length' => '40',

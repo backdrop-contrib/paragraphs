@@ -130,7 +130,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
     $reload = (!$form_state['submitted']);
-    $layout = layout_paragraphs_instance_tempstore_load($layout_name, $reload);
+    $layout = layout_paragraphs_instance_load($layout_name, $reload);
     if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
@@ -199,7 +199,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
  */
 function layout_paragraphs_edit_content_validate($form, &$form_state) {
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_tempstore_load($form['layout_paragraphs']['layout']['#layout']->name);
+  $layout = layout_paragraphs_instance_load($form['layout_paragraphs']['layout']['#layout']->name);
   if (!$layout) {
     $layout = $form['layout_paragraphs']['layout']['#layout'];
   }
@@ -253,7 +253,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     // Update existing entity.
     // Save new positions to the tempstore.
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
-    $layout = layout_paragraphs_instance_tempstore_load($layout_name);
+    $layout = layout_paragraphs_instance_load($layout_name);
     $layout->locked = FALSE;
     // @todo: Do we need to consider deleted Paragraphs here?
     $layout->positions = [];
@@ -262,12 +262,11 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
         $layout->positions[$region] = array_filter(explode(',', $uuids_string));
       }
     }
+    // Update the tempstore with the new positions so the store field data
+    // function can save it.
     layout_paragraphs_set_layout_tempstore($layout);
-    $langcode = $form['langcode']['#value'];
     $form_state['values']['content']['layout_name'] = $layout_name;
     layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
-    // @todo: Save traditional Paragraphs field data to the database.
-    // $form_state['values'][$field_name][$langcode] = $values;
   }
   else {
     // We need to handle insertion of new entities yet...

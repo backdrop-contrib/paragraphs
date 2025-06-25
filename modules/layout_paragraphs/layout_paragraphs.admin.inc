@@ -224,7 +224,7 @@ function layout_paragraphs_context() {
  */
 function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = NULL) {
   /* @var Layout $layout */
-  $layout_tempstore = layout_paragraphs_instance_tempstore_load($layout->name);
+  $layout_tempstore = layout_paragraphs_instance_load($layout->name);
   if (is_a($layout_tempstore, 'Layout')) {
     $layout = $layout_tempstore;
   }
@@ -1520,28 +1520,6 @@ function _layout_paragraphs_template_generate_svg($template) {
 }
 
 /**
- * Save a block while editing with Layout Paragraphs.
- */
-function layout_paragraphs_save_block($layout, $region_id, $uuid, $block_index) {
-  $block = $layout->content[$uuid];
-
-  $data = array(
-    'nid' => $layout->node->nid,
-    'uuid' => $uuid,
-    'region_id' => $region_id,
-    'block_index' => $block_index,
-    'block_data' => json_encode($block),
-  );
-  $exists = db_query('SELECT count(uuid) FROM {layout_paragraphs_blocks} WHERE uuid = :uuid', array(':uuid' => $uuid))->fetchField();
-  if ($exists) {
-    backdrop_write_record('layout_paragraphs_blocks', $data, 'uuid');
-  }
-  else {
-    backdrop_write_record('layout_paragraphs_blocks', $data);
-  }
-}
-
-/**
  * Return block info for Paragraphs types when editing with Layout Paragraphs.
  */
 function layout_paragraphs_get_block_info($delta = NULL) {
@@ -1777,7 +1755,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   /* @var BlockParagraphs $block */
   $block = $form_state['block'];
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  $layout = layout_paragraphs_get_layout_tempstore($form_state['layout']->name);
   if (!$layout) {
     $layout = $form_state['layout'];
   }
@@ -1796,8 +1774,8 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
 
   // Generate a UUID for the block.
   if (empty($block->uuid)) {
-    $uuid = new Uuid();
-    $block->uuid = $uuid->generate();
+    $paragraphs_item_id = $block->paragraphs_item->id() ?? 0;
+    $block->uuid = layout_paragraphs_get_block_uuid($paragraphs_item_id);
   }
 
   // Temporarily store any unfinished blocks (those that do not yet have a
@@ -1821,6 +1799,29 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   layout_paragraphs_set_layout_tempstore($layout);
 }
 
+/**
+ * Helper function to get the UUID for a Paragraphs block for a particular
+ * Paragraphs item id.
+ *
+ * @param int|string $paragraphs_item_id
+ *   The Paragraphs item ID for which to get the UUID.
+ *
+ * @return string
+ *   The UUID for the Paragraphs block, or a newly generated UUID if the
+ *   Paragraphs item ID is not set.
+ */
+function layout_paragraphs_get_block_uuid($paragraphs_item_id = 0) {
+  $uuid = '';
+  // If the Paragraphs item ID is not set, generate a new UUID.
+  if (!empty($paragraphs_item_id)) {
+    // Get the UUID from the layout_paragraphs_blocks table.
+    $uuid = db_query('SELECT uuid FROM {layout_paragraphs_blocks} WHERE paragraphs_item_id = :paragraphs_item_id', array(':paragraphs_item_id' => $paragraphs_item_id))->fetchField();
+  }
+  if (empty($uuid)) {
+    $uuid = (new Uuid())->generate();
+  }
+  return $uuid;
+}
 
 /**
  * Menu callback; Remove a block from a layout.
@@ -1832,6 +1833,7 @@ function layout_paragraphs_block_remove_page(Layout $layout, Block $block, $rend
 
   $commands = array();
   $layout->removeBlock($block->uuid);
+  // Update the tempstore to account for the removed block.
   layout_paragraphs_set_layout_tempstore($layout);
 
   if (backdrop_is_ajax()) {
@@ -1890,7 +1892,7 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  */
 function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_tempstore_load($form_state['layout']->name);
+  $layout = layout_paragraphs_instance_load($form_state['layout']->name);
   if (!$layout) {
     $layout = $form_state['layout'];
   }
@@ -1920,12 +1922,6 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
     $commands[] = ajax_command_replace('#layout-editor-block-' . $block->uuid, $renderer->renderBlock($block));
   }
 
-  // Remove the page title pseudo region if we're adding a Title block or a
-  // Combo block.
-  if ($block->module == 'system' && $block->delta == 'page_components' && ($block->childDelta == 'title' || $block->childDelta == 'title_combo')) {
-    $commands[] = ajax_command_replace('#layout-editor-title', '<div id="layout-title-region-empty"></div>');
-  }
-
   // Update the messages area.
   if ($message = layout_paragraphs_locked_message($layout)) {
     backdrop_set_message($message, 'warning');
@@ -1933,7 +1929,7 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   $commands[] = ajax_command_remove('#messages');
   $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
 
-  // Update the layout's tempstore.
+  // Update the layout's tempstore with the new block data.
   layout_paragraphs_set_layout_tempstore($layout);
 
   return array(
@@ -2000,10 +1996,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
           ->orderBy('lpb.block_index');
         $result = $query->execute();
         foreach ($result as $block_info) {
-          if (!empty($block_info->block_data)) {
-            $block_info->block_data = json_decode($block_info->block_data, TRUE);
-          }
-          $placed_blocks[$block_info->block_data['paragraphs_item_id']] = $block_info;
+          $placed_blocks[$block_info->paragraphs_item_id] = $block_info;
         }
       }
       if (!empty($entity_id) && is_numeric($entity_id)) {
@@ -2018,7 +2011,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
             $orphan_block_count++;
             $block_info = new stdClass();
             // $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;
-            $block_info->uuid = (new Uuid())->generate();
+            $block_info->uuid = layout_paragraphs_get_block_uuid($paragraph_id);
             $block_info->block_index = $delta;
             $block_info->block_data = json_encode(array(
               'paragraphs_item_id' => $paragraph_id,
@@ -2053,7 +2046,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         }
         else {
           // Set a broken block.
-          $block = new BlockBroken($paragraphs_block_key, $block_info->block_data);
+          $block = new BlockBroken($paragraphs_block_key, (array) json_decode($block_info->block_data));
           $block->status = FALSE;
         }
         $layout->content[$block_info->uuid] = $block;
@@ -2081,11 +2074,12 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
       if ($orphan_block_count > 0) {
         backdrop_set_message(t('There are @count orphaned blocks in this layout.', array('@count' => $orphan_block_count)), 'warning');
       }
+      // Update the layout's tempstore with the blocks loaded from the database.
       layout_paragraphs_set_layout_tempstore($layout);
       break;
 
     case 'tempstore':
-      $old_layout = layout_paragraphs_instance_tempstore_load($layout->name);
+      $old_layout = layout_paragraphs_instance_load($layout->name);
       if (!empty($old_layout)) {
         $old_layout_blocks = $old_layout->content;
       }
