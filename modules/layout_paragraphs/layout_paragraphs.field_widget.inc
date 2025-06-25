@@ -129,7 +129,8 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       }
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
-    $layout = layout_paragraphs_instance_tempstore_load($layout_name);
+    $reload = (!$form_state['submitted']);
+    $layout = layout_paragraphs_instance_tempstore_load($layout_name, $reload);
     if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
@@ -173,9 +174,6 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     }
 
     $layout_form = $layout_form_state = [];
-    if (!$form_state['submitted']) {
-      layout_paragraphs_set_layout_tempstore($layout);
-    }
     $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
     $form['layout_paragraphs']['layout'] = $layout_content;
     $form['layout_paragraphs']['element'] = $element;

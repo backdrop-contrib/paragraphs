@@ -175,7 +175,7 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
     // Special case due to mismatch between entity type and form key.
     $entity = $form_state['term'];
   }
-  $entity_id = (!empty($entity->id())) ? $entity->id() : $form_state['layout_paragraphs']['#entity_tempstore_id'];
+  $entity_id = $entity->id() ?? $form_state['layout_paragraphs']['#entity_tempstore_id'];
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
   // load the old layout and process all regions/blocks to new layout.
@@ -2024,6 +2024,7 @@ function layout_paragraphs_locked_message($item) {
 function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $source = 'database', string $lp_id = '') {
   $update_needed = TRUE;
   $skip_tempstore_update = FALSE;
+  $orphan_block_count = 0;
   $layout_template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
   reset($layout_template_info['regions']);
   // @todo: We may be able to make this auto replacement more intuitive, e.g.
@@ -2066,7 +2067,6 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         // Embedded widget.
         $entity = entity_load($entity_type, $entity_id);
         $paragraphs_field_values = field_get_values($entity, $field_name);
-        $orphan_block_count = 0;
         foreach ($paragraphs_field_values as $delta => $paragraphs_field_value) {
           $paragraph_id = $paragraphs_field_value;
           if (!isset($placed_blocks[$paragraph_id])) {
@@ -2091,6 +2091,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
           $block_data = [
             'paragraphs_item_id' => $paragraph_id,
             'layout_name' => $layout->name,
+            'uuid' => $block_info->uuid,
           ];
           $block = new BlockParagraphs($paragraphs_block_key, $block_data);
           if (!empty($block_paragraph->status)) {

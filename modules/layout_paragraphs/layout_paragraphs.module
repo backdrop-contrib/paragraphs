@@ -276,12 +276,12 @@ function layout_paragraphs_entity_delete($entity, $entity_type) {
  *   Example: 'node.page.field_layout_paragraphs.123'.
  *
  * @param bool $place_blocks
- *  Whether to place blocks in the layout.
+ *   Whether to place blocks in the layout.
  *
  * @param string $source
- *  The source of the layout, either 'tempstore' or 'database'. We need to be
- *  able to specify so that we don't end up in an infinite loop, e.g. from
- *  within layout_paragraphs_instance_tempstore_load().
+ *   The source of the layout, either 'tempstore' or 'database'. We need to be
+ *   able to specify so that we don't end up in an infinite loop, e.g. from
+ *   within layout_paragraphs_instance_tempstore_load().
  *
  * @return Layout
  *   The loaded layout object.
@@ -356,17 +356,22 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
  *
  * @param string $instance_name
  *   The layout name machine name of the instance to load.
+ * @param bool $reload
+ *   Whether to force reload the instance from the database and skip checking the
+ *   tempstore.
  *
  * @return Layout|false
  *   The Layout paragraphs instance, or false if it couldn't be loaded.
  */
-function layout_paragraphs_instance_tempstore_load(string $instance_name) {
+function layout_paragraphs_instance_tempstore_load(string $instance_name, bool $reload = FALSE) {
   if (empty($instance_name)) {
     return NULL;
   }
-  $layout = layout_paragraphs_get_layout_tempstore($instance_name);
-  if (!empty($layout)) {
-    return $layout;
+  if (!$reload) {
+    $layout = layout_paragraphs_get_layout_tempstore($instance_name);
+    if (!empty($layout)) {
+      return $layout;
+    }
   }
   $layout = layout_paragraphs_layout_load($instance_name, TRUE, 'database');
   if (!empty($layout)) {
@@ -431,9 +436,9 @@ function layout_paragraphs_theme_registry_alter(&$theme_registry) {
         'attributes' => array(),
         'admin' => FALSE,
       ),
-    'template' => 'layout--flexible',
-    'path' => backdrop_get_path('module', 'layout') . '/templates',
-    'base hook' => 'layout',
+      'template' => 'layout--flexible',
+      'path' => backdrop_get_path('module', 'layout') . '/templates',
+      'base hook' => 'layout',
     );
   }
 }
