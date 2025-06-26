@@ -224,10 +224,16 @@ function layout_paragraphs_context() {
  */
 function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = NULL) {
   /* @var Layout $layout */
-  $layout_tempstore = layout_paragraphs_instance_load($layout->name);
+  // For some reason, the layout template is getting reset to default when only
+  // one layout template is available, when creating new content and this
+  // section checks tempstore. We may be able to remove this explicit save/
+  // reset of the layout template later if we determine why.
+  $layout_template = $layout->layout_template ?? 'default';
+  $layout_tempstore = layout_paragraphs_get_layout_tempstore($layout->name);
   if (is_a($layout_tempstore, 'Layout')) {
     $layout = $layout_tempstore;
   }
+  $layout->layout_template = $layout_template;
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $form_state['layout'] = $layout;
   if ($renderer_name) {
@@ -307,52 +313,6 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
 
   // layout_paragraphs_set_layout_tempstore($layout);
   return $form;
-}
-
-/**
- * Handle form submission of the display content editor.
- *
- * This reads the location of the various blocks from the form, which will
- * have been modified via JavaScript, rearranges them and then saves
- * the display.
- */
-function layout_paragraphs_content_form_submit($form, &$form_state) {
-  /* @var Layout $layout */
-  $layout = &$form_state['layout'];
-
-  // @todo: How is this different than layout_paragraphs_edit_content_submit,
-  // and is it ever called?
-  // Update the block positions based on the hidden position elements.
-  if (!empty($form_state['values']['content']['positions'])) {
-    $new_content = array();
-    $new_positions = array();
-
-    foreach ($form_state['values']['content']['positions'] as $region_id => $blocks) {
-      $new_positions[$region_id] = array();
-      if ($blocks) {
-        $uuids = array_filter(explode(',', $blocks));
-        foreach ($uuids as $uuid) {
-          if (isset($layout->content[$uuid])) {
-            $new_content[$uuid] = $layout->content[$uuid];
-            $new_positions[$region_id][] = $uuid;
-          }
-        }
-      }
-    }
-    $layout->content = $new_content;
-    $layout->positions = $new_positions;
-  }
-
-  // Let layouts save their own settings if needed.
-  $layout->formSubmit($form, $form_state);
-
-  // Save the entire layout to configuration.
-  $layout->save();
-
-  // Delete the tempstore copy of the layout.
-  layout_clear_layout_tempstore($layout->name, 'paragraphs');
-
-  backdrop_set_message(t('Layout content saved.'));
 }
 
 /**
@@ -1892,7 +1852,7 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  */
 function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_load($form_state['layout']->name);
+  $layout = layout_paragraphs_get_layout_tempstore($form_state['layout']->name);
   if (!$layout) {
     $layout = $form_state['layout'];
   }
@@ -1970,7 +1930,6 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
   // @todo: We may be able to make this auto replacement more intuitive, e.g.
   // if the layout has a region with the same machine name, leave it there.
   // Right now everything flows into the first region.
-  reset($layout_template_info['regions']);
   $default_region = _layout_paragraphs_get_default_region($layout_template_info['regions'] ?? []);
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
   switch ($source) {
@@ -2000,14 +1959,16 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         }
       }
       if (!empty($entity_id) && is_numeric($entity_id)) {
-        // Consider any Paragraphs items that are not explicitly placed, for example
-        // if the Layout UI was turned on after content was created with the
-        // Embedded widget.
         $entity = entity_load($entity_type, $entity_id);
         $paragraphs_field_values = field_get_values($entity, $field_name);
         foreach ($paragraphs_field_values as $delta => $paragraphs_field_value) {
           $paragraph_id = $paragraphs_field_value;
-          if (!isset($placed_blocks[$paragraph_id]) || empty($placed_blocks[$paragraph_id]->region_id)) {
+          if (!isset($placed_blocks[$paragraph_id]) || empty($placed_blocks[$paragraph_id]->region_id) || !isset($layout->positions[$placed_blocks[$paragraph_id]->region_id])) {
+            // Consider any Paragraphs items that are:
+            //  * not explicitly placed, for example if the Layout UI was turned
+            //    on after content was created with the Embedded widget.
+            //  * explicitly placed but in a region that is not in the current
+            //    layout.
             $orphan_block_count++;
             $block_info = new stdClass();
             // $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;
@@ -2054,7 +2015,6 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
 
         // Move the block into the correct position.
         $position = $block_info->block_index;
-        $temp_previous_positions = $layout->positions[$region_id] ?? array();
         if (is_numeric($position)) {
           $reordered_positions = array();
           foreach ($layout->positions[$region_id] as $n => $uuid) {
@@ -2067,25 +2027,23 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
           }
           $layout->positions[$region_id] = $reordered_positions;
         }
-        if (count($reordered_positions) != count($temp_previous_positions)) {
-          $somethings_wrong = TRUE;
-        }
       }
       if ($orphan_block_count > 0) {
-        backdrop_set_message(t('There are @count orphaned blocks in this layout.', array('@count' => $orphan_block_count)), 'warning');
+        backdrop_set_message(t('There are @count orphaned blocks in this layout, placed automatically in the default region.', array('@count' => $orphan_block_count)), 'warning');
       }
       // Update the layout's tempstore with the blocks loaded from the database.
       layout_paragraphs_set_layout_tempstore($layout);
       break;
 
     case 'tempstore':
-      $old_layout = layout_paragraphs_instance_load($layout->name);
+      $old_layout = layout_paragraphs_get_layout_tempstore($layout->name);
       if (!empty($old_layout)) {
         $old_layout_blocks = $old_layout->content;
       }
       else {
         // There is no tempstore data, so let's try loading from the database
-        // and return that result without updating it again here.
+        // and return that result without updating it again here (since it will
+        // be updated when loaded in this call).
         $update_needed = _layout_paragraphs_add_paragraphs_to_layout($layout, 'database', $lp_id);
         $skip_tempstore_update = TRUE;
       }

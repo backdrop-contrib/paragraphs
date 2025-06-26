@@ -129,8 +129,10 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       }
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
-    $reload = (!$form_state['submitted']);
-    $layout = layout_paragraphs_instance_load($layout_name, $reload);
+    $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+    if (empty($layout)) {
+      $layout = layout_paragraphs_layout_load($layout_name, TRUE, 'database');
+    }
     if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
@@ -158,7 +160,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
           '#type' => 'hidden',
           '#title' => t('Layout template'),
           '#description' => t('Which layout template should be used?'),
-          '#value' => (!empty($template_name)) ? $template_name : $default_template,
+          '#value' => $template_name ?? $default_template,
           '#required' => TRUE,
         );
         $layout->layout_template = $template_name;
@@ -199,7 +201,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
  */
 function layout_paragraphs_edit_content_validate($form, &$form_state) {
   /* @var Layout $layout */
-  $layout = layout_paragraphs_instance_load($form['layout_paragraphs']['layout']['#layout']->name);
+  $layout = layout_paragraphs_get_layout_tempstore($form['layout_paragraphs']['layout']['#layout']->name);
   if (!$layout) {
     $layout = $form['layout_paragraphs']['layout']['#layout'];
   }
@@ -241,19 +243,15 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
   // database table as well as saving the layout_paragraphs_blocks table. We
   // need to make sure the data remains in the field in the usual way so that
   // if Layout UI is disabled, the data is still there.
-  $module = 'layout_paragraphs';
-  $lp_id = 0;
   $layout_template = $form_state['values']['layout_paragraphs_templates'];
-  $field_name = $form['layout_paragraphs']['#field']['field_name'];
   $entity_type = $form['#entity_type'];
-  $bundle = $form['#bundle'];
   $entity = $form['layout_paragraphs']['#entity'];
   $entity_id = $entity->id() ?? 0;
   if (!empty($entity_id)) {
     // Update existing entity.
     // Save new positions to the tempstore.
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
-    $layout = layout_paragraphs_instance_load($layout_name);
+    $layout = layout_paragraphs_get_layout_tempstore($layout_name);
     $layout->locked = FALSE;
     // @todo: Do we need to consider deleted Paragraphs here?
     $layout->positions = [];
@@ -269,6 +267,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
   }
   else {
+    // @todo:
     // We need to handle insertion of new entities yet...
     // 1. The URLs on the layout have a blank where the layout name should be,
     //    e.g. when trying to add a Paragraphs block.

@@ -185,7 +185,10 @@ function layout_paragraphs_menu() {
  *
  */
 function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, string $layout_name) {
-  $layout = layout_paragraphs_instance_load($layout_name);
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  if (empty($layout)) {
+    $layout = layout_paragraphs_layout_load($layout_name, FALSE, 'database');
+  }
   if (empty($layout)) {
     return FALSE;
   }
@@ -221,13 +224,13 @@ function layout_paragraphs_tempstore_block_retrieve(string $layout_block_uuid, L
 /**
  * Helper: Clear a layout instance from the tempstore.
  *
- * @param Layout $layout
- *   The layout instance to clear.
+ * @param string $layout_name
+ *   The name of the layout instance to clear.
  *
  * @return void
  */
-function layout_paragraphs_clear_layout_tempstore(Layout $layout) {
-  tempstore_clear_all('layout_paragraphs', $layout->name);
+function layout_paragraphs_clear_layout_tempstore(string $layout_name) {
+  tempstore_clear_all('layout_paragraphs', $layout_name);
 }
 
 /**
@@ -240,6 +243,8 @@ function layout_paragraphs_clear_layout_tempstore(Layout $layout) {
  */
 function layout_paragraphs_set_layout_tempstore(Layout $layout) {
   $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
+  backdrop_set_message('Content keys: ' . implode(', ', array_keys($layout->content)), 'status', FALSE);
+  backdrop_set_message('Position keys: ' . implode(', ', array_keys($layout->positions)), 'status', FALSE);
   tempstore_set('layout_paragraphs', $layout->name, $layout, $expire);
 }
 
@@ -252,6 +257,10 @@ function layout_paragraphs_set_layout_tempstore(Layout $layout) {
  * @return Layout|false
  */
 function layout_paragraphs_get_layout_tempstore(string $layout_name) {
+  $layout = tempstore_get('layout_paragraphs', $layout_name);
+  if (empty($layout)) {
+    return FALSE;
+  }
   return tempstore_get('layout_paragraphs', $layout_name);
 }
 
@@ -291,9 +300,7 @@ function layout_paragraphs_entity_delete($entity, $entity_type) {
  *   Whether to place blocks in the layout.
  *
  * @param string $source
- *   The source of the layout, either 'tempstore' or 'database'. We need to be
- *   able to specify so that we don't end up in an infinite loop, e.g. from
- *   within layout_paragraphs_instance_load().
+ *   The source of the layout, either 'tempstore' or 'database'.
  *
  * @return Layout
  *   The loaded layout object.
@@ -324,7 +331,13 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
   );
   $layout = new Layout($config);
   $layout->setContexts('paragraphs', layout_paragraphs_context());
-  $layout->setLayoutTemplate($template_name);
+  // Load the template information.
+  $layout_template_info = layout_paragraphs_get_layout_template_info($template_name);
+  foreach ($layout_template_info['regions'] as $region_id => $region_name) {
+    // Add the regions to the layout.
+    $layout->positions[$region_id] = array();
+  }
+  $layout->layout_template = $template_name;
   if ($place_blocks && !empty($lp_id)) {
     _layout_paragraphs_add_paragraphs_to_layout($layout, $source, $lp_id);
   }
@@ -360,6 +373,7 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
 }
 
 /**
+ * Menu callback:
  * Get a layout paragraphs template instance currently being edited from the
  * tempstore.
  *
@@ -369,7 +383,7 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
  * @param string $instance_name
  *   The layout name machine name of the instance to load.
  * @param bool $reload
- *   Whether to force reload the instance from the database and skip checking the
+ *   Force reload the instance from the database and skip checking the
  *   tempstore.
  *
  * @return Layout|false
@@ -734,7 +748,6 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
   $bundle = $field_instance['bundle'];
   $field_name = $field_instance['field_name'];
   $entity = entity_load($entity_type, $entity_id);
-  $previous_paragraphs_data = (!empty($entity->{$field_name}[$entity->langcode])) ? $entity->{$field_name}[$entity->langcode] : array();
   // Check if this entity already has a layout_paragraphs entry.
   $result = db_select('layout_paragraphs', 'lp')
     ->fields('lp')
@@ -757,11 +770,10 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
   elseif (!empty($entity_id)) {
     $lp_id = layout_paragraphs_entity_template_insert($entity_id, $entity_type, $bundle, $field_name, $layout_template);
   }
-
   if (empty($layout_name)) {
     $layout_name = _layout_paragraphs_get_layout_name($field_instance, $entity_id);
   }
-  $layout = layout_paragraphs_instance_load($layout_name);
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   foreach ($layout->positions as $region_id => $uuids) {
     foreach ($uuids as $block_index => $uuid) {
       if (!empty($uuid)) {
@@ -773,6 +785,9 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
           $block->paragraphs_item->setHostEntity($entity_type, $entity);
           $block->paragraphs_item->being_edited = FALSE;
           $block->paragraphs_item->save(TRUE);
+          // Update $layout with the saved Paragraphs item, saved to tempstore below.
+          $layout->content[$uuid]->paragraphs_item = $block->paragraphs_item;
+          layout_paragraphs_set_layout_tempstore($layout);
           // @todo: Check to see if this needs to be saved before saving.
           // @todo: Consider revisions here. Deeper testing needed for certain.
           $block_data = json_encode([
@@ -793,24 +808,43 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
       }
     }
   }
+  layout_paragraphs_set_layout_tempstore($layout);
 }
 
 /**
- * Insert the Paragraphs field info here in order to have it save along with
- * the host entity, instead of separately.
+ * Handle insertion of new content once the ID has been created.
  */
-function layout_paragraphs_entity_presave($entity, $entity_type) {
-  $layout_name = $entity->content['layout_name'] ?? '';
-  if (empty($layout_name) && !empty($entity->content['layout_instance_tempstore_id'])) {
+function layout_paragraphs_entity_insert($entity, $entity_type) {
+  if (!empty($entity->content['layout_instance_tempstore_id'])) {
     $tempstore_id = $entity->content['layout_instance_tempstore_id'] ?? $entity->id();
     $insert_data = tempstore_get('layout_paragraphs_field', $tempstore_id);
     $layout_name = _layout_paragraphs_get_layout_name($insert_data['field_instance'], $tempstore_id);
+    // @todo: The below is not storing the positions of the blocks correctly
+    // upon new content creation, leaving "orphaned" blocks when the content is
+    // loaded.
+    layout_paragraphs_store_field_data($insert_data['field_instance'], $insert_data['layout_template'], $entity->id(), $layout_name);
+    layout_paragraphs_clear_layout_tempstore($layout_name);
     tempstore_clear('layout_paragraphs_field', $tempstore_id);
   }
-  if (empty($layout_name)) {
+}
+
+/**
+ * Add the Paragraphs field info here in order to have it save along with
+ * the host entity. This won't work for newly inserted content because we need
+ * the entity ID and it doesn't exist yet in that case.
+ */
+function layout_paragraphs_entity_presave($entity, $entity_type) {
+  if ($entity_type == 'paragraphs_item') {
     return;
   }
-  $layout = layout_paragraphs_instance_load($layout_name);
+  $layout_name = $entity->content['layout_name'] ?? '';
+  $is_new = (empty($layout_name) && !empty($entity->content['layout_instance_tempstore_id']));
+  if ($is_new) {
+    $tempstore_id = $entity->content['layout_instance_tempstore_id'] ?? $entity->id();
+    $insert_data = tempstore_get('layout_paragraphs_field', $tempstore_id);
+    $layout_name = _layout_paragraphs_get_layout_name($insert_data['field_instance'], $tempstore_id);
+  }
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   if (!empty($layout)) {
     $field_instance = _layout_paragraphs_get_field_instance($layout_name);
     $field_name = $field_instance['field_name'] ?? '';
@@ -825,7 +859,11 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
             // Set the host entity for the Paragraphs item.
             // $block->paragraphs_item->setHostEntity($entity_type, $entity);
             // Save the Paragraphs item.
-            // $block->paragraphs_item->save(TRUE);
+            if ($block->paragraphs_item->is_new) {
+              $block->paragraphs_item->save(TRUE);
+              $layout->content[$uuid]->paragraphs_item = $block->paragraphs_item;
+              layout_paragraphs_set_layout_tempstore($layout);
+            }
             // Add the Paragraphs item to the entity's field data to be saved.
             $entity->{$field_name}[$langcode][$delta++] = [
               'value' => $block->paragraphs_item->item_id,
@@ -835,7 +873,9 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
         }
       }
     }
-    layout_paragraphs_clear_layout_tempstore($layout);
+    if (!$is_new) {
+      layout_paragraphs_clear_layout_tempstore($layout_name);
+    }
   }
 }
 
