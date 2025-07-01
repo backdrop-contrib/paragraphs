@@ -1248,7 +1248,7 @@ function paragraphs_entity_metadata_property_callback(&$info, $entity_type, $fie
  */
 function paragraphs_field_property_get($entity, array $options, $name, $entity_type, $info) {
   $field = field_info_field($name);
-  $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->language : NULL);
+  $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->langcode : NULL);
   $values = array();
   if (isset($entity->{$name}[$langcode])) {
     foreach ($entity->{$name}[$langcode] as $delta => $data) {
