@@ -17,7 +17,7 @@
 function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_state, $bundle) {
 
   // Load the paragraph type from machine name.
-  $paragraph_type = $bundle;
+  $paragraph_type = paragraphs_bundle_load($bundle);
   // Prepare the new paragraph type machine name prefix.
   $paragraph_type_prefix = $paragraph_type->bundle . '_clone';
   // Get the next occurrence count to use in the names.

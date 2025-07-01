@@ -1963,12 +1963,14 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         $paragraphs_field_values = field_get_values($entity, $field_name);
         foreach ($paragraphs_field_values as $delta => $paragraphs_field_value) {
           $paragraph_id = $paragraphs_field_value;
-          if (!isset($placed_blocks[$paragraph_id]) || empty($placed_blocks[$paragraph_id]->region_id) || !isset($layout->positions[$placed_blocks[$paragraph_id]->region_id])) {
+          $region_id = $placed_blocks[$paragraph_id]->region_id ?? '';
+          if (!isset($placed_blocks[$paragraph_id]) || empty($region_id) || !isset($layout->positions[$region_id])) {
             // Consider any Paragraphs items that are:
             //  * not explicitly placed, for example if the Layout UI was turned
             //    on after content was created with the Embedded widget.
             //  * explicitly placed but in a region that is not in the current
             //    layout.
+            backdrop_set_message('Expecting region: ' . $region_id . ' but it was not found.');
             $orphan_block_count++;
             $block_info = new stdClass();
             // $block_info->uuid = 'layout_paragraphs:' . $paragraph_id;

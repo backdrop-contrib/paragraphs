@@ -243,8 +243,6 @@ function layout_paragraphs_clear_layout_tempstore(string $layout_name) {
  */
 function layout_paragraphs_set_layout_tempstore(Layout $layout) {
   $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
-  backdrop_set_message('Content keys: ' . implode(', ', array_keys($layout->content)), 'status', FALSE);
-  backdrop_set_message('Position keys: ' . implode(', ', array_keys($layout->positions)), 'status', FALSE);
   tempstore_set('layout_paragraphs', $layout->name, $layout, $expire);
 }
 

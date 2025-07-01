@@ -391,7 +391,7 @@ function paragraphs_menu() {
     'title' => 'Clone Paragraphs type',
     'access arguments' => array('administer paragraphs bundles'),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('paragraphs_admin_bundle_clone_create_form', 3),
+    'page arguments' => array('paragraphs_admin_bundle_clone_create_form', 4),
     'file' => 'paragraphs.type_clone.inc',
     'type' => MENU_VISIBLE_IN_BREADCRUMB,
   );
@@ -1253,7 +1253,7 @@ function paragraphs_entity_metadata_property_callback(&$info, $entity_type, $fie
  */
 function paragraphs_field_property_get($entity, array $options, $name, $entity_type, $info) {
   $field = field_info_field($name);
-  $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->language : NULL);
+  $langcode = field_language($entity_type, $entity, $name, isset($options['language']) ? $options['language']->langcode : NULL);
   $values = array();
   if (isset($entity->{$name}[$langcode])) {
     foreach ($entity->{$name}[$langcode] as $delta => $data) {
@@ -1487,7 +1487,7 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
 /**
  * Implements hook_theme().
  */
-function paragraphs_theme() {
+function paragraphs_theme($existing, $type, $theme, $path) {
   return array(
     'paragraphs_field_multiple_value_form' => array(
       'render element' => 'element',
@@ -1501,13 +1501,13 @@ function paragraphs_theme() {
     'paragraphs_items' => array(
       'render element' => 'element',
       'template' => 'paragraphs-items',
-      'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
+      'path' => $path . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
     'paragraphs_item' => array(
       'render element' => 'elements',
       'template' => 'paragraphs-item',
-      'path' => backdrop_get_path('module', 'paragraphs') . '/theme',
+      'path' => $path . '/theme',
       'file' => 'paragraphs.theme.inc',
     ),
   );
@@ -1691,9 +1691,12 @@ function paragraphs_modules_uninstalled($modules) {
 /**
  * Access callback for separate edit/sort/delete form.
  *
- * @var ParagraphsItemEntity $paragraphs_item
+ * @param ParagraphsItemEntity $paragraphs_item
+ *  The paragraphs item entity to check access for.
+ *
+ * @return bool
  */
-function paragraphs_modal_admin_access($paragraphs_item) {
+function paragraphs_modal_admin_access(ParagraphsItemEntity $paragraphs_item) {
   $paragraphs_item->hostEntity();
   $host_entity_type = $paragraphs_item->hostEntityType();
   $instance = $paragraphs_item->instanceInfo();
@@ -1866,7 +1869,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
         'weight' => $weight,
       );
 
-      /* @var $entity_shell ParagraphsItemEntity */
+      /** @var ParagraphsItemEntity $entity_shell */
       $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
       $entity_shell->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
 

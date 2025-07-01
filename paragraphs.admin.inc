@@ -55,7 +55,7 @@ function paragraphs_admin_bundle_overview() {
     );
     // Clone bundle.
     $operations['clone_type'] = array(
-      'title' => t('clone'),
+      'title' => t('Clone'),
       'href' => 'admin/structure/paragraphs/types/' . $type_url_str . '/clone',
     );
 
@@ -208,7 +208,9 @@ function paragraphs_admin_bundle_form_validate(array $form, array &$form_state) 
     // 'theme' conflicts with theme_node_form().
     // '0' is invalid, since elsewhere we check it using empty().
     if (in_array($bundle->bundle, array('0', 'theme'))) {
-      form_set_error('type', t("Invalid machine-readable name. Enter a name other than %invalid.", array('%invalid' => $bundle->bundle)));
+      form_set_error('type', t("Invalid machine-readable name. Enter a name other than %invalid.", array(
+        '%invalid' => $bundle->bundle,
+      )));
     }
   }
 
@@ -309,7 +311,7 @@ function paragraphs_admin_bundle_form_submit(array $form, array &$form_state) {
   }
   elseif ($status == SAVED_NEW) {
     backdrop_set_message(t('The Paragraph type %name has been added.', $t_args));
-    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs/types'));
+    watchdog('paragraphs', 'Added Paragraph type %name.', $t_args, WATCHDOG_NOTICE, l(t('view'), 'admin/structure/paragraphs/types/'));
   }
 
   $form_state['redirect'] = 'admin/structure/paragraphs/types';
@@ -366,53 +368,6 @@ function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_st
   watchdog('paragraphs', 'Deleted Paragraph type %name.', $t_args, WATCHDOG_NOTICE);
 
   $form_state['redirect'] = 'admin/structure/paragraphs/types';
-}
-
-/**
- * Paragraphs admin landing page.
- *
- * @return string Rendered page.
- */
-function paragraphs_config_page() {
-  $blocks = array();
-  if ($admin = db_query("SELECT menu_name, mlid FROM {menu_links} WHERE link_path = 'admin/structure/paragraphs' AND module = 'system'")->fetchAssoc()) {
-    $admin[':type'] = MENU_NORMAL_ITEM;
-    $result = db_query("
-      SELECT m.*, ml.*
-      FROM {menu_links} ml
-      INNER JOIN {menu_router} m ON ml.router_path = m.path
-      WHERE menu_name = :menu_name
-        AND ml.plid = :mlid
-        AND m.type = :type
-        AND hidden = 0
-      ORDER BY ml.link_title ASC", $admin, array('fetch' => PDO::FETCH_ASSOC));
-    foreach ($result as $item) {
-      _menu_link_translate($item);
-      if (!$item['access']) {
-        continue;
-      }
-      // The link description, either derived from 'description' in hook_menu()
-      // or customized via menu module is used as title attribute.
-      if (!empty($item['localized_options']['attributes']['title'])) {
-        $item['description'] = $item['localized_options']['attributes']['title'];
-        unset($item['localized_options']['attributes']['title']);
-      }
-      $block = $item;
-      $block['content'] = '';
-      $block['content'] .= theme('admin_block_content', array(
-        'content' => system_admin_menu_block($item),
-      ));
-      if (!empty($block['content'])) {
-        $block['show'] = TRUE;
-      }
-
-      // Prepare for sorting as in function _menu_tree_check_access().
-      // The weight is offset so it is always positive, with a uniform 5-digits.
-      $blocks[(50000 + $item['weight']) . ' ' . $item['title'] . ' ' . $item['mlid']] = $block;
-    }
-  }
-
-  return theme('admin_page', array('blocks' => $blocks));
 }
 
 /**
@@ -902,6 +857,7 @@ function paragraphs_modal_admin_add_form($form, &$form_state, $mode, $paragraphs
     'bundle' => $paragraphs_bundle->bundle,
     'field_name' => $field_name,
   ));
+  /** @var ParagraphsItemEntity $new_paragraph */
   $new_paragraph->setHostEntity($host_entity_type, $host_entity, $host_entity->langcode, FALSE);
   $new_paragraph->position = $new_paragraph_position;
 
