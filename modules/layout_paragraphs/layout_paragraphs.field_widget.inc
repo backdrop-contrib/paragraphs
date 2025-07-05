@@ -88,12 +88,12 @@ function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $inst
  */
 function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   if ($instance['widget']['type'] == 'layout_paragraphs') {
+    $save_layout_tempstore = FALSE;
     $return = [];
     form_load_include($form_state, 'inc', 'layout_paragraphs', 'layout_paragraphs.admin');
     form_load_include($form_state, 'inc', 'layout_paragraphs', 'layout_paragraphs.context.admin');
     form_load_include($form_state, 'inc', 'layout', 'layout.admin');
 
-    $parents = $form['#parents'];
     $field_name = $field['field_name'];
     $langcode = (!empty($langcode)) ? $langcode : LANGUAGE_NONE;
 
@@ -108,13 +108,19 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $all_templates = layout_flexible_template_load_all('paragraphs');
     $available_templates = $instance['widget']['settings']['available_layout_templates'];
     $entity_type = $element['#entity_type'];
-    $entity_id = $element['#entity']->id() ?? 0;
+    $entity_id = (!empty($element['#entity'])) ? $element['#entity']->id() : 0;
+    if (!empty($form_state['input']['content']['positions'])) {
+      // We need to check if content is added in the form state, to try to
+      // preserve the layout that was being edited.
+      $entity_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
+    }
+    if (empty($entity_id)) {
+      $entity_id = $form_state['input']['content']['layout_paragraphs_tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? $element['#entity']->id() ?? '';
+    }
     $form['layout_paragraphs']['#field'] = $field;
     $form['layout_paragraphs']['#instance'] = $instance;
     $form['layout_paragraphs']['#entity'] = $element['#entity'];
-    if (empty($form_state['layout_paragraphs']['#entity_tempstore_id'])) {
-      $form_state['layout_paragraphs']['#entity_tempstore_id'] = (!empty($entity_id)) ? $entity_id : (new Uuid())->generate();
-    }
+    $form_state['input']['content']['layout_paragraphs_tempstore_id'] = $entity_id;
     if (!empty($form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'])) {
       $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
     }
@@ -128,10 +134,11 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         break;
       }
     }
-    $layout_name = _layout_paragraphs_get_layout_name($instance, $form_state['layout_paragraphs']['#entity_tempstore_id']);
+    $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
     $layout = layout_paragraphs_get_layout_tempstore($layout_name);
     if (empty($layout)) {
       $layout = layout_paragraphs_layout_load($layout_name, TRUE, 'database');
+      $save_layout_tempstore = TRUE;
     }
     if (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
@@ -179,7 +186,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
     $form['layout_paragraphs']['layout'] = $layout_content;
     $form['layout_paragraphs']['element'] = $element;
-
+    // $form['layout_paragraphs']['entity_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'] ?? '';
     if ($entity_type == 'taxonomy_term') {
       // @todo: Figure out why this seems to be needed for terms.
       // Maybe because the submit handler is not explicitly set in taxonomy_form_term?
@@ -191,7 +198,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
     $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
 
-    layout_paragraphs_set_layout_tempstore($layout);
+    if ($save_layout_tempstore) {
+      layout_paragraphs_set_layout_tempstore($layout);
+    }
     return $return;
   }
 }
@@ -244,27 +253,12 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
   // need to make sure the data remains in the field in the usual way so that
   // if Layout UI is disabled, the data is still there.
   $layout_template = $form_state['values']['layout_paragraphs_templates'];
-  $entity_type = $form['#entity_type'];
   $entity = $form['layout_paragraphs']['#entity'];
   $entity_id = $entity->id() ?? 0;
   if (!empty($entity_id)) {
     // Update existing entity.
     // Save new positions to the tempstore.
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
-    $layout = layout_paragraphs_get_layout_tempstore($layout_name);
-    $layout->locked = FALSE;
-    // @todo: Do we need to consider deleted Paragraphs here?
-    $layout->positions = [];
-    foreach ($form_state['values']['content']['positions'] as $region => $uuids_string) {
-      if (!empty($uuids_string)) {
-        $layout->positions[$region] = array_filter(explode(',', $uuids_string));
-      }
-    }
-    // Update the tempstore with the new positions so the store field data
-    // function can save it.
-    layout_paragraphs_set_layout_tempstore($layout);
-    $form_state['values']['content']['layout_name'] = $layout_name;
-    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
   }
   else {
     // @todo:
@@ -272,17 +266,41 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     // 1. The URLs on the layout have a blank where the layout name should be,
     //    e.g. when trying to add a Paragraphs block.
     // 2. Saving the entity fires this submit hook before the entity ID is set.
-    if ($entity_type == 'taxonomy_term') {
-      // Seems to require a special case based on how and when terms get saved.
-      $entity_id = $form_state['values']['tid'] ?? 0;
-    }
+    // $temp_entity_id = $form['layout_paragraphs']['#entity_tempstore_id'] ?? 0;
+    // if (!empty($temp_entity_id)) {
+    //   // This is a new entity, so we need to set the layout name based on the
+    //   // temporary ID.
+    //   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $temp_entity_id);
+    // }
+    // $form_state['values']['content']['layout_instance_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'];
+    // if (0 && $entity_type == 'taxonomy_term') {
+    //   // Seems to require a special case based on how and when terms get saved.
+    //   $entity_id = $form_state['values']['tid'] ?? 0;
+    // }
+    $tempstore_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
+    $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $tempstore_id);
 
-    $form_state['values']['content']['layout_instance_tempstore_id'] = $form_state['layout_paragraphs']['#entity_tempstore_id'];
     $insert_data = [
       'field_instance' => $form['layout_paragraphs']['#instance'],
       'layout_template' => $layout_template,
     ];
-    tempstore_set('layout_paragraphs_field', $form_state['layout_paragraphs']['#entity_tempstore_id'], $insert_data, 60 * 60 * 24 * 7);
-    return;
+    tempstore_set('layout_paragraphs_field', $tempstore_id, $insert_data, 60 * 60 * 24 * 7);
   }
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  $layout->locked = FALSE;
+  // @todo: Do we need to consider deleted Paragraphs here?
+  // @todo: Do we need to change positions of blocks as below? If so, is it only
+  // in certain conditions? (e.g. when creating new content the positions seem
+  // to match already in the simplest case. Can we optimize when we do this?)
+  $layout->positions = [];
+  foreach ($form_state['values']['content']['positions'] as $region => $uuids_string) {
+    $layout->positions[$region] = (!empty($uuids_string)) ? array_filter(explode(',', $uuids_string)) : [];
+  }
+  // Update the tempstore with the new positions so the store field data
+  // function can save it.
+  layout_paragraphs_set_layout_tempstore($layout);
+  if (!empty($entity_id)) {
+    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
+  }
+  $form_state['values']['content']['layout_name'] = $layout_name;
 }

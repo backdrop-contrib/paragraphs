@@ -175,7 +175,7 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
     // Special case due to mismatch between entity type and form key.
     $entity = $form_state['term'];
   }
-  $entity_id = $entity->id() ?? $form_state['layout_paragraphs']['#entity_tempstore_id'];
+  $entity_id = $entity->id() ?? $form['layout_paragraphs']['#entity_tempstore_id'];
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
   // load the old layout and process all regions/blocks to new layout.
@@ -1723,7 +1723,6 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $style = $form_state['style'];
   /* @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
-  $block_plugin = $block->plugin;
 
   // Save the block settings.
   $block->formSubmit($form, $form_state);
@@ -1755,7 +1754,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     // Clean up the in_progress value now that we're fully done.
     $layout->in_progress = NULL;
   }
-
+  tempstore_set('layout_paragraphs_block_tempstore_link', $block->uuid, $layout->name, time() + 60 * 60 * 24);
   layout_paragraphs_set_layout_tempstore($layout);
 }
 
@@ -2064,4 +2063,32 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
     layout_paragraphs_set_layout_tempstore($layout);
   }
   return $update_needed;
+}
+
+/**
+ * Helper to get an ID for a layout based on blocks that have been placed
+ * within it and have saved tempstore breadcrumbs. This is used to link the
+ * layout and blocks across various forms and submissions that end up
+ * resetting data within the form. If we can optimize this better and make this
+ * unnecessary, we should do so.
+ */
+function _layout_paragraphs_get_layout_id_from_block_tempstore(array $block_positions) {
+  $entity_id = NULL;
+  foreach ($block_positions as $position_key => $blocks) {
+    $blocks_array = explode(',', $blocks);
+    foreach ($blocks_array as $block_uuid) {
+      // If we've edited the layout previously, blocks have been storing
+      // temporary linkages to the layout name so we can retrieve them.
+      // @see layout_paragraphs_block_configure_form_submit()
+      $layout_name = tempstore_get('layout_paragraphs_block_tempstore_link', $block_uuid);
+      if (!empty($layout_name)) {
+        list(,,, $entity_id) = explode('.', $layout_name);
+        break;
+      }
+    }
+    if (!empty($entity_id)) {
+      break;
+    }
+  }
+  return $entity_id;
 }
