@@ -515,6 +515,7 @@ function paragraphs_library_item_delete_form_submit($form, &$form_state) {
  * Page callback for listing the usage of a Paragraphs library item.
  */
 function paragraphs_library_item_usage_listing($paragraphs_library_item) {
+  $items = [];
   $field_name = 'field_reusable_paragraph';
   $target_id = $paragraphs_library_item->id();
   $field_info = field_info_field($field_name);
