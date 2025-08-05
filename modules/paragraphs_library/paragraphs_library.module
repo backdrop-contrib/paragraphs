@@ -505,7 +505,7 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
  * Deletes the paragraphs_library_item and displays a message.
  */
 function paragraphs_library_item_delete_form_submit($form, &$form_state) {
-  $library_item_id = $form_state['values'][''];
+  $library_item_id = $form_state['values']['library_item_id'];
   $library_item = entity_load('paragraphs_library_item', $library_item_id);
   entity_delete_multiple('paragraphs_library_item', [$library_item_id]);
   backdrop_set_message(t('Paragraphs library item %title has been deleted.', ['%title' => check_plain($library_item->label())]));
