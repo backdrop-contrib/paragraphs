@@ -41,7 +41,7 @@ function paragraphs_library_delete_form_submit($form, &$form_state) {
 }
 
 /**
- * Delete confirmation for multiple paragraphs_library entities through action
+ * Delete confirmation for multiple paragraphs_library_item entities through action
  * and bulk operation.
  */
 function paragraphs_library_multiple_delete_confirm($form, &$form_state) {

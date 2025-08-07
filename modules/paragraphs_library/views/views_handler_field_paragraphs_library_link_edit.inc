@@ -15,7 +15,7 @@ class views_handler_field_paragraphs_library_link_edit extends views_handler_fie
    * {@inheritdoc}
    */
   public function render_link($data, $values) {
-    if ($data && user_access('edit any paragraphs_library entities')) {
+    if ($data && user_access('edit any paragraphs_library_item entities')) {
       $this->options['alter']['make_link'] = TRUE;
 
       $text = !empty($this->options['text']) ? $this->options['text'] : t('Edit');

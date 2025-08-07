@@ -139,7 +139,7 @@ function paragraphs_library_schema() {
 function paragraphs_library_install() {
   user_role_grant_permissions(BACKDROP_AUTHENTICATED_ROLE, [
     // Grant viewing permision to authenticated users.
-    'view paragraphs_library entities',
+    'view paragraphs_library_item entities',
   ]);
 }
 
