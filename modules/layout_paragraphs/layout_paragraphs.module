@@ -435,7 +435,7 @@ function layout_paragraphs_theme($existing, $type, $theme, $path) {
     ) + $base,
     'layout_paragraphs_items' => array(
       'variables' => array(
-        'items' => NULL,
+        'items' => array(),
         'layout_name' => NULL,
       ),
     ) + $base,

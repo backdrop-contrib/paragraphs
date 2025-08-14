@@ -550,8 +550,7 @@ class ParagraphsItemEntity extends Entity {
 
   /**
    * Ensure file fields on the entity have their URIs loaded for previews.
-   *
-   * Copied from #1447338-7, thanks!
+   * Ensure modal admin links are added if appropriate.
    */
   public function view($view_mode = 'full', $langcode = NULL, $page = NULL) {
     if ($langcode == NULL) {

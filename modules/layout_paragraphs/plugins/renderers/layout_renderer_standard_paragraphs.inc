@@ -102,7 +102,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return string
    *   The HTML string representing the entire rendered, themed layout.
    */
-  function renderLayout() {
+  public function renderLayout() {
     if (empty($this->prep_run)) {
       $this->prepare();
     }
@@ -135,7 +135,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return array
    *   An array of rendered layout regions, keyed on the region name.
    */
-  function renderRegions() {
+  public function renderRegions() {
     $this->rendered['regions'] = array();
 
     // Loop through all layout regions, put all blocks that belong to the
@@ -161,7 +161,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return string
    *   The rendered, HTML string output of the passed-in region.
    */
-  function renderRegion($region_id, $blocks) {
+  public function renderRegion($region_id, $blocks) {
     $style_settings = $this->prepared['regions'][$region_id]['style settings'];
     $tag = isset($style_settings['element']) ? $style_settings['element'] : '';
     $classes = array();
@@ -182,7 +182,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return array
    *   The array of rendered blocks, keyed on block UUID.
    */
-  function renderBlocks() {
+  public function renderBlocks() {
     $this->rendered['blocks'] = array();
 
     foreach ($this->prepared['blocks'] as $uuid => $block) {
@@ -203,7 +203,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return string
    *   The rendered block as HTML.
    */
-  function renderBlock($block) {
+  public function renderBlock($block) {
     $output = '';
     if ($content = $block->getContent()) {
       $style = layout_get_style_info($block->style->plugin);

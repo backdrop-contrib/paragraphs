@@ -148,17 +148,17 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
         // Check the field instance's widget to see if Layout Paragraphs is in use.
         // @todo: Ensure the individual Paragraphs are rendered fully, with modal links if appropriate.
         if ($instance['widget']['type'] == 'layout_paragraphs') {
-          $paragraphs = element_children($element);
-          $element = array(
-            'items' => $paragraphs,
-          );
+          $paragraphs_element = $element;
+          $element = array();
+          foreach (element_children($paragraphs_element) as $key) {
+            $element['items'][$key] = $paragraphs_element[$key];
+          }
           // If so, we need to wrap the Paragraph items in the Layout.
           $element['#theme_wrappers'] = array('layout_paragraphs_items');
           $element['#layout_name'] = $entity_type . '.' . $entity->bundle() . '.' . $field['field_name'] . '.' . $entity->id();
         }
       }
-
-      break;
+    break;
   }
 
   return $element;

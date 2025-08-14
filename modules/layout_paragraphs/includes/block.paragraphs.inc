@@ -48,7 +48,7 @@ class BlockParagraphs extends Block {
   /**
    * {@inheritdoc}
    */
-  function __construct($plugin_name, array $data) {
+  public function __construct($plugin_name, array $data) {
     parent::__construct($plugin_name, $data);
 
     $this->settings += array(
@@ -77,7 +77,7 @@ class BlockParagraphs extends Block {
   /**
    *  Sets title text on draggable block panel in Layout builder.
    */
-  function getAdminTitle() {
+  public function getAdminTitle() {
     $suffix = $this->is_orphaned ? ' (' . t('orphaned') . ')' : '';
     if (!empty($this->settings['admin_label'])) {
       // If a custom admin title was added in the block itself, use it first.
@@ -101,7 +101,7 @@ class BlockParagraphs extends Block {
   /**
    * {@inheritdoc}
    */
-  function getAdminPreview() {
+  public function getAdminPreview() {
     $display_mode = 'paragraphs_editor_preview';
     if (!empty($this->settings['admin_description'])) {
       return filter_xss($this->settings['admin_description']);
@@ -113,7 +113,7 @@ class BlockParagraphs extends Block {
   /**
    *  Paragraphs don't have front-facing titles, so this returns an empty string.
    */
-  function getTitle() {
+  public function getTitle() {
     return '';
   }
 
@@ -122,13 +122,13 @@ class BlockParagraphs extends Block {
    *
    * @return string
    */
-  function getContent() {
+  public function getContent() {
     // @todo: We'll need to consider Display Modes here.
     $display_mode = 'full';
     $content = '';
     if (!empty($this->paragraphs_item)) {
-      $entity_view = entity_view($this->paragraphs_item, $display_mode);
-      $content = render($entity_view);
+      // @todo: ensure modal admin links get added if appropriate.
+      $content = $this->paragraphs_item->view($display_mode);
     }
     return $content;
   }
@@ -141,7 +141,7 @@ class BlockParagraphs extends Block {
    *
    * @return array|null
    */
-  function getChildren() {
+  public function getChildren() {
     $blocks = array();
     $query_parts = explode('/', check_plain($_GET['q']));
     $layout_name = $query_parts[5];
@@ -168,7 +168,7 @@ class BlockParagraphs extends Block {
    * Overrides Block::form().
    * Builds the block's configuration form.
    */
-  function form(&$form, &$form_state) {
+  public function form(&$form, &$form_state) {
     $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
     $this->paragraphs_item->being_edited = TRUE;
 
@@ -207,7 +207,7 @@ class BlockParagraphs extends Block {
   /**
    * Validates the block form settings.
    */
-  function formValidate($form, &$form_state) {
+  public function formValidate($form, &$form_state) {
     parent::formValidate($form, $form_state);
 
     field_attach_form_validate('paragraphs_item', $this->paragraphs_item, $form, $form_state);
@@ -216,7 +216,7 @@ class BlockParagraphs extends Block {
   /**
    * Submit handler to save the block form settings.
    */
-  function formSubmit($form, &$form_state) {
+  public function formSubmit($form, &$form_state) {
     parent::formSubmit($form, $form_state);
 
     $this->settings['admin_label'] = trim($form_state['values']['admin_label']);

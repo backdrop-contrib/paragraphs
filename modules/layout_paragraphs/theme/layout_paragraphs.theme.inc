@@ -47,13 +47,6 @@ function theme_layout_paragraphs_template_option($variables) {
 
 /**
  * Outputs items from a Paragraphs field in Layout form.
- *
- * We:
- *  - Look up the layout information in layout_paragraphs, including the ID.
- *  - Look up the block placements from layout_paragraphs_blocks.
- *  - Compare blocks to the items sent in the $variables array; if any are
- *    missing, we add them to the default region.
- *  - Render the layout using the layout_paragraphs renderer.
  */
 function theme_layout_paragraphs_items($variables) {
   module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');

@@ -1435,8 +1435,6 @@ function layout_paragraphs_template_delete_form_submit(&$form, &$form_state) {
  *
  * @return string $svg
  *   The SVG of the generated thumbnail image.
- *
- *   This function only works with the GD toolkit. ImageMagick is not supported.
  */
 function _layout_paragraphs_template_generate_svg($template) {
   $template_rows = $template->rows;
