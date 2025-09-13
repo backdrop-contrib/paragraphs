@@ -550,9 +550,11 @@ function paragraphs_modal_admin_sort_form($form, &$form_state, $paragraphs_item)
       $item['entity'] = paragraphs_item_load($item['value']);
       $item_render_array = $item['entity']->view('paragraphs_editor_preview', $langcode);
       $item_markup = backdrop_render($item_render_array);
+      $has_markup = TRUE;
+      $bundle = paragraphs_bundle_load($item['entity']->bundle);
       if (empty($item_markup) || empty(trim(strip_tags($item_markup, '<img><a>')))) {
-        $bundle = paragraphs_bundle_load($item['entity']->bundle);
         $item_markup = $bundle->name;
+        $has_markup = FALSE;
       }
       $form['paragraphs_items'][$item['value']] = array(
         'preview' => array(
@@ -570,6 +572,18 @@ function paragraphs_modal_admin_sort_form($form, &$form_state, $paragraphs_item)
           '#title_display' => 'invisible',
         ),
       );
+
+      if ($has_markup) {
+        // Display collapsed if there is something to preview.
+        $form['paragraphs_items'][$item['value']]['preview'] = array(
+          '#type' => 'details',
+          '#summary' => t('Preview: ' . $bundle->name),
+          '#details' => $item_markup,
+          '#attributes' => array(
+            'class' => array('paragraphs-preview'),
+          ),
+        );
+      }
     }
     $form['actions'] = array(
       '#type' => 'actions',
