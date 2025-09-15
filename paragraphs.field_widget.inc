@@ -438,6 +438,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
   $default_edit_mode_override = isset($instance['settings']['default_edit_mode_override']) ? $instance['settings']['default_edit_mode_override'] : PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE;
   $force_open = (!empty($instance['widget']['paragraphs_edit_mode_open']) || count($items) < $default_edit_mode_override);
+  $preview_collapsed = isset($instance['settings']['preview_collapsed']) ? $instance['settings']['preview_collapsed'] : PARAGRAPHS_PREVIEW_MODE_COLLAPSED;
 
   $being_edited_paragraph = ($default_edit_mode === 'open');
 
@@ -590,6 +591,14 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           );
           $preview = $paragraphs_item->view('paragraphs_editor_preview', $langcode);
           $element['paragraph_bundle_preview']['preview'] = $preview;
+
+          if ($preview_collapsed) {
+            $element['paragraph_bundle_preview']['preview'] = array(
+              '#type' => 'details',
+              '#summary' => t('Preview'),
+              '#details' => backdrop_render($preview),
+            );
+          }
         }
 
         foreach (element_children($element) as $key) {
