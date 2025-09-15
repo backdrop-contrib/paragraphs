@@ -2024,7 +2024,8 @@ function paragraphs_autoload_info() {
 }
 
 /**
- * Retrieves the default theme's Paragraphs stylesheets defined in the .info file.
+ * Retrieves the default theme's Paragraphs stylesheets defined in the .info
+ * file.
  *
  * Themes may specify CSS files for use with Paragraphs by
  * including a "paragraphs_stylesheets" key in the theme .info file.
