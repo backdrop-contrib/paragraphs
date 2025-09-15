@@ -274,7 +274,10 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
               '#value' => t('Add !title', array('!title' => $bundle['name'])),
               '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
               '#attributes' => array(
-                'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+                'class' => array(
+                  'field-add-more-submit',
+                  'paragraphs-add-more-submit',
+                ),
               ),
               '#limit_validation_errors' => array(),
               '#submit' => array('paragraphs_add_more_submit'),
@@ -330,7 +333,10 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more',
             '#value' => $text,
             '#attributes' => array(
-              'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+              'class' => array(
+                'field-add-more-submit',
+                'paragraphs-add-more-submit',
+              ),
             ),
             '#limit_validation_errors' => array(),
             '#submit' => array('paragraphs_add_more_submit'),
