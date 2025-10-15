@@ -599,10 +599,14 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           $element['paragraph_bundle_preview']['preview'] = $preview;
 
           if ($preview_collapsed) {
+            $rendered_preview = backdrop_render($preview);
+            $summary_preview = truncate_utf8(trim(strip_tags($rendered_preview)), 170, FALSE, TRUE, 3);
+            $summary = t('Preview') . ($summary_preview ? ': ' . $summary_preview : '');
+
             $element['paragraph_bundle_preview']['preview'] = array(
               '#type' => 'details',
-              '#summary' => t('Preview'),
-              '#details' => backdrop_render($preview),
+              '#summary' => $summary,
+              '#details' => $rendered_preview,
             );
           }
         }
