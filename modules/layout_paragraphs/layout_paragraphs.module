@@ -174,6 +174,29 @@ function layout_paragraphs_menu() {
 }
 
 /**
+ * Implements hook_library_info().
+ */
+function layout_paragraphs_library_info() {
+  $libraries['layout_paragraphs'] = array(
+    'title' => 'Layout Paragraphs',
+    'version' => '1.0',
+    'css' => array(
+      backdrop_get_path('module', 'layout') . '/css/layout.admin.css' => array(),
+      backdrop_get_path('module', 'layout') . '/css/layout.flexible.admin.css' => array(),
+      backdrop_get_path('module', 'layout_paragraphs') . '/css/layout_paragraphs.css' => array(),
+    ),
+    'js' => array(
+      backdrop_get_path('module', 'layout') . '/js/layout.admin.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'backdrop.ajax'),
+      array('system', 'ui.sortable'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
  * Menu loader to load a layout instance and retrieve an individual Paragraphs
  * block from it.
  *
@@ -347,8 +370,6 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
  *
  * @param LayoutFlexibleTemplate $flexible_template
  *   The loaded flexible template object.
- * @param string $flexible_template_type
- *   The type of flexible template to save. Defaults to 'flexible'.
  */
 function layout_paragraphs_template_tempstore_set(LayoutFlexibleTemplate $flexible_template) {
   layout_flexible_tempstore_set($flexible_template, 'paragraphs');
@@ -439,6 +460,27 @@ function layout_paragraphs_theme($existing, $type, $theme, $path) {
         'layout_name' => NULL,
       ),
     ) + $base,
+    'layout__paragraphs' => array(
+      'variables' => array(
+        'content' => NULL,
+        'settings' => NULL,
+        'layout' => NULL,
+        'layout_template_info' => NULL,
+        'renderer' => NULL,
+        'attributes' => array(),
+        'admin' => FALSE,
+      ),
+      'template' => 'layout--paragraphs',
+      'path' => $path . '/templates',
+      'theme path' => $path . '/templates',
+      'type' => 'module',
+      'base hook' => 'layout',
+      'attached' => array(
+        'library' => array(
+          array('layout_paragraphs', 'layout_paragraphs'),
+        ),
+      ),
+    ),
   );
 }
 
@@ -657,8 +699,8 @@ function layout_paragraphs_get_layout_template_info($template_name = NULL, $rebu
         'name' => $layout_paragraphs_template->name,
         'regions' => array(),
         'default region' => '',
-        'template' => 'layout--flexible',
-        'path' => backdrop_get_path('module', 'layout') . '/templates',
+        'template' => 'layout--paragraphs',
+        'path' => backdrop_get_path('module', 'layout_paragraphs') . '/templates',
         'flexible' => TRUE,
         'layout_template_type' => 'paragraphs',
         'is_full_page' => FALSE,
