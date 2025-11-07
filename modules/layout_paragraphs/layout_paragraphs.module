@@ -462,6 +462,8 @@ function layout_paragraphs_theme_registry_alter(&$theme_registry) {
       ),
       'template' => 'layout--flexible',
       'path' => backdrop_get_path('module', 'layout') . '/templates',
+      'theme path' => backdrop_get_path('module', 'layout') . '/templates',
+      'type' => 'module',
       'base hook' => 'layout',
     );
   }
