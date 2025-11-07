@@ -26,10 +26,21 @@
   <div class="layout-flexible-content <?php $region_buttons ? print 'layout-flexible-editor' : ''; ?>">
     <?php foreach ($row_data as $name => $row) : ?>
       <?php
+      // Ensure there is content in this row before rendering it.
+      $has_content = FALSE;
+      foreach ($row['regions'] as $region) :
+        if (!empty($content[$region['content_key']])) :
+          $has_content = TRUE;
+          break;
+        endif;
+      endforeach;
+      if (!$has_content && !$region_buttons) :
+        continue;
+      endif;
       $row_classes = array('flexible-row', 'l-' . $name);
-      if ($row['element'] == 'header' || $row['element'] == 'footer') {
+      if ($row['element'] == 'header' || $row['element'] == 'footer') :
         $row_classes[] = 'l-' . $row['element'];
-      }
+      endif;
       ?>
       <<?php print $row['element']; ?> data-row-id="<?php print $name; ?>" class="<?php print implode(' ', $row_classes); ?>" <?php print $row['row_id']; ?>>
         <div class="<?php print $row['row_class']; ?>">
@@ -49,6 +60,12 @@
           <?php endif; ?>
           <div class="l-flexible-row row">
             <?php foreach ($row['regions'] as $region) : ?>
+              <?php
+              // Ensure there is content in this region before rendering it.
+              if (empty($content[$region['content_key']]) && !$region_buttons) :
+                continue;
+              endif;
+              ?>
               <div class="l-col col-md-<?php print $region['region_md']; ?> <?php print $region['region_classes']; ?>">
                 <?php if ($region_buttons) : ?>
                   <div class="layout-editor-region" id="layout-editor-region-<?php print $name; ?>" data-region-name="<?php print $name; ?>">

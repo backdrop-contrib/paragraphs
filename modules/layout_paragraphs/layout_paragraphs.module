@@ -164,7 +164,7 @@ function layout_paragraphs_menu() {
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/toggle-block-status/%/%layout_paragraphs_tempstore_block'] = array(
     'title' => 'Disable block',
     'load arguments' => array(5),
-    'page callback' => 'layout_block_disable_page',
+    'page callback' => 'layout_paragraphs_block_disable_page',
     'page arguments' => array(5, 8, 7),
     'file' => 'layout_paragraphs.admin.inc',
   );
@@ -182,7 +182,6 @@ function layout_paragraphs_library_info() {
     'version' => '1.0',
     'css' => array(
       backdrop_get_path('module', 'layout') . '/css/layout.admin.css' => array(),
-      backdrop_get_path('module', 'layout') . '/css/layout.flexible.admin.css' => array(),
       backdrop_get_path('module', 'layout_paragraphs') . '/css/layout_paragraphs.css' => array(),
     ),
     'js' => array(
@@ -901,11 +900,19 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
             // Set the host entity for the Paragraphs item.
             // $block->paragraphs_item->setHostEntity($entity_type, $entity);
             // Save the Paragraphs item.
-            if ($block->paragraphs_item->is_new) {
+            if ($block->is_new) {
               $block->paragraphs_item->save(TRUE);
               $layout->content[$uuid]->paragraphs_item = $block->paragraphs_item;
               layout_paragraphs_set_layout_tempstore($layout);
             }
+            // Mark Paragraph items as disabled if needed.
+            if ($block->status != $block->paragraphs_item->status) {
+              $block->paragraphs_item->status = $block->status;
+              $block->paragraphs_item->save(TRUE);
+            }
+            // Delete Paragraphs if needed, considering revisions as well.
+            // @todo.
+
             // Add the Paragraphs item to the entity's field data to be saved.
             $entity->{$field_name}[$langcode][$delta++] = [
               'value' => $block->paragraphs_item->item_id,

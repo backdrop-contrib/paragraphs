@@ -1784,6 +1784,9 @@ function layout_paragraphs_get_block_uuid($paragraphs_item_id = 0) {
  * Menu callback; Remove a block from a layout.
  */
 function layout_paragraphs_block_remove_page(Layout $layout, Block $block, $renderer_name) {
+  // @todo: This function needs work. When the block is removed, it
+  // should also delete (or mark for deletion) the Paragraphs item.
+
   if (backdrop_get_token('layout-' . $layout->name) !== $_GET['token']) {
     return MENU_ACCESS_DENIED;
   }
@@ -1810,23 +1813,21 @@ function layout_paragraphs_block_remove_page(Layout $layout, Block $block, $rend
  * Menu callback; Set a block as disabled.
  */
 function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $renderer_name) {
-  // @todo: This function hasn't been touched. When the block is disabled, it
-  // should also mark the Paragraphs item as disabled.
-  return;
-
   if (backdrop_get_token('layout-' . $layout->name) !== $_GET['token']) {
     return MENU_ACCESS_DENIED;
   }
 
   $uuid = $block->uuid;
   $layout->content[$uuid]->status = $block->status ? BLOCK_DISABLED : BLOCK_ENABLED;
-  layout_set_layout_tempstore($layout);
+  layout_paragraphs_set_layout_tempstore($layout);
 
   $renderer = layout_create_renderer($renderer_name, $layout);
+
+  $block->status = $layout->content[$uuid]->status;
   $replace_block = $renderer->renderBlock($block);
 
   if (backdrop_is_ajax()) {
-    if ($message = layout_locked_message($layout, 'layout')) {
+    if ($message = layout_paragraphs_locked_message($layout, 'layout')) {
       backdrop_set_message($message, 'warning');
       $commands[] = ajax_command_remove('#messages');
       $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
@@ -1840,7 +1841,8 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
   }
   else {
     backdrop_set_message(t('Block "@title" disabled.', array('@title' => $block->getAdminTitle())));
-    backdrop_goto('admin/structure/layouts/manage/' . $layout->name);
+    // @todo: Redirect to the current entity edit page.
+    // backdrop_goto('admin/structure/layouts/manage/' . $layout->name);
   }
 
 }/**
@@ -1986,8 +1988,8 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
       foreach ($placed_blocks as $paragraph_id => $block_info) {
         $region_id = $block_info->region_id ?? $default_region;
         $block_paragraph = entity_load('paragraphs_item', $paragraph_id);
-        $paragraphs_block_key = 'layout_paragraphs:' . $block_paragraph->bundle;
         if (!empty($block_paragraph)) {
+          $paragraphs_block_key = 'layout_paragraphs:' . $block_paragraph->bundle;
           $block_data = [
             'paragraphs_item_id' => $paragraph_id,
             'layout_name' => $layout->name,
