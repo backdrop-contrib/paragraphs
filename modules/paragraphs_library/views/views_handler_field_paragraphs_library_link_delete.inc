@@ -16,7 +16,7 @@ class views_handler_field_paragraphs_library_link_delete extends views_handler_f
    */
   public function render_link($data, $values) {
     // Ensure user has access to delete this node.
-    if (!user_access('edit any paragraphs_library entities')) {
+    if (!user_access('edit any paragraphs_library_item entities')) {
       return;
     }
 

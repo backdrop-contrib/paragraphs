@@ -62,7 +62,7 @@ class views_handler_field_paragraphs_library_link extends views_handler_field {
    * An example of field level access control.
    */
   public function access() {
-    return user_access('view paragraphs_library entities');
+    return user_access('view paragraphs_library_item entities');
   }
 
   /**

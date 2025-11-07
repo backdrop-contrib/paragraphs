@@ -61,7 +61,7 @@ function paragraphs_library_entity_info() {
       'extra fields controller class' => 'EntityDefaultExtraFieldsController',
 
       // By including 'admin ui' we are telling Entity UI to create menu items
-      // for viewing, adding, editing and deleting paragraphs_library entities.
+      // for viewing, adding, editing and deleting paragraphs_library_item entities.
       'admin ui' => [
         'path' => 'admin/content/paragraphs/library',
         'controller class' => 'EntityBundleableUIController',
@@ -298,6 +298,11 @@ function paragraphs_library_permission() {
       'description' => t('Allows users to configure Paragraphs Library types and their fields.'),
       'restrict access' => TRUE,
     ],
+    'administer paragraphs_library_item entities' => [
+      'title' => t('Administer Paragraphs library items'),
+      'description' => t('Allows users to administer Paragraphs library items.'),
+      'restrict access' => TRUE,
+    ],
     'create paragraphs_library_item entities' => [
       'title' => t('Create Paragraphs library items'),
       'description' => t('Allows users to create Paragraphs library items.'),
@@ -306,12 +311,10 @@ function paragraphs_library_permission() {
     'view own paragraphs_library_item entities' => [
       'title' => t('View own Paragraphs library items'),
       'description' => t('Allows users to view own Paragraphs library items.'),
-      'restrict access' => TRUE,
     ],
     'view paragraphs_library_item entities' => [
       'title' => t('View Paragraphs library items'),
       'description' => t('Allows users to view Paragraphs library items.'),
-      'restrict access' => TRUE,
     ],
     'edit any paragraphs_library_item entities' => [
       'title' => t('Edit any Paragraphs library items'),
@@ -382,13 +385,13 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
         'class' => array('paragraphs-library-item-form-revision-information'),
       ),
       '#weight' => 20,
-      '#access' => (!empty($library_item) && $library_item->id()) && (user_access('administer paragraphs library items')),
+      '#access' => (!empty($library_item) && $library_item->id()) && (user_access('administer paragraphs_library_item entities')),
     );
     $form['revision_information']['revision'] = array(
       '#type' => 'checkbox',
       '#title' => t('Create new revision'),
       '#default_value' => FALSE,
-      '#access' => user_access('administer paragraphs library items'),
+      '#access' => user_access('administer paragraphs_library_item entities'),
     );
     // Check the revision log checkbox when the log textarea is filled in.
     // This must not happen if "Create new revision" is enabled by default,
@@ -505,7 +508,7 @@ function paragraphs_library_item_delete_form($form, &$form_state, ParagraphsLibr
  * Deletes the paragraphs_library_item and displays a message.
  */
 function paragraphs_library_item_delete_form_submit($form, &$form_state) {
-  $library_item_id = $form_state['values'][''];
+  $library_item_id = $form_state['values']['library_item_id'];
   $library_item = entity_load('paragraphs_library_item', $library_item_id);
   entity_delete_multiple('paragraphs_library_item', [$library_item_id]);
   backdrop_set_message(t('Paragraphs library item %title has been deleted.', ['%title' => check_plain($library_item->label())]));
@@ -515,6 +518,7 @@ function paragraphs_library_item_delete_form_submit($form, &$form_state) {
  * Page callback for listing the usage of a Paragraphs library item.
  */
 function paragraphs_library_item_usage_listing($paragraphs_library_item) {
+  $items = [];
   $field_name = 'field_reusable_paragraph';
   $target_id = $paragraphs_library_item->id();
   $field_info = field_info_field($field_name);
@@ -619,7 +623,7 @@ function paragraphs_library_entity_property_info_alter(&$info) {
     'type' => 'date',
     'description' => t("The date the paragraphs_library was posted."),
     'setter callback' => 'entity_plus_property_verbatim_set',
-    'setter permission' => 'administer paragraphs library items',
+    'setter permission' => 'administer paragraphs_library_item entities',
     'schema field' => 'created',
   ];
 
@@ -636,7 +640,7 @@ function paragraphs_library_entity_property_info_alter(&$info) {
     'type' => 'user',
     'description' => t("The author of the paragraphs_library."),
     'setter callback' => 'entity_plus_property_verbatim_set',
-    'setter permission' => 'administer paragraphs library items',
+    'setter permission' => 'administer paragraphs_library_item entities',
     'required' => TRUE,
     'schema field' => 'uid',
   ];
@@ -657,21 +661,21 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
   $access = FALSE;
   switch ($op) {
     case 'create':
-      $access = user_access('administer paragraphs library items', $account)
-          || user_access('create paragraphs_library entities', $account);
+      $access = user_access('administer paragraphs_library_item entities', $account)
+          || user_access('create paragraphs_library_item entities', $account);
       break;
     case 'view':
-      $access = user_access('administer paragraphs library items', $account)
-          || user_access('view paragraphs_library entities', $account)
-          || (user_access('view own paragraphs_library entities', $account) && ($library_item->uid == $account->uid));
+      $access = user_access('administer paragraphs_library_item entities', $account)
+          || user_access('view paragraphs_library_item entities', $account)
+          || (user_access('view own paragraphs_library_item entities', $account) && ($library_item->uid == $account->uid));
       break;
 
     case 'update':
     case 'edit':
     case 'delete':
-      $access = user_access('administer paragraphs library items')
-          || user_access('edit any paragraphs_library entities')
-          || (user_access('edit own paragraphs_library entities') && ($library_item->uid == $account->uid));
+      $access = user_access('administer paragraphs_library_item entities')
+          || user_access('edit any paragraphs_library_item entities')
+          || (user_access('edit own paragraphs_library_item entities') && ($library_item->uid == $account->uid));
       break;
   }
   return $access;
@@ -732,7 +736,7 @@ function _paragraphs_library_revision_access(ParagraphsLibraryItem $library_item
     if ($is_current_revision && (db_query('SELECT COUNT(revision_id) FROM {paragraphs_library_item_revision} WHERE item_id = :id', array(':id' => $library_item->id()))->fetchField() == 1 || $op == 'update' || $op == 'delete')) {
       $access[$cid] = FALSE;
     }
-    elseif (user_access('administer paragraphs library items', $account)) {
+    elseif (user_access('administer paragraphs_library_item entities', $account)) {
       $access[$cid] = TRUE;
     }
     else {
@@ -864,7 +868,7 @@ function paragraphs_library_item_load(?int $library_item_id = NULL, ?int $revisi
 }
 
 /**
- * Load multiple paragraphs_library entities based on certain conditions.
+ * Load multiple paragraphs_library_item entities based on certain conditions.
  */
 function paragraphs_library_item_load_multiple($library_item_ids = [], $conditions = [], $reset = FALSE) {
   return entity_load_multiple('paragraphs_library_item', $library_item_ids, $conditions, $reset);
@@ -885,7 +889,7 @@ function paragraphs_library_item_delete($library_item) {
 }
 
 /**
- * Delete multiple paragraphs_library entities.
+ * Delete multiple paragraphs_library_item entities.
  */
 function paragraphs_library_item_delete_multiple($library_item_ids) {
   entity_delete_multiple('paragraphs_library_item', $library_item_ids);
@@ -1093,11 +1097,11 @@ function paragraphs_library_item_revision_overview(ParagraphsLibraryItem $librar
 
   $rows = array();
   $revert_permission = FALSE;
-  if ((user_access('revert revisions') || user_access('administer paragraphs library items')) && paragraphs_library_access('update', $library_item)) {
+  if ((user_access('revert revisions') || user_access('administer paragraphs_library_item entities')) && paragraphs_library_access('update', $library_item)) {
     $revert_permission = TRUE;
   }
   $delete_permission = FALSE;
-  if ((user_access('delete revisions') || user_access('administer paragraphs library items')) && paragraphs_library_access('delete', $library_item)) {
+  if ((user_access('delete revisions') || user_access('administer paragraphs_library_item entities')) && paragraphs_library_access('delete', $library_item)) {
     $delete_permission = TRUE;
   }
   foreach ($revisions as $revision) {
