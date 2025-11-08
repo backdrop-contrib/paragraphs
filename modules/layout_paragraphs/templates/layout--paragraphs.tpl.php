@@ -38,9 +38,6 @@
         continue;
       endif;
       $row_classes = array('flexible-row', 'l-' . $name);
-      if ($row['element'] == 'header' || $row['element'] == 'footer') :
-        $row_classes[] = 'l-' . $row['element'];
-      endif;
       ?>
       <<?php print $row['element']; ?> data-row-id="<?php print $name; ?>" class="<?php print implode(' ', $row_classes); ?>" <?php print $row['row_id']; ?>>
         <div class="<?php print $row['row_class']; ?>">
