@@ -102,13 +102,22 @@
   }
 }
 
-/** Temporary CSS **/
+.layout--paragraphs {
+  .l-region--sub-content {
+    padding: 0;
+  }
+}
+
 .layout-paragraphs--wrapper {
   .layout {
     height: auto;
     width: 100%;
   }
+}
 
+/** Temporary CSS **/
+/*
+.layout-paragraphs--wrapper {
   .block-content {
     padding: 1rem;
   }
@@ -130,3 +139,4 @@
     }
   }
 }
+*/

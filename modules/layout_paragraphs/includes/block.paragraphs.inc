@@ -123,8 +123,7 @@ class BlockParagraphs extends Block {
    * @return string
    */
   public function getContent() {
-    // @todo: We'll need to consider Display Modes here.
-    $display_mode = 'full';
+    $display_mode = $this->field_instance['display']['default']['settings']['view_mode'];
     $content = '';
     if (!empty($this->paragraphs_item)) {
       // @todo: ensure modal admin links get added if appropriate.
