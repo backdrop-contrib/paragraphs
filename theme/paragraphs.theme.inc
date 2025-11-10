@@ -77,10 +77,11 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['theme_hook_suggestions'][] = $paragraphs_item_type . '__' . $paragraphs_item_id;
 
   // Add the modal css class if enabled.
+  $modal_admin_enabled = !empty($variables['elements']['#modal_admin']) || !empty($paragraphs_item->modal_admin);
   if (!paragraphs_item_access('delete', $paragraphs_item)
     || !paragraphs_item_access('create', $paragraphs_item)
     || !paragraphs_item_access('update', $paragraphs_item)
-    || empty($variables['elements']['#modal_admin'])
+    || !$modal_admin_enabled
     || !empty($variables['elements']['#in_preview'])) {
     return;
   }

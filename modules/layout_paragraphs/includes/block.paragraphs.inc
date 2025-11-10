@@ -126,7 +126,9 @@ class BlockParagraphs extends Block {
     $display_mode = $this->field_instance['display']['default']['settings']['view_mode'];
     $content = '';
     if (!empty($this->paragraphs_item)) {
-      // @todo: ensure modal admin links get added if appropriate.
+      if (!empty($this->field_instance["settings"]["modal_admin"])) {
+        $this->paragraphs_item->modal_admin = TRUE;
+      }
       $content = $this->paragraphs_item->view($display_mode);
     }
     return $content;
