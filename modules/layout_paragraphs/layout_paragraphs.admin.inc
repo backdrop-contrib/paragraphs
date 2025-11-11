@@ -176,7 +176,7 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
     // Special case due to mismatch between entity type and form key.
     $entity = $form_state['term'];
   }
-  $entity_id = $entity->id() ?? $form['layout_paragraphs']['#entity_tempstore_id'];
+  $entity_id = $entity->id() ?? $form_state['layout_paragraphs']['tempstore_id'];
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
   // load the old layout and process all regions/blocks to new layout.
