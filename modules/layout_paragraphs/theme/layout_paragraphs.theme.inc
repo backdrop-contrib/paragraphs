@@ -51,10 +51,8 @@ function theme_layout_paragraphs_template_option($variables) {
 function theme_layout_paragraphs_items($variables) {
   module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
   $layout = layout_paragraphs_layout_load($variables['layout_name'], TRUE, 'database');
+  /* @var LayoutRendererStandardParagraphs $renderer */
   $renderer = layout_create_renderer('paragraphs_standard', $layout);
-  // @todo: Roughly render them for now, until we can polish.
-  // @todo: It's possible individual Paragraphs are already rendered and we
-  // could avoid re-rendering them -- follow the theme processing to be sure.
   $output = '';
   $output .= '<div class="layout-paragraphs--wrapper">';
   $output .= $renderer->render();

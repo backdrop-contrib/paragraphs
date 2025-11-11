@@ -155,6 +155,7 @@ function layout_paragraphs_select_template_after_build($element, $form_state) {
  *
  * @param array $form
  * @param array $form_state
+ *
  * @return void
  */
 function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
@@ -311,7 +312,7 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
     }
   }
 
-  // layout_paragraphs_set_layout_tempstore($layout);
+  layout_paragraphs_set_layout_tempstore($layout);
   return $form;
 }
 
@@ -1784,14 +1785,14 @@ function layout_paragraphs_get_block_uuid($paragraphs_item_id = 0) {
  * Menu callback; Remove a block from a layout.
  */
 function layout_paragraphs_block_remove_page(Layout $layout, Block $block, $renderer_name) {
-  // @todo: This function needs work. When the block is removed, it
-  // should also delete (or mark for deletion) the Paragraphs item.
-
   if (backdrop_get_token('layout-' . $layout->name) !== $_GET['token']) {
     return MENU_ACCESS_DENIED;
   }
 
   $commands = array();
+  // Save this information for later use, when the block itself is no longer
+  // available but we still need to delete the Paragraphs item.
+  $layout->in_progress['deleted_blocks'][] = $block;
   $layout->removeBlock($block->uuid);
   // Update the tempstore to account for the removed block.
   layout_paragraphs_set_layout_tempstore($layout);
@@ -1851,10 +1852,7 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  */
 function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   /* @var Layout $layout */
-  $layout = layout_paragraphs_get_layout_tempstore($form_state['layout']->name);
-  if (!$layout) {
-    $layout = $form_state['layout'];
-  }
+  $layout = $form_state['layout'];
   /* @var Block $block */
   $block = $form_state['block'];
   /* @var LayoutRendererStandard $renderer */
@@ -1889,6 +1887,8 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
 
   // Update the layout's tempstore with the new block data.
+  $uuid = $block->uuid;
+  $layout->content[$uuid] = $block;
   layout_paragraphs_set_layout_tempstore($layout);
 
   return array(

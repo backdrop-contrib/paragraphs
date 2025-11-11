@@ -115,12 +115,12 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $entity_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
     }
     if (empty($entity_id)) {
-      $entity_id = $form_state['input']['content']['layout_paragraphs_tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? $element['#entity']->id() ?? '';
+      $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? $element['#entity']->id() ?? '';
     }
     $form['layout_paragraphs']['#field'] = $field;
     $form['layout_paragraphs']['#instance'] = $instance;
     $form['layout_paragraphs']['#entity'] = $element['#entity'];
-    $form_state['input']['content']['layout_paragraphs_tempstore_id'] = $entity_id;
+    $form_state['layout_paragraphs']['tempstore_id'] = $entity_id;
     if (!empty($form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'])) {
       $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
     }
@@ -278,6 +278,9 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     //   $entity_id = $form_state['values']['tid'] ?? 0;
     // }
     $tempstore_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
+    if (empty($tempstore_id)) {
+      $tempstore_id = $form_state['layout_paragraphs']['tempstore_id'] ?? '';
+    }
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $tempstore_id);
 
     $insert_data = [

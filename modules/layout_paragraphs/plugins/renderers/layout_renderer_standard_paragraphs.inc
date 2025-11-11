@@ -215,9 +215,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
         );
       }
       // Add the contextual links.
-      if (!($block->module === 'system' && $block->delta === 'main')) {
-        $content['#contextual_links']['layout'] = array('admin/structure/layouts/manage/' . $this->layout->name . '/modal', array($block->uuid));
-      }
+      $content['#contextual_links']['layout'] = array('admin/structure/layouts/manage/' . $this->layout->name . '/modal', array($block->uuid));
 
       $data = array(
         'content' => $content,

@@ -488,7 +488,8 @@ function paragraphs_modal_admin_save_close($form, &$form_state) {
 
   // Refresh display of Paragraph that was edited.
   if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
-    $selector = '.paragraphs-item-' . $form_state['build_info']['args'][0]->item_id;
+    $paragraphs_id = $form_state['build_info']['args'][0]->item_id;
+    $selector = '.paragraphs-item-' . $paragraphs_id;
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
     $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
