@@ -309,8 +309,8 @@ function layout_paragraphs_entity_delete($entity, $entity_type) {
 }
 
 /**
- * Load a Layout Paragraphs layout from the database by name and places any
- * specifically added Paragraphs blocks.
+ * Load a Layout Paragraphs layout by name from the database or tempstore and
+ * places any specifically added Paragraphs blocks.
  *
  * @param string $layout_paragraphs_template_name
  *   The concatenated machine name of the layout template to load.
@@ -847,14 +847,16 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
         }
       }
     }
-    foreach ($layout->in_progress['deleted_blocks'] as $deleted_block) {
-      db_delete('layout_paragraphs_blocks')
-        ->condition('lp_id', $lp_id)
-        ->condition('paragraphs_item_id', $deleted_block->paragraphs_item->item_id)
-        ->execute();
-      $deleted_block->paragraphs_item->deleteRevision(TRUE);
+    if (!empty($layout->in_progress['deleted_blocks'])) {
+      foreach ($layout->in_progress['deleted_blocks'] as $deleted_block) {
+        db_delete('layout_paragraphs_blocks')
+          ->condition('lp_id', $lp_id)
+          ->condition('paragraphs_item_id', $deleted_block->paragraphs_item->item_id)
+          ->execute();
+        $deleted_block->paragraphs_item->deleteRevision(TRUE);
+      }
     }
-    layout_paragraphs_set_layout_tempstore($layout);
+    layout_paragraphs_clear_layout_tempstore($layout->name);
   }
 }
 
@@ -912,17 +914,15 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
           // Load block with Paragraphs item attached from tempstore.
           $block = $layout->content[$uuid] ?? layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
           if (!empty($block->paragraphs_item)) {
-            // Set the host entity for the Paragraphs item.
-            // $block->paragraphs_item->setHostEntity($entity_type, $entity);
-            // Save the Paragraphs item.
-            if ($block->is_new) {
-              $block->paragraphs_item->save(TRUE);
-              $layout->content[$uuid] = $block;
-            }
+            $block_save_needed = FALSE;
             // Mark Paragraph items as disabled if needed.
             if ($block->status != $block->paragraphs_item->status) {
               $block->paragraphs_item->status = $block->status;
+              $block_save_needed = TRUE;
+            }
+            if ($block->is_new || $block_save_needed) {
               $block->paragraphs_item->save(TRUE);
+              $layout->content[$uuid] = $block;
             }
             // Add the Paragraphs item to the entity's field data to be saved.
             $entity->{$field_name}[$langcode][$delta++] = [
@@ -952,6 +952,9 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
  *   The field instance array, or an empty array if not found.
  */
 function _layout_paragraphs_get_field_instance(string $layout_name) {
+  if (empty($layout_name)) {
+    return [];
+  }
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
   if (empty($entity_type) || empty($bundle) || empty($field_name)) {
     return [];

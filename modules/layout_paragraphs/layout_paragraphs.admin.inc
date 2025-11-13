@@ -4,23 +4,23 @@
  */
 
 /**
- * Select a Layout Paragraphs template from the options.
+ * Add an interface to select a Layout Paragraphs template from the options.
  */
-function layout_paragraphs_select_template($field, $instance, $template_options, $default = 'default') {
-  $form = [];
-  $form['#field'] = $field;
-  $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
-  $form['#attached']['css'][] = backdrop_get_path('module', 'layout') . '/css/layout.admin.css';
+function layout_paragraphs_select_template(&$form, &$form_state, $field, $instance, $template_options, $default = 'default') {
+  $build = [];
+  $build['#field'] = $field;
+  $build['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
+  $build['#attached']['css'][] = backdrop_get_path('module', 'layout') . '/css/layout.admin.css';
 
   if (!isset($template_options[$default])) {
     $default = 'default';
   }
 
-  $form['#attributes'] = array(
+  $build['#attributes'] = array(
     'class' => array('layout-paragraphs-settings-form'),
   );
 
-  $form['layout_paragraphs_templates'] = array(
+  $build['layout_paragraphs_templates'] = array(
     '#title' => t('Layout template'),
     '#type' => 'radios',
     '#default_value' => $default,
@@ -35,11 +35,11 @@ function layout_paragraphs_select_template($field, $instance, $template_options,
   );
 
   foreach ($template_options as $template_name => $template_info) {
-    $form['layout_paragraphs_templates']['#options'][$template_name] = $template_info->title;
-    $form['layout_paragraphs_templates'][$template_name]['#description'] = $template_info->preview;
+    $build['layout_paragraphs_templates']['#options'][$template_name] = $template_info->title;
+    $build['layout_paragraphs_templates'][$template_name]['#description'] = $template_info->preview;
   }
 
-  $form['layout_paragraphs_templates']['submit'] = array(
+  $build['layout_paragraphs_templates']['submit'] = array(
     '#type' => 'container',
     '#attributes' => array(
       'class' => array('layout-paragraphs-templates-select'),
@@ -60,14 +60,27 @@ function layout_paragraphs_select_template($field, $instance, $template_options,
     '#weight' => 100,
   );
 
-  return $form;
+  $form['layout_paragraphs']['select_template'] = $build;
 }
 
 /**
  *
  */
-function layout_paragraphs_select_template_change_submit($form, &$form_state) {
+function layout_paragraphs_select_template_change_submit(&$form, &$form_state) {
   $form_state['rebuild'] = TRUE;
+  $new_template_name = $form_state['input']['layout_paragraphs_templates'];
+  $layout = layout_paragraphs_get_layout_tempstore($form['layout_paragraphs']['layout']['#layout']->name);
+  $layout->setLayoutTemplate($new_template_name);
+  layout_paragraphs_set_layout_tempstore($layout);
+  // Update the $form positions to reflect the new template.
+  // First load the layout template details.
+  $template_info = layout_paragraphs_get_layout_template_info($new_template_name);
+  // Now update the positions in the form state.
+  $form['layout_paragraphs']['layout']['content']['positions'] = [];
+  foreach ($template_info['regions'] as $region_name => $region_info) {
+    $form['layout_paragraphs']['layout']['content']['positions'][$region_name] = [];
+    $form_state['values']['content']['positions'][$region_name] = '';
+  }
   return $form;
 }
 
@@ -158,7 +171,7 @@ function layout_paragraphs_select_template_after_build($element, $form_state) {
  *
  * @return void
  */
-function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
+function layout_paragraphs_select_template_change_ajax(&$form, &$form_state) {
   $new_template_name = $form_state['values']['layout_paragraphs_templates'];
   $form_element = $form['layout_paragraphs'];
   $templates = &$form_element['select_template']['layout_paragraphs_templates'];
@@ -178,8 +191,6 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
   }
   $entity_id = $entity->id() ?? $form_state['layout_paragraphs']['tempstore_id'];
   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
-  // @todo adjust this refreshing of the layout and shifting paragraphs/regions;
-  // load the old layout and process all regions/blocks to new layout.
   $config = array(
     'is_new' => TRUE,
     'layout_template' => $new_template_name,
@@ -189,13 +200,19 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
   );
   $new_layout = new Layout($config);
   $new_layout->setContexts('paragraphs', layout_paragraphs_context());
-  _layout_paragraphs_add_paragraphs_to_layout($new_layout, 'tempstore');
-  // $layout_renderer = layout_get_renderer_info('paragraphs_editor');
-  // $renderer = new LayoutRendererEditorParagraphs($new_layout, $layout_renderer);
   $layout_form = $layout_form_state = [];
   $form_element['layout'] = layout_paragraphs_content_form($layout_form, $layout_form_state, $new_layout, 'paragraphs_editor');
   $form_element['layout']['#layout']->renderer_name = 'paragraphs_editor';
-  layout_paragraphs_set_layout_tempstore($form_element['layout']['#layout']);
+
+  $layout = $form_element['layout']['#layout'];
+  _layout_paragraphs_add_paragraphs_to_layout($layout, 'tempstore');
+  $form['layout_paragraphs']['layout']['#layout'] = $layout;
+  $form_state['values']['content']['positions'] = [];
+  foreach ($layout->positions as $region => $blocks) {
+    $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
+  }
+  layout_paragraphs_set_layout_tempstore($layout);
+  $form_state['rebuild'] = TRUE;
   return $form_element;
 }
 
@@ -204,8 +221,6 @@ function layout_paragraphs_select_template_change_ajax($form, &$form_state) {
  *
  * @return EntityLayoutContext
  *   The layout context for paragraphs.
- *
- * @since 1.17.5 Function added.
  */
 function layout_paragraphs_context() {
   $paragraphs_context = layout_create_context('paragraphs', array(
@@ -223,8 +238,7 @@ function layout_paragraphs_context() {
  *
  * @ingroup forms
  */
-function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = NULL) {
-  /* @var Layout $layout */
+function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = 'editor') {
   // For some reason, the layout template is getting reset to default when only
   // one layout template is available, when creating new content and this
   // section checks tempstore. We may be able to remove this explicit save/
@@ -233,27 +247,26 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
   $layout_tempstore = layout_paragraphs_get_layout_tempstore($layout->name);
   if (is_a($layout_tempstore, 'Layout')) {
     $layout = $layout_tempstore;
+    // Ensure the layout template is correct, e.g. in case of an Ajax change.
+    if ($layout->layout_template != $layout_template) {
+      $layout->setLayoutTemplate($layout_template);
+      $positions = $layout->positions;
+      // Update form and form_state positions to match new layout template regions.
+      $form_state['values']['content']['positions'] = [];
+      foreach ($positions as $region => $blocks) {
+        $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
+      }
+    }
   }
-  $layout->layout_template = $layout_template;
   $layout->setContexts('paragraphs', layout_paragraphs_context());
-  $form_state['layout'] = $layout;
-  if ($renderer_name) {
-    $renderer = layout_create_renderer($renderer_name, $layout);
-  }
-  else {
-    $renderer = layout_create_renderer('editor', $layout);
-  }
 
+  $renderer = layout_create_renderer($renderer_name, $layout);
   if (!isset($form_state['renderer'])) {
     $form_state['renderer'] = $renderer;
   }
 
   /* @var LayoutRendererEditorParagraphs $renderer */
   $renderer = $form_state['renderer'];
-
-  // Although layout is already set in $form_state, we need this to make it
-  // available to the theme layer.
-  $form['#layout'] = $layout;
 
   $form['#attached'] = array(
     'library' => array(
@@ -311,6 +324,10 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
       $form['content']['positions'][$default_region]['#default_value'] .= ',' . implode(',', $blocks);
     }
   }
+  $form_state['layout'] = $layout;
+  // Although layout is already set in $form_state, we need this to make it
+  // available to the theme layer.
+  $form['#layout'] = $layout;
 
   layout_paragraphs_set_layout_tempstore($layout);
   return $form;
@@ -2055,10 +2072,9 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
       break;
   }
   if ($update_needed && !$skip_tempstore_update && !empty($old_layout_blocks)) {
-    $delta = 0;
     foreach ($old_layout_blocks as $uuid => $block) {
       $layout->content[$uuid] = $block;
-      $layout->setBlockPosition($uuid, $default_region, $delta++);
+      $layout->setBlockPosition($uuid, $default_region);
     }
     layout_paragraphs_set_layout_tempstore($layout);
   }

@@ -55,9 +55,16 @@ class BlockParagraphs extends Block {
       'admin_label' => '',
       'admin_description' => '',
     );
+    $data += array(
+      'layout_name' => '',
+      'delta' => '',
+      'paragraphs_item_id' => '',
+      'orphan' => FALSE,
+    );
     $this->is_orphaned = !empty($data['orphan']);
 
     // $this->host_entity_id = end(preg_split('/./', $data['layout_name']));
+
     $this->field_instance = _layout_paragraphs_get_field_instance($data['layout_name']);
     $this->bundle = paragraphs_bundle_load($this->delta);
     if (!empty($data['paragraphs_item_id'])) {

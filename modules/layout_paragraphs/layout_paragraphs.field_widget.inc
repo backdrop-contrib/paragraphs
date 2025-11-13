@@ -109,13 +109,13 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $available_templates = $instance['widget']['settings']['available_layout_templates'];
     $entity_type = $element['#entity_type'];
     $entity_id = (!empty($element['#entity'])) ? $element['#entity']->id() : 0;
-    if (!empty($form_state['input']['content']['positions'])) {
+    if (empty($entity_id) && !empty($form_state['input']['content']['positions'])) {
       // We need to check if content is added in the form state, to try to
       // preserve the layout that was being edited.
       $entity_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
     }
     if (empty($entity_id)) {
-      $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? $element['#entity']->id() ?? '';
+      $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? '';
     }
     $form['layout_paragraphs']['#field'] = $field;
     $form['layout_paragraphs']['#instance'] = $instance;
@@ -158,7 +158,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       }
       if (count($options) > 1) {
         module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
-        $form['layout_paragraphs']['select_template'] = layout_paragraphs_select_template($field, $instance, $template_options, $default_template);
+        layout_paragraphs_select_template($form, $form_state, $field, $instance, $template_options, $default_template);
       }
       elseif (count($options) == 1) {
         // Only one choice possible, so we will use it automatically.
@@ -221,7 +221,7 @@ function layout_paragraphs_edit_content_validate($form, &$form_state) {
   foreach ($layout->positions as $uuids) {
     foreach ($uuids as $uuid) {
       if (in_array($uuid, $all_uuids)) {
-        form_error($form['content']['positions'], t('The "@block" item has incorrectly been positioned multiple times. This may indicate an incorrectly saved layout configuration.', array('@block' => $layout->content[$uuid]->getAdminTitle())));
+        watchdog('layout_paragraphs', t('The "@block" item has incorrectly been positioned multiple times. This may indicate an incorrectly saved layout configuration.', array('@block' => $layout->content[$uuid]->getAdminTitle())));
       }
       $all_uuids[] = $uuid;
     }
@@ -261,22 +261,6 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
     $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $entity_id);
   }
   else {
-    // @todo:
-    // We need to handle insertion of new entities yet...
-    // 1. The URLs on the layout have a blank where the layout name should be,
-    //    e.g. when trying to add a Paragraphs block.
-    // 2. Saving the entity fires this submit hook before the entity ID is set.
-    // $temp_entity_id = $form['layout_paragraphs']['#entity_tempstore_id'] ?? 0;
-    // if (!empty($temp_entity_id)) {
-    //   // This is a new entity, so we need to set the layout name based on the
-    //   // temporary ID.
-    //   $layout_name = _layout_paragraphs_get_layout_name($form['layout_paragraphs']['#instance'], $temp_entity_id);
-    // }
-    // $form_state['values']['content']['layout_instance_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'];
-    // if (0 && $entity_type == 'taxonomy_term') {
-    //   // Seems to require a special case based on how and when terms get saved.
-    //   $entity_id = $form_state['values']['tid'] ?? 0;
-    // }
     $tempstore_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
     if (empty($tempstore_id)) {
       $tempstore_id = $form_state['layout_paragraphs']['tempstore_id'] ?? '';
@@ -291,10 +275,6 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
   }
   $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   $layout->locked = FALSE;
-  // @todo: Do we need to consider deleted Paragraphs here?
-  // @todo: Do we need to change positions of blocks as below? If so, is it only
-  // in certain conditions? (e.g. when creating new content the positions seem
-  // to match already in the simplest case. Can we optimize when we do this?)
   $layout->positions = [];
   foreach ($form_state['values']['content']['positions'] as $region => $uuids_string) {
     $layout->positions[$region] = (!empty($uuids_string)) ? array_filter(explode(',', $uuids_string)) : [];
