@@ -281,7 +281,7 @@ function layout_paragraphs_get_layout_tempstore(string $layout_name) {
   if (empty($layout)) {
     return FALSE;
   }
-  return tempstore_get('layout_paragraphs', $layout_name);
+  return $layout;
 }
 
 /**
@@ -407,15 +407,13 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
  * @return Layout|false
  *   The Layout paragraphs instance, or false if it couldn't be loaded.
  */
-function layout_paragraphs_instance_load(string $instance_name, bool $reload = FALSE) {
+function layout_paragraphs_instance_load(string $instance_name) {
   if (empty($instance_name)) {
     return NULL;
   }
-  if (!$reload) {
-    $layout = layout_paragraphs_get_layout_tempstore($instance_name);
-    if (!empty($layout)) {
-      return $layout;
-    }
+  $layout = layout_paragraphs_get_layout_tempstore($instance_name);
+  if (!empty($layout)) {
+    return $layout;
   }
   $layout = layout_paragraphs_layout_load($instance_name, TRUE, 'database');
   if (!empty($layout)) {
@@ -856,7 +854,6 @@ function layout_paragraphs_store_field_data(array $field_instance, string $layou
         $deleted_block->paragraphs_item->deleteRevision(TRUE);
       }
     }
-    layout_paragraphs_clear_layout_tempstore($layout->name);
   }
 }
 
@@ -876,12 +873,12 @@ function layout_paragraphs_entity_insert($entity, $entity_type) {
     // Replace the temporary ID with the actual entity ID and update the db and
     // the tempstore before storing the data.
     $layout = layout_paragraphs_get_layout_tempstore($layout_name);
-    layout_paragraphs_clear_layout_tempstore($layout_name);
     $layout_name = _layout_paragraphs_get_layout_name($insert_data['field_instance'], $entity->id());
     $layout->name = $layout_name;
     layout_paragraphs_set_layout_tempstore($layout);
     layout_paragraphs_store_field_data($insert_data['field_instance'], $insert_data['layout_template'], $entity->id(), $layout_name);
     tempstore_clear('layout_paragraphs_field', $tempstore_id);
+    layout_paragraphs_clear_layout_tempstore($layout_name);
   }
 }
 
@@ -921,6 +918,8 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
               $block_save_needed = TRUE;
             }
             if ($block->is_new || $block_save_needed) {
+              $block->paragraphs_item->setHostEntity($entity_type, $entity);
+              $block->paragraphs_item->being_edited = FALSE;
               $block->paragraphs_item->save(TRUE);
               $layout->content[$uuid] = $block;
             }

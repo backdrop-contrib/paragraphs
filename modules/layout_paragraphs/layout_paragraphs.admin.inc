@@ -73,11 +73,10 @@ function layout_paragraphs_select_template_change_submit(&$form, &$form_state) {
   $layout->setLayoutTemplate($new_template_name);
   layout_paragraphs_set_layout_tempstore($layout);
   // Update the $form positions to reflect the new template.
-  // First load the layout template details.
-  $template_info = layout_paragraphs_get_layout_template_info($new_template_name);
-  // Now update the positions in the form state.
+  $form['layout_paragraphs']['layout']['#layout'] = $layout;
   $form['layout_paragraphs']['layout']['content']['positions'] = [];
-  foreach ($template_info['regions'] as $region_name => $region_info) {
+  $form_state['values']['content']['positions'] = [];
+  foreach ($layout->positions as $region_name => $region_info) {
     $form['layout_paragraphs']['layout']['content']['positions'][$region_name] = [];
     $form_state['values']['content']['positions'][$region_name] = '';
   }
@@ -211,7 +210,7 @@ function layout_paragraphs_select_template_change_ajax(&$form, &$form_state) {
   foreach ($layout->positions as $region => $blocks) {
     $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
   }
-  layout_paragraphs_set_layout_tempstore($layout);
+  // layout_paragraphs_set_layout_tempstore($layout);
   $form_state['rebuild'] = TRUE;
   return $form_element;
 }
@@ -238,7 +237,7 @@ function layout_paragraphs_context() {
  *
  * @ingroup forms
  */
-function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $renderer_name = 'editor') {
+function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $renderer_name = 'editor') {
   // For some reason, the layout template is getting reset to default when only
   // one layout template is available, when creating new content and this
   // section checks tempstore. We may be able to remove this explicit save/
@@ -250,13 +249,13 @@ function layout_paragraphs_content_form($form, &$form_state, Layout $layout, $re
     // Ensure the layout template is correct, e.g. in case of an Ajax change.
     if ($layout->layout_template != $layout_template) {
       $layout->setLayoutTemplate($layout_template);
-      $positions = $layout->positions;
-      // Update form and form_state positions to match new layout template regions.
-      $form_state['values']['content']['positions'] = [];
-      foreach ($positions as $region => $blocks) {
-        $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
-      }
     }
+    // Update form and form_state positions to match new layout template regions.
+    $form_state['values']['content']['positions'] = [];
+    foreach ($layout->positions as $region => $blocks) {
+      $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
+    }
+
   }
   $layout->setContexts('paragraphs', layout_paragraphs_context());
 
@@ -1867,14 +1866,19 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  * AJAX callback to update the underlying layout form after updating a
  * Layout Paragraphs block.
  */
-function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
+function layout_paragraphs_block_configure_ajax_update($form, &$form_state) {
   /* @var Layout $layout */
   $layout = $form_state['layout'];
+  // Get the latest version of the layout from tempstore.
+  $tempstore_layout = layout_paragraphs_get_layout_tempstore($layout->name);
+  if ($tempstore_layout) {
+    $layout = $tempstore_layout;
+  }
   /* @var Block $block */
   $block = $form_state['block'];
   /* @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
-  $added_to_region = $block->is_new ? (isset($layout->in_progress['region_name']) ? $layout->in_progress['region_name'] : $form_state['values']['region']) : FALSE;
+  $added_to_region = $block->is_new ? ($layout->in_progress['region_name'] ?? $form_state['values']['region']) : FALSE;
 
   // Display error messages in the form if any.
   if (form_get_errors()) {
@@ -1903,10 +1907,11 @@ function layout_paragraphs_block_configure_ajax_update($form, $form_state) {
   $commands[] = ajax_command_remove('#messages');
   $commands[] = ajax_command_html('#layout-messages', theme('status_messages'));
 
-  // Update the layout's tempstore with the new block data.
+  // Update form_state and the layout's tempstore with the new block data.
   $uuid = $block->uuid;
   $layout->content[$uuid] = $block;
   layout_paragraphs_set_layout_tempstore($layout);
+  $form_state['layout'] = $layout;
 
   return array(
     '#type' => 'ajax',
@@ -2073,8 +2078,11 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
   }
   if ($update_needed && !$skip_tempstore_update && !empty($old_layout_blocks)) {
     foreach ($old_layout_blocks as $uuid => $block) {
+      $newly_placed = !isset($layout->content[$uuid]);
       $layout->content[$uuid] = $block;
-      $layout->setBlockPosition($uuid, $default_region);
+      if ($newly_placed) {
+        $layout->setBlockPosition($uuid, $default_region);
+      }
     }
     layout_paragraphs_set_layout_tempstore($layout);
   }
