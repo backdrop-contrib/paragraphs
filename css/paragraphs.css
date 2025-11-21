@@ -120,3 +120,12 @@ html.dialog-open {
     }
   }
 }
+
+.paragraphs--preview-description {
+  font-size: .875rem;
+  color: #666;
+}
+
+.paragraphs--preview-collapsed:open .paragraphs--preview-description {
+  display: none;
+}

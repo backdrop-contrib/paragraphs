@@ -601,13 +601,16 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           if ($preview_collapsed) {
             $rendered_preview = backdrop_render($preview);
             $text = str_replace(array('<', '>'), array(' <', '> '), $rendered_preview);
-            $summary_preview = trim(truncate_utf8(strip_tags(filter_xss($text)), 280, TRUE, TRUE, 150));
-            $summary = t('Preview') . ($summary_preview ? ': ' . $summary_preview : '');
+            $summary_preview = trim(truncate_utf8(strip_tags(filter_xss($text)), 140, TRUE, TRUE, 150));
+            $summary = t('Preview') . ($summary_preview ? '<span class="paragraphs--preview-description">: ' . $summary_preview . '</span>' : '');
 
             $element['paragraph_bundle_preview']['preview'] = array(
               '#type' => 'details',
               '#summary' => $summary,
               '#details' => $rendered_preview,
+              '#attributes' => array(
+                'class' => array('paragraphs--preview-collapsed'),
+              ),
             );
           }
         }
