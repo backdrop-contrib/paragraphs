@@ -97,15 +97,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $langcode = (!empty($langcode)) ? $langcode : LANGUAGE_NONE;
 
     $form['#attached']['js'][] = backdrop_get_path('module', 'layout') . '/js/layout.admin.js';
-    // $form['#attached']['css'][] = backdrop_get_path('module', 'mini_layouts') . '/css/mini-layouts.admin.css';
     $form['layout_paragraphs'] = array(
       '#type' => 'container',
-      '#attributes' => array(
-        'id' => array('ajax-layout-paragraphs-templates'),
-      ),
     );
-    $all_templates = layout_flexible_template_load_all('paragraphs');
-    $available_templates = $instance['widget']['settings']['available_layout_templates'];
     $entity_type = $element['#entity_type'];
     $entity_id = (!empty($element['#entity'])) ? $element['#entity']->id() : 0;
     if (empty($entity_id) && !empty($form_state['input']['content']['positions'])) {
@@ -116,23 +110,16 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     if (empty($entity_id)) {
       $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? '';
     }
+    $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
+    $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
+    // Save the current edit path to tempstore, so we can return here after
+    // ajax operations.
+    $edit_path = (is_numeric($entity_id)) ? base_path() . current_path() : NULL;
+    tempstore_set('layout_paragraphs:edit_path', $layout_name, $edit_path, $expire);
     $form['layout_paragraphs']['#field'] = $field;
     $form['layout_paragraphs']['#instance'] = $instance;
     $form['layout_paragraphs']['#entity'] = $element['#entity'];
     $form_state['layout_paragraphs']['tempstore_id'] = $entity_id;
-    if (!empty($form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'])) {
-      $default_template = $form_state['layout_paragraphs']['select_template']['layout_paragraphs_templates'];
-    }
-    else {
-      $default_template = _layout_paragraphs_determine_layout_template($entity_id, $instance['entity_type'], $instance['bundle'], $field_name, $available_templates);
-    }
-    $active_templates = 0;
-    foreach ($available_templates as $template_name => $template_status) {
-      if ($template_status != 0) {
-        $active_templates++;
-        break;
-      }
-    }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
     $layout = layout_paragraphs_get_layout_tempstore($layout_name);
     if (empty($layout)) {
@@ -144,43 +131,77 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $layout->locked = FALSE;
     }
 
-    $available_templates = ($active_templates) ? $available_templates : array_keys($all_templates);
-    $options = [];
-    if (!empty($available_templates)) {
-      $template_options = [];
-      // ($instance['widget']['settings']['available_layout_templates']);
-      foreach ($available_templates as $template_name) {
-        if (!empty($all_templates[$template_name])) {
-          $options[$template_name] = $all_templates[$template_name]->title;
-          $template_options[$template_name] = $all_templates[$template_name];
-        }
-      }
-      if (count($options) > 1) {
-        module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
-        layout_paragraphs_select_template($form, $form_state, $field, $instance, $template_options, $default_template);
-      }
-      elseif (count($options) == 1) {
-        // Only one choice possible, so we will use it automatically.
-        $template_name = key($options);
-        $form['layout_paragraphs']['select_template']['layout_paragraphs_templates'] = array(
-          '#type' => 'hidden',
-          '#title' => t('Layout template'),
-          '#description' => t('Which layout template should be used?'),
-          '#value' => $template_name ?? $default_template,
-          '#required' => TRUE,
+    $template_options = _layout_paragraphs_layout_get_available_templates($layout_name);
+    if (count($template_options['available']) >= 1) {
+      $form['layout_paragraphs']['select_template']['options'] = [
+        '#type' => 'container',
+        '#attributes' => array(
+          'class' => array('layout-paragraphs--template-options'),
+        ),
+      ];
+      if (is_numeric($entity_id)) {
+        $form['layout_paragraphs']['select_template']['options']['reset_link'] = array(
+          '#type' => 'link',
+          '#title' => t('Reset'),
+          '#href' => 'layout_paragraphs/reset/' . $layout->name,
+          '#limit_validation_errors' => array(),
+          '#weight' => 100,
+          '#attributes' => array(
+            'class' => array(
+              'use-ajax',
+            ),
+            'data-dialog' => 'true',
+            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+          ),
         );
-        $layout->layout_template = $template_name;
+        $form['layout_paragraphs']['select_template']['options']['change_link'] = array(
+          '#type' => 'link',
+          '#title' => t('Change layout template'),
+          '#href' => 'layout_paragraphs/template_change/' . $layout->name,
+          '#limit_validation_errors' => array(),
+          '#weight' => 100,
+          '#attributes' => array(
+            'class' => array(
+              'use-ajax',
+            ),
+            'data-dialog' => 'true',
+            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+          ),
+        );
+      }
+      else {
+        // New entity, we ask them to save first before changing template.
+        $form['layout_paragraphs']['select_template']['options']['new_action'] = array(
+          '#type' => 'container',
+        );
+        $form['layout_paragraphs']['select_template']['options']['new_action']['save_now'] = array(
+          '#type' => 'submit',
+          '#value' => t('Save now'),
+          '#submit' => array('layout_paragraphs_new_content_submit'),
+          '#weight' => 100,
+          '#attributes' => array(
+            'class' => array(
+              'layout-paragraphs--save-now',
+              'button--small',
+            ),
+          ),
+        );
+        $form['layout_paragraphs']['select_template']['options']['change_notice'] = array(
+          '#markup' => '<div class="description"><p>' . t('Note: other layout templates are available. You can add content below, and you will be able to change the layout template after saving for the first time, if you wish.') . '</p></div>',
+        );
       }
     }
-    else {
-      // @todo: It should be impossible to have no templates available if we've
-      // prevented default from being removed or disabled. Verify, then remove
-      // this message.
-      $form['layout_paragraphs']['tempmarkup'] = array(
-        '#markup' => '<div class="messages warning"><p>' . t('No layout templates are available for this field. Using default.') . '</p></div>',
-      );
-    }
-
+    $template_name = $template_options['active']->name ?? reset($template_options['available'])->name;
+    $layout->layout_template = $template_name;
+    $form['layout_paragraphs']['select_template']['layout_paragraphs_template'] = array(
+      '#type' => 'hidden',
+      '#title' => t('Layout template'),
+      '#value' => $template_name,
+      '#required' => TRUE,
+      '#attributes' => array(
+        'id' => array('layout-paragraphs--current-template'),
+      ),
+    );
     $layout_form = $layout_form_state = [];
     $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
     $form['layout_paragraphs']['layout'] = $layout_content;
@@ -197,8 +218,84 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
     $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
 
-    return $return;
   }
+}
+
+/**
+ * Submit handler to save a new entity and continue editing.
+ */
+function layout_paragraphs_new_content_submit($form, &$form_state) {
+  $submit_functions = $form['actions']['submit']['#submit'] ?? [];
+  foreach ($submit_functions as $function) {
+    if ($function != 'layout_paragraphs_new_content_submit') {
+      call_user_func($function, $form, $form_state);
+    }
+  }
+  // Redirect to the edit form for the new entity.
+  $entity_type = $form['#entity_type'];
+  $entity_id = $form['#' . $entity_type]->id();
+  $entity_uri = $form['#' . $entity_type]->uri();
+  if (backdrop_valid_path($entity_uri['path'] . '/edit')) {
+    $edit_path = $entity_uri['path'] . '/edit';
+  }
+  elseif (backdrop_valid_path($entity_type . '/' . $entity_id . '/edit')) {
+    $edit_path = $entity_type . '/' . $entity_id . '/edit';
+  }
+  if (!empty($edit_path)) {
+    $form_state['redirect'] = $edit_path;
+  }
+}
+
+/**
+ * Helper to determine the available layouts for a given layout name, based on
+ * looking up the field instance settings and defaults.
+ *
+ * @param string $layout_name
+ *   The layout name.
+ *
+ * @return array
+ *   An array of available templates, with the following keys:
+ *    - 'active' (LayoutFlexibleTemplate): The active template.
+ *    - 'available' (array): An array of other available templates
+ *      (LayoutFlexibleTemplate objects), keyed by template machine name.
+ */
+function _layout_paragraphs_layout_get_available_templates($layout_name) {
+  $template_options = [
+    'active' => [
+      'name' => 'default',
+    ],
+    'available' => [],
+  ];
+  $templates = [];
+  $all_templates = layout_flexible_template_load_all('paragraphs');
+  $instance = _layout_paragraphs_get_field_instance($layout_name);
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  if (!empty($instance)) {
+    $templates = $instance['widget']['settings']['available_layout_templates'];
+  }
+  $default_template = $layout->layout_template ?? 'default';
+  $active_templates = 0;
+  foreach ($templates as $template_name => $template_status) {
+    if ($template_status != 0) {
+      $active_templates++;
+      break;
+    }
+  }
+  if (!empty($templates)) {
+    $template_options = [];
+    foreach ($templates as $template_name) {
+      if (!empty($all_templates[$template_name])) {
+        if ($template_name == $default_template) {
+          $template_options['active'] = $all_templates[$template_name];
+        }
+        else {
+          $template_options['available'][$template_name] = $all_templates[$template_name];
+        }
+      }
+    }
+  }
+
+  return $template_options;
 }
 
 /**
@@ -254,8 +351,10 @@ function layout_paragraphs_edit_content_validate($form, &$form_state) {
  * @see layout_paragraphs_edit_content()
  */
 function layout_paragraphs_edit_content_submit($form, &$form_state) {
-  $layout_template = $form_state['values']['layout_paragraphs_templates'];
-  $entity = $form['layout_paragraphs']['#entity'];
+  $layout_template = $form['layout_paragraphs']['layout']['#layout']->layout_template;
+  $entity_type = $form['#entity_type'];
+  $entity = $form_state[$entity_type];
+  $entity->revision = $form_state['values']['revision'] ?? $entity->revision;
   $entity_id = $entity->id() ?? 0;
   if (!empty($entity_id)) {
     // Update existing entity.
@@ -274,13 +373,6 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
       'layout_template' => $layout_template,
     ];
     tempstore_set('layout_paragraphs_field', $tempstore_id, $insert_data, 60 * 60 * 24 * 7);
-  }
-
-  if (!empty($entity_id)) {
-    // If this is an existing entity, save the field data now. For new entities,
-    // the data will be saved in the entity's insert hook when we have an
-    // entity ID.
-    layout_paragraphs_store_field_data($form['layout_paragraphs']['#instance'], $layout_template, $entity_id);
   }
   $form_state['values']['content']['layout_name'] = $layout_name;
 }

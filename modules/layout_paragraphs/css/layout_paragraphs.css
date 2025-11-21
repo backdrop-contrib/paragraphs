@@ -3,6 +3,16 @@
   --layout-paragraph-template-width: 90px;
 }
 
+.layout-icon {
+  width: 60px;
+  height: 75px;
+}
+
+.layout-info {
+  display: flex;
+  gap: 1rem;
+}
+
 .form-type-radios.form-item-layout-paragraphs-templates {
   .form-radios {
     display: flex;
@@ -104,7 +114,7 @@
 
 .layout--paragraphs {
   .l-region--sub-content {
-    padding: 0;
+    padding-inline-end: 0;
   }
 }
 
@@ -112,6 +122,51 @@
   .layout {
     height: auto;
     width: 100%;
+  }
+}
+
+.layout-paragraphs--template-options {
+  text-align: end;
+  margin-block: 1rem;
+
+  &:has(.layout-paragraphs--save-now) {
+    display: flex;
+    justify-content: flex-end;
+
+    .description p {
+      margin-block: 0;
+      margin-inline: 1rem;
+    }
+  }
+
+  a {
+    margin-inline-end: 1rem;
+  }
+
+  .description {
+    text-align: left;
+  }
+}
+
+.layout-paragraphs-dialog {
+  max-width: min(95vw, 48em);
+
+  .ui-dialog-content:has(#layout-paragraphs-select-template-form)  {
+    + .ui-dialog-buttonpane {
+      opacity: .5;
+      pointer-events: none;
+    }
+
+    &:has(.layout-options input:checked) {
+    + .ui-dialog-buttonpane {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  }
+
+  .ui-button {
+    border: 1px solid transparent;
   }
 }
 
