@@ -1494,6 +1494,7 @@ function layout_paragraphs_template_delete_form_submit(&$form, &$form_state) {
   /* @var LayoutFlexibleTemplate $layout_paragraphs_template */
   $layout_paragraphs_template = &$form_state['flexible_template'];
   $layout_paragraphs_template->delete();
+  layout_paragraphs_reset_caches();
 
   backdrop_set_message(t('The layout template "@title" has been deleted.', array('@title' => $layout_paragraphs_template->title)));
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts';
@@ -1826,6 +1827,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     // Clean up the in_progress value now that we're fully done.
     $layout->in_progress = NULL;
   }
+  layout_paragraphs_reset_caches();
   tempstore_set('layout_paragraphs_block_tempstore_link', $block->uuid, $layout->name, time() + 60 * 60 * 24);
   layout_paragraphs_set_layout_tempstore($layout);
 }

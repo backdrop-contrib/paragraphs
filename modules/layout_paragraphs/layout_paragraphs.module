@@ -941,13 +941,13 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
           // Load block with Paragraphs item attached from tempstore.
           $block = $layout->content[$uuid] ?? layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
           if (!empty($block->paragraphs_item)) {
-            $block_save_needed = FALSE;
+            $block_save_needed = ($block->is_new || $block->paragraphs_item->being_edited);
             // Mark Paragraph items as disabled if needed.
             if ($block->status != $block->paragraphs_item->status) {
               $block->paragraphs_item->status = $block->status;
               $block_save_needed = TRUE;
             }
-            if ($block->is_new || $block_save_needed) {
+            if ($block_save_needed) {
               $block->paragraphs_item->setHostEntity($entity_type, $entity);
               $block->paragraphs_item->being_edited = FALSE;
               $block->paragraphs_item->is_new = FALSE;
