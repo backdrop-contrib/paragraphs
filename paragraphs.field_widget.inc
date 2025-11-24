@@ -274,7 +274,10 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
               '#value' => t('Add !title', array('!title' => $bundle['name'])),
               '#access' => entity_access('create', 'paragraphs_item', $entity_shell),
               '#attributes' => array(
-                'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+                'class' => array(
+                  'field-add-more-submit',
+                  'paragraphs-add-more-submit',
+                ),
               ),
               '#limit_validation_errors' => array(),
               '#submit' => array('paragraphs_add_more_submit'),
@@ -330,7 +333,10 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
             '#name' => strtr($id_prefix, '-', '_') . '_add_more_add_more',
             '#value' => $text,
             '#attributes' => array(
-              'class' => array('field-add-more-submit', 'paragraphs-add-more-submit'),
+              'class' => array(
+                'field-add-more-submit',
+                'paragraphs-add-more-submit',
+              ),
             ),
             '#limit_validation_errors' => array(),
             '#submit' => array('paragraphs_add_more_submit'),
@@ -438,6 +444,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
   $default_edit_mode = isset($instance['settings']['default_edit_mode']) ? $instance['settings']['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE;
   $default_edit_mode_override = isset($instance['settings']['default_edit_mode_override']) ? $instance['settings']['default_edit_mode_override'] : PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE;
   $force_open = (!empty($instance['widget']['paragraphs_edit_mode_open']) || count($items) < $default_edit_mode_override);
+  $preview_collapsed = isset($instance['settings']['preview_collapsed']) ? $instance['settings']['preview_collapsed'] : PARAGRAPHS_PREVIEW_MODE_COLLAPSED;
 
   $being_edited_paragraph = ($default_edit_mode === 'open');
 
@@ -589,6 +596,21 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           );
           $preview = $paragraphs_item->view('paragraphs_editor_preview', $langcode);
           $element['paragraph_bundle_preview']['preview'] = $preview;
+
+          if ($preview_collapsed) {
+            $rendered_preview = backdrop_render($preview);
+            $summary_preview = trim(filter_xss(truncate_utf8(strip_tags($rendered_preview), 140, TRUE, TRUE, 150)));
+            $summary = t('Preview') . ($summary_preview ? '<span class="paragraphs--preview-description">: ' . $summary_preview . '</span>' : '');
+
+            $element['paragraph_bundle_preview']['preview'] = array(
+              '#type' => 'details',
+              '#summary' => $summary,
+              '#details' => $rendered_preview,
+              '#attributes' => array(
+                'class' => array('paragraphs--collapsible-preview'),
+              ),
+            );
+          }
         }
 
         foreach (element_children($element) as $key) {
