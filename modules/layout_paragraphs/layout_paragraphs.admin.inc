@@ -432,6 +432,10 @@ function _layout_paragraphs_settings_get_group_operations($template_info, $is_de
       'title' => t('Configure name'),
       'href' => 'admin/structure/paragraphs/layouts/' . $template_info['name'] . '/edit',
     );
+    $links['clone'] = array(
+      'title' => t('Clone template'),
+      'href' => 'admin/structure/paragraphs/layouts/' . $template_info['name'] . '/clone',
+    );
     if (module_exists('config') && user_access('synchronize configuration')) {
       $links['export'] = array(
         'title' => t('Export'),
@@ -615,7 +619,7 @@ function layout_paragraphs_template_settings_form_submit($form, &$form_state) {
   $layout_paragraphs_template->save();
 
   layout_paragraphs_template_tempstore_set($layout_paragraphs_template);
-  cache()->delete('layout:paragraphs:config');
+  layout_paragraphs_reset_caches();
   backdrop_set_message(t('Layout paragraphs template "@title" saved.', array('@title' => $layout_paragraphs_template->title)));
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts/' . $form_state['values']['machine_name'] . '/configure';
 }
@@ -724,6 +728,51 @@ function layout_paragraphs_template_configure_form($form, &$form_state, LayoutFl
 }
 
 /**
+ * Form to manage cloning a Layout Paragraphs template.
+ *
+ * @param LayoutFlexibleTemplate $layout_paragraphs_template
+ *   The template configuration being edited.
+ *
+ * @ingroup forms
+ */
+function layout_paragraphs_template_clone_form($form, &$form_state, LayoutFlexibleTemplate $layout_paragraphs_template) {
+  backdrop_set_title(t('Clone template'));
+  $layout_paragraphs_template->is_new = TRUE;
+  $layout_paragraphs_template->name .= '_clone';
+  $layout_paragraphs_template->title .= ' ' . t('(Clone)');
+  $build = backdrop_get_form('layout_paragraphs_template_settings_edit_form', $layout_paragraphs_template);
+  $build['help'] = array(
+    '#type' => 'help',
+    '#markup' => t('You are cloning a Paragraphs layout template. This can be helpful to ensure matching region names, so switching between templates will flow the content into the expected regions.'),
+    '#weight' => -10,
+  );
+  $form_state['flexible_template_source'] = $layout_paragraphs_template;
+  $build['actions']['submit']['#submit'] = array(
+    'layout_paragraphs_template_clone_form_submit',
+  );
+  return $build;
+}
+
+/**
+ * Form to manage cloning a Layout Paragraphs template.
+ *
+ * @param LayoutFlexibleTemplate $layout_paragraphs_template
+ *   The template configuration being edited.
+ *
+ * @ingroup forms
+ */
+function layout_paragraphs_template_clone_form_submit($form, &$form_state) {
+  $template = $form_state['flexible_template_source'];
+  $template->name = check_plain($form_state['input']['machine_name']);
+  $template->title = check_plain($form_state['input']['name']);
+  $template->description = check_plain($form_state['input']['description']);
+  unset($template->is_new);
+  $template->save();
+  layout_paragraphs_reset_caches();
+  $form_state['redirect'] = 'admin/structure/paragraphs/layouts/' . $template->name . '/configure';
+}
+
+/**
  * Handler for layout_paragraphs_template_configure_form() to add a new row.
  */
 function layout_paragraphs_template_add_row($form, &$form_state) {
@@ -765,7 +814,7 @@ function layout_paragraphs_template_configure_form_submit($form, &$form_state) {
   $layout_paragraphs_template->save();
 
   tempstore_clear('layout.paragraphs', $form_state['flexible_template_name']);
-  cache()->delete('layout:paragraphs:config');
+  layout_paragraphs_reset_caches();
   backdrop_set_message(t('Layout Paragraphs template "@title" saved.', array('@title' => $layout_paragraphs_template->title)));
 }
 

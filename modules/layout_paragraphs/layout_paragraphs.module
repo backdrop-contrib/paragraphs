@@ -78,6 +78,16 @@ function layout_paragraphs_menu() {
     'file' => 'layout_paragraphs.admin.inc',
   );
 
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/clone'] = array(
+    'title' => 'Clone layout template',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_clone_form', 4),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
   $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/delete'] = array(
     'title' => 'Delete Paragraphs layout template',
     'page callback' => 'backdrop_get_form',
@@ -645,9 +655,7 @@ function layout_paragraphs_layout_flexible_types_alter(&$types) {
  * Reset all caches provided by Layout Paragraphs module.
  */
 function layout_paragraphs_reset_caches() {
-  cache()->delete('layout:paragraphs:config');
-  backdrop_static_reset('layout_flexible_template_load_all:paragraphs');
-  backdrop_static_reset('layout_flexible_tempstore_load:paragraphs');
+  layout_flexible_reset_caches('paragraphs');
 }
 
 /**
