@@ -132,6 +132,8 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     }
 
     $template_options = _layout_paragraphs_layout_get_available_templates($layout_name);
+    // Existing entities will have an active template that is not counted in
+    // available templates. New entities will not have an active template yet.
     if (count($template_options['available']) >= 1) {
       $form['layout_paragraphs']['select_template']['options'] = [
         '#type' => 'container',
@@ -169,8 +171,9 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
           ),
         );
       }
-      else {
-        // New entity, we ask them to save first before changing template.
+      elseif (count($template_options['available']) > 1) {
+        // New entity, we ask them to save first before changing template if
+        // there are more than one choice.
         $form['layout_paragraphs']['select_template']['options']['new_action'] = array(
           '#type' => 'container',
         );
@@ -227,8 +230,8 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
 function layout_paragraphs_new_content_submit($form, &$form_state) {
   $submit_functions = $form['actions']['submit']['#submit'] ?? [];
   foreach ($submit_functions as $function) {
-    if ($function != 'layout_paragraphs_new_content_submit') {
-      call_user_func($function, $form, $form_state);
+    if ($function != 'layout_paragraphs_new_content_submit' && function_exists($function)) {
+      $function($form, $form_state);
     }
   }
   // Redirect to the edit form for the new entity.
@@ -274,15 +277,7 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
     $templates = $instance['widget']['settings']['available_layout_templates'];
   }
   $default_template = $layout->layout_template ?? 'default';
-  $active_templates = 0;
-  foreach ($templates as $template_name => $template_status) {
-    if ($template_status != 0) {
-      $active_templates++;
-      break;
-    }
-  }
   if (!empty($templates)) {
-    $template_options = [];
     foreach ($templates as $template_name) {
       if (!empty($all_templates[$template_name])) {
         if ($template_name == $default_template) {

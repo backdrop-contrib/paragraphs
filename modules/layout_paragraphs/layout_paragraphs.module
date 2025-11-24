@@ -926,7 +926,7 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
     $field_instance = _layout_paragraphs_get_field_instance($layout_name);
     $field_name = $field_instance['field_name'] ?? '';
     $langcode = $entity->langcode;
-    $delta = is_array($entity->{$field_name}[$langcode]) ? max(array_keys($entity->{$field_name}[$langcode])) + 1 : 0;
+    $delta = (!empty($entity->{$field_name}) && is_array($entity->{$field_name}[$langcode])) ? max(array_keys($entity->{$field_name}[$langcode])) + 1 : 0;
     foreach ($layout->positions as $region_id => $uuids) {
       foreach ($uuids as $block_index => $uuid) {
         if (!empty($uuid)) {
@@ -977,15 +977,17 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
         }
       }
     }
-    // Clean up invalid block data from entity field data before saving.
-    foreach ($entity->{$field_name}[$langcode] as $key => $item) {
-      $paragraphs_item_id = $item['value'] ?? 0;
-      if (in_array($paragraphs_item_id, $deleted_block_paragraph_ids) || (empty($paragraphs_item_id) && is_object($item['entity']))) {
-        unset($entity->{$field_name}[$langcode][$key]);
+    if (!empty($entity->{$field_name})) {
+      // Clean up invalid block data from entity field data before saving.
+      foreach ($entity->{$field_name}[$langcode] as $key => $item) {
+        $paragraphs_item_id = $item['value'] ?? 0;
+        if (in_array($paragraphs_item_id, $deleted_block_paragraph_ids) || (empty($paragraphs_item_id) && is_object($item['entity']))) {
+          unset($entity->{$field_name}[$langcode][$key]);
+        }
       }
+      // Re-index the array.
+      $entity->{$field_name}[$langcode] = array_values($entity->{$field_name}[$langcode]);
     }
-    // Re-index the array.
-    $entity->{$field_name}[$langcode] = array_values($entity->{$field_name}[$langcode]);
     layout_paragraphs_set_layout_tempstore($layout);
   }
 }
