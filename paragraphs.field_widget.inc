@@ -609,7 +609,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
               '#summary' => $summary,
               '#details' => $rendered_preview,
               '#attributes' => array(
-                'class' => array('paragraphs--preview-collapsed'),
+                'class' => array('paragraphs--collapsible-preview'),
               ),
             );
           }
