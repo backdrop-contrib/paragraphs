@@ -12,6 +12,7 @@ define('PARAGRAPHS_DEFAULT_TITLE', 'Paragraph');
 define('PARAGRAPHS_DEFAULT_TITLE_MULTIPLE', 'Paragraphs');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE', 'open');
 define('PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE', 1);
+define('PARAGRAPHS_PREVIEW_MODE_COLLAPSED', FALSE);
 define('PARAGRAPHS_DEFAULT_ADD_MODE', 'select');
 define('PARAGRAPHS_DEFAULT_MODAL_ADMIN', FALSE);
 
@@ -713,6 +714,18 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#attributes' => array('style' => 'width:3em'),
     '#min' => 1,
     '#max' => 99,
+  );
+
+  $element['preview_collapsed'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Display previews collapsed by default'),
+    '#description' => t('The previews can be clicked to view the content.'),
+    '#default_value' => isset($settings['preview_collapsed']) ? $settings['preview_collapsed'] : PARAGRAPHS_PREVIEW_MODE_COLLAPSED,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="instance[settings][default_edit_mode]"]' => array('value' => 'preview'),
+      ),
+    ),
   );
 
   $element['add_mode'] = array(
@@ -2011,7 +2024,8 @@ function paragraphs_autoload_info() {
 }
 
 /**
- * Retrieves the default theme's Paragraphs stylesheets defined in the .info file.
+ * Retrieves the default theme's Paragraphs stylesheets defined in the .info
+ * file.
  *
  * Themes may specify CSS files for use with Paragraphs by
  * including a "paragraphs_stylesheets" key in the theme .info file.
