@@ -108,13 +108,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $entity_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
     }
     if (empty($entity_id)) {
-      if ($entity_type != 'taxonomy_term') {
-        $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? '';
-      }
-      else {
-        $uuid = new Uuid();
-        $entity_id = $uuid->generate();
-      }
+      $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? (new Uuid())->generate();
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
     $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
@@ -371,7 +365,7 @@ function layout_paragraphs_edit_content_submit($form, &$form_state) {
   $layout_template = $form['layout_paragraphs']['layout']['#layout']->layout_template;
   $entity_type = $form['#entity_type'];
   $entity_type = ($entity_type == 'taxonomy_term') ? 'term' : $entity_type;
-  $entity = $form_state[$entity_type];
+  $entity = $form_state[$entity_type] ?? $form['layout_paragraphs']['#entity'];
   if (!empty($form_state['values']['revision'])) {
     $entity->revision = $form_state['values']['revision'];
   }
