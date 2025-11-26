@@ -108,7 +108,13 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
       $entity_id = _layout_paragraphs_get_layout_id_from_block_tempstore($form_state['input']['content']['positions']);
     }
     if (empty($entity_id)) {
-      $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? '';
+      if ($entity_type != 'taxonomy_term') {
+        $entity_id = $form_state['layout_paragraphs']['tempstore_id'] ?? $form_state[$entity_type . '_tempstore_id'] ?? '';
+      }
+      else {
+        $uuid = new Uuid();
+        $entity_id = $uuid->generate();
+      }
     }
     $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
     $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
@@ -122,11 +128,11 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     $form_state['layout_paragraphs']['tempstore_id'] = $entity_id;
     $layout_name = _layout_paragraphs_get_layout_name($instance, $entity_id);
     $layout = layout_paragraphs_get_layout_tempstore($layout_name);
-    if (empty($layout)) {
+    if (empty($layout) && is_numeric($entity_id)) {
       $layout = layout_paragraphs_layout_load($layout_name, TRUE, 'database');
       layout_paragraphs_set_layout_tempstore($layout);
     }
-    if (empty($entity_id) || !$layout) {
+    elseif (empty($entity_id) || !$layout) {
       $layout = layout_paragraphs_layout_load($layout_name);
       $layout->locked = FALSE;
     }
@@ -227,16 +233,15 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     layout_paragraphs_content_form($form, $form_state, $layout, 'paragraphs_editor');
     layout_paragraphs_set_layout_tempstore($layout);
     // $form['layout_paragraphs']['entity_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'] ?? '';
+    $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
+    $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
     if ($entity_type == 'taxonomy_term') {
       // @todo: Figure out why this seems to be needed for terms.
       // Maybe because the submit handler is not explicitly set in taxonomy_form_term?
       // Paragraphs don't seem to be saving on new terms, unless you save the term,
       // then edit it again. Maybe tempstore needs to be set earlier?
-      $form['#submit'] = [];
       $form['#submit'][] = 'taxonomy_form_term_submit';
     }
-    $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
-    $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
 
   }
 }
@@ -280,6 +285,8 @@ function layout_paragraphs_new_content_submit($form, &$form_state) {
  *      (LayoutFlexibleTemplate objects), keyed by template machine name.
  */
 function _layout_paragraphs_layout_get_available_templates($layout_name) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  $new_content = (empty($entity_id) || !is_numeric($entity_id));
   $template_options = [
     'active' => [],
     'available' => [],
@@ -295,7 +302,7 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
   if (!empty($templates)) {
     foreach ($templates as $template_name => $enabled) {
       if (!empty($all_templates[$template_name]) && !empty($enabled)) {
-        if ($template_name == $default_template) {
+        if ($template_name == $default_template || (empty($template_options['active']) && $new_content)) {
           $template_options['active'] = $all_templates[$template_name];
         }
         else {
@@ -363,8 +370,11 @@ function layout_paragraphs_edit_content_validate($form, &$form_state) {
 function layout_paragraphs_edit_content_submit($form, &$form_state) {
   $layout_template = $form['layout_paragraphs']['layout']['#layout']->layout_template;
   $entity_type = $form['#entity_type'];
+  $entity_type = ($entity_type == 'taxonomy_term') ? 'term' : $entity_type;
   $entity = $form_state[$entity_type];
-  $entity->revision = $form_state['values']['revision'] ?? $entity->revision;
+  if (!empty($form_state['values']['revision'])) {
+    $entity->revision = $form_state['values']['revision'];
+  }
   $entity_id = $entity->id() ?? 0;
   if (!empty($entity_id)) {
     // Update existing entity.

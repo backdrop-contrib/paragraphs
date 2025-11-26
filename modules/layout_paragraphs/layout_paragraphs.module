@@ -219,8 +219,14 @@ function layout_paragraphs_menu() {
  */
 function layout_paragraphs_access(Layout $layout) {
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
-  $entity = entity_load($entity_type, $entity_id);
-  return entity_access('update', $entity_type, $entity);
+  if (is_numeric($entity_id)) {
+    $entity = entity_load($entity_type, $entity_id);
+    $access = entity_access('update', $entity_type, $entity);
+  }
+  else {
+    $access = entity_access('create', $entity_type);
+  }
+  return $access;
 }
 
 /**
@@ -405,6 +411,15 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
     $template_name = $result['layout_template'];
     $lp_id = $result['id'];
   }
+  else {
+    $field_instance = _layout_paragraphs_get_field_instance($layout_paragraphs_template_name);
+    foreach ($field_instance['widget']['settings']['available_layout_templates'] as $template_name => $enabled) {
+      if (!empty($enabled)) {
+        break;
+      }
+    }
+  }
+
   if (empty($template_name)) {
     $template_name = 'default';
   }
