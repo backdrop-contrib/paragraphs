@@ -132,9 +132,7 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
     }
 
     $template_options = _layout_paragraphs_layout_get_available_templates($layout_name);
-    // Existing entities will have an active template that is not counted in
-    // available templates. New entities will not have an active template yet.
-    if (count($template_options['available']) >= 1) {
+    if (is_numeric($entity_id) || count($template_options['available']) >= 1) {
       $form['layout_paragraphs']['select_template']['options'] = [
         '#type' => 'container',
         '#attributes' => array(
@@ -142,6 +140,8 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         ),
       ];
       if (is_numeric($entity_id)) {
+        // If we have an existing entity, we can offer to reset the tempstore
+        // to what is in the database.
         $form['layout_paragraphs']['select_template']['options']['reset_link'] = array(
           '#type' => 'link',
           '#title' => t('Reset'),
@@ -156,46 +156,65 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
             'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
           ),
         );
-        $form['layout_paragraphs']['select_template']['options']['change_link'] = array(
-          '#type' => 'link',
-          '#title' => t('Change layout template'),
-          '#href' => 'layout_paragraphs/template_change/' . $layout->name,
-          '#limit_validation_errors' => array(),
-          '#weight' => 100,
-          '#attributes' => array(
-            'class' => array(
-              'use-ajax',
-            ),
-            'data-dialog' => 'true',
-            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
-          ),
-        );
       }
-      elseif (count($template_options['available']) > 1) {
-        // New entity, we ask them to save first before changing template if
-        // there are more than one choice.
-        $form['layout_paragraphs']['select_template']['options']['new_action'] = array(
-          '#type' => 'container',
-        );
-        $form['layout_paragraphs']['select_template']['options']['new_action']['save_now'] = array(
-          '#type' => 'submit',
-          '#value' => t('Save now'),
-          '#submit' => array('layout_paragraphs_new_content_submit'),
-          '#weight' => 100,
-          '#attributes' => array(
-            'class' => array(
-              'layout-paragraphs--save-now',
-              'button--small',
+      // Existing entities will have an active template that is not counted in
+      // available templates. New entities will not have an active template yet.
+      $active_count = !empty($template_options['active']) ? 1 : 0;
+      $available_count = count($template_options['available']);
+      if ($active_count + $available_count > 1) {
+        if (is_numeric($entity_id)) {
+          $form['layout_paragraphs']['select_template']['options']['change_link'] = array(
+            '#type' => 'link',
+            '#title' => t('Change layout template'),
+            '#href' => 'layout_paragraphs/template_change/' . $layout->name,
+            '#limit_validation_errors' => array(),
+            '#weight' => 100,
+            '#attributes' => array(
+              'class' => array(
+                'use-ajax',
+              ),
+              'data-dialog' => 'true',
+              'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
             ),
-          ),
-        );
-        $form['layout_paragraphs']['select_template']['options']['change_notice'] = array(
-          '#markup' => '<div class="description"><p>' . t('Note: other layout templates are available. You can add content below, and you will be able to change the layout template after saving for the first time, if you wish.') . '</p></div>',
-        );
+          );
+        }
+        elseif ($active_count + $available_count > 2) {
+          // New entity, we ask them to save first before changing template if
+          // there are more than one choice.
+          $form['layout_paragraphs']['select_template']['options']['new_action'] = array(
+            '#type' => 'container',
+          );
+          $form['layout_paragraphs']['select_template']['options']['new_action']['save_now'] = array(
+            '#type' => 'submit',
+            '#value' => t('Save now'),
+            '#submit' => array('layout_paragraphs_new_content_submit'),
+            '#weight' => 100,
+            '#attributes' => array(
+              'class' => array(
+                'layout-paragraphs--save-now',
+                'button--small',
+              ),
+            ),
+          );
+          $form['layout_paragraphs']['select_template']['options']['change_notice'] = array(
+            '#markup' => '<div class="description"><p>' . t('Note: other layout templates are available. You can add content below, and you will be able to change the layout template after saving for the first time, if you wish.') . '</p></div>',
+          );
+        }
       }
     }
     $template_name = $template_options['active']->name ?? reset($template_options['available'])->name;
-    $layout->layout_template = $template_name;
+    // Ensure the layout template is allowed. If not, reset to one that is.
+    if ($template_name != $template_options['active']->name) {
+      $layout->setLayoutTemplate($template_name);
+      backdrop_set_message(t('The previously selected layout template is no longer available here. The layout has been reset to use the "@template" template.', ['@template' => $template_name]), 'warning');
+      // Update form and form_state positions to match new layout template regions.
+      $form_state['values']['content']['positions'] = [];
+      foreach ($layout->positions as $region => $blocks) {
+        $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
+      }
+    }
+    $layout->setContexts('paragraphs', layout_paragraphs_context());
+    $form['layout_paragraphs']['element'] = $element;
     $form['layout_paragraphs']['select_template']['layout_paragraphs_template'] = array(
       '#type' => 'hidden',
       '#title' => t('Layout template'),
@@ -205,10 +224,8 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         'id' => array('layout-paragraphs--current-template'),
       ),
     );
-    $layout_form = $layout_form_state = [];
-    $layout_content = layout_paragraphs_content_form($layout_form, $layout_form_state, $layout, 'paragraphs_editor');
-    $form['layout_paragraphs']['layout'] = $layout_content;
-    $form['layout_paragraphs']['element'] = $element;
+    layout_paragraphs_content_form($form, $form_state, $layout, 'paragraphs_editor');
+    layout_paragraphs_set_layout_tempstore($layout);
     // $form['layout_paragraphs']['entity_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'] ?? '';
     if ($entity_type == 'taxonomy_term') {
       // @todo: Figure out why this seems to be needed for terms.
@@ -264,9 +281,7 @@ function layout_paragraphs_new_content_submit($form, &$form_state) {
  */
 function _layout_paragraphs_layout_get_available_templates($layout_name) {
   $template_options = [
-    'active' => [
-      'name' => 'default',
-    ],
+    'active' => [],
     'available' => [],
   ];
   $templates = [];
@@ -276,10 +291,10 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
   if (!empty($instance)) {
     $templates = $instance['widget']['settings']['available_layout_templates'];
   }
-  $default_template = $layout->layout_template ?? 'default';
+  $default_template = $layout->layout_template;
   if (!empty($templates)) {
-    foreach ($templates as $template_name) {
-      if (!empty($all_templates[$template_name])) {
+    foreach ($templates as $template_name => $enabled) {
+      if (!empty($all_templates[$template_name]) && !empty($enabled)) {
         if ($template_name == $default_template) {
           $template_options['active'] = $all_templates[$template_name];
         }

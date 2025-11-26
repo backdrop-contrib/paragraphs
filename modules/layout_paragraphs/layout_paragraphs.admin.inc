@@ -259,28 +259,7 @@ function layout_paragraphs_context() {
  *
  * @ingroup forms
  */
-function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $renderer_name = 'editor') {
-  // For some reason, the layout template is getting reset to default when only
-  // one layout template is available, when creating new content and this
-  // section checks tempstore. We may be able to remove this explicit save/
-  // reset of the layout template later if we determine why.
-  $layout_template = $layout->layout_template ?? 'default';
-  $layout_tempstore = layout_paragraphs_get_layout_tempstore($layout->name);
-  if (is_a($layout_tempstore, 'Layout')) {
-    $layout = $layout_tempstore;
-    // Ensure the layout template is correct, e.g. in case of an Ajax change.
-    if ($layout->layout_template != $layout_template) {
-      $layout->setLayoutTemplate($layout_template);
-    }
-    // Update form and form_state positions to match new layout template regions.
-    $form_state['values']['content']['positions'] = [];
-    foreach ($layout->positions as $region => $blocks) {
-      $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
-    }
-
-  }
-  $layout->setContexts('paragraphs', layout_paragraphs_context());
-
+function layout_paragraphs_content_form(&$form, &$form_state, Layout &$layout, $renderer_name = 'editor') {
   $renderer = layout_create_renderer($renderer_name, $layout);
   if (!isset($form_state['renderer'])) {
     $form_state['renderer'] = $renderer;
@@ -289,7 +268,7 @@ function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $r
   /* @var LayoutRendererEditorParagraphs $renderer */
   $renderer = $form_state['renderer'];
 
-  $form['#attached'] = array(
+  $build['#attached'] = array(
     'library' => array(
       array('system', 'backdrop.ajax'),
       array('system', 'backdrop.announce'),
@@ -302,7 +281,7 @@ function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $r
     ),
   );
 
-  $form['messages'] = array(
+  $build['messages'] = array(
     '#markup' => $layout->locked ? '<div class="messages warning">' . layout_paragraphs_locked_message($layout) . '</div>' : '',
     '#weight' => -100,
     // Prefix/suffix used to identify in AJAX requests.
@@ -310,22 +289,22 @@ function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $r
     '#suffix' => '</div>',
   );
 
-  $form['content'] = array('#tree' => TRUE);
-  $form['content']['block'] = array('#tree' => TRUE);
-  $form['content']['display'] = array(
+  $build['content'] = array('#tree' => TRUE);
+  $build['content']['block'] = array('#tree' => TRUE);
+  $build['content']['display'] = array(
     '#markup' => $renderer->render(),
   );
 
   $layout_positions = $layout->positions;
-  $default_region = _layout_paragraphs_get_default_region($form['content']['positions'] ?? []);
+  $default_region = _layout_paragraphs_get_default_region($build['content']['positions'] ?? []);
   foreach ($renderer->layout_template_info['regions'] as $region_id => $title) {
     // Make sure we at least have an empty array for all possible locations.
     if (!isset($layout_positions[$region_id])) {
       $layout_positions[$region_id] = array();
     }
-    if (empty($form['content']['positions'][$region_id])) {
+    if (empty($build['content']['positions'][$region_id])) {
       // Use 'hidden' instead of 'value' so the JS can access it.
-      $form['content']['positions'][$region_id] = array(
+      $build['content']['positions'][$region_id] = array(
         '#type' => 'hidden',
         '#default_value' => implode(',', $layout_positions[$region_id]),
       );
@@ -335,23 +314,22 @@ function layout_paragraphs_content_form($form, &$form_state, Layout &$layout, $r
   foreach ($layout_positions as $region_id => $blocks) {
     // If there are any blocks in the layout that are not in the template,
     // add them to the default region.
-    if (!isset($form['content']['positions']['paragraph-layout-default-template'])) {
-      $form['content']['positions'][$default_region] = array(
+    if (!isset($build['content']['positions']['paragraph-layout-default-template'])) {
+      $build['content']['positions'][$default_region] = array(
         '#type' => 'hidden',
         '#default_value' => implode(',', $blocks),
       );
     }
     else {
-      $form['content']['positions'][$default_region]['#default_value'] .= ',' . implode(',', $blocks);
+      $build['content']['positions'][$default_region]['#default_value'] .= ',' . implode(',', $blocks);
     }
   }
   $form_state['layout'] = $layout;
   // Although layout is already set in $form_state, we need this to make it
   // available to the theme layer.
-  $form['#layout'] = $layout;
+  $build['#layout'] = $layout;
 
-  layout_paragraphs_set_layout_tempstore($layout);
-  return $form;
+  $form['layout_paragraphs']['layout'] = $build;
 }
 
 /**
