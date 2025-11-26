@@ -141,19 +141,21 @@ function layout_paragraphs_menu() {
     'access arguments' => array('administer layout paragraphs'),
     'theme callback' => 'ajax_base_page_theme',
   );
-  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/add-block/%/%'] = array(
-    'title callback' => 'layout_paragraphs_block_add_title',
-    'title arguments' => array(5, 7, 8),
-    'page callback' => 'layout_paragraphs_block_add_page',
-    'access arguments' => array('administer layout paragraphs'),
-    'page arguments' => array(5, 7, 8),
-    'file' => 'layout_paragraphs.admin.inc',
-  ) + $base;
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/configure-region/%/%'] = array(
     'title' => 'Configure region',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_configure_region_page', 5, 7 , 8),
     'access arguments' => array('administer layout paragraphs'),
+    'access arguments' => array('administer layout paragraphs'),
+    'file' => 'layout_paragraphs.admin.inc',
+  ) + $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/add-block/%/%'] = array(
+    'title callback' => 'layout_paragraphs_block_add_title',
+    'title arguments' => array(5, 7, 8),
+    'page callback' => 'layout_paragraphs_block_add_page',
+    'page arguments' => array(5, 7, 8),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
     'file' => 'layout_paragraphs.admin.inc',
   ) + $base;
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/configure-block/%/%layout_paragraphs_tempstore_block'] = array(
@@ -161,6 +163,8 @@ function layout_paragraphs_menu() {
     'load arguments' => array(5),
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_block_configure_form', 5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
     'file' => 'layout_paragraphs.admin.inc',
   ) + $base;
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/remove-block/%/%layout_paragraphs_tempstore_block'] = array(
@@ -168,6 +172,8 @@ function layout_paragraphs_menu() {
     'load arguments' => array(5),
     'page callback' => 'layout_paragraphs_block_remove_page',
     'page arguments' => array(5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
     'file' => 'layout_paragraphs.admin.inc',
   );
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/remove-block/%/%layout_paragraphs_tempstore_block'] += $base;
@@ -176,6 +182,8 @@ function layout_paragraphs_menu() {
     'load arguments' => array(5),
     'page callback' => 'layout_paragraphs_block_disable_page',
     'page arguments' => array(5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
     'file' => 'layout_paragraphs.admin.inc',
   );
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/toggle-block-status/%/%layout_paragraphs_tempstore_block'] += $base;
@@ -183,20 +191,36 @@ function layout_paragraphs_menu() {
     'title' => 'Layout Paragraphs template change dialog',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_select_template_form', 2),
-    'access arguments' => array('administer layout paragraphs'),
     'type' => MENU_CALLBACK,
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(2),
     'file' => 'layout_paragraphs.admin.inc',
   );
   $items['layout_paragraphs/reset/%layout_paragraphs_instance'] = array(
     'title' => 'Reset and lose all unsaved changes',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_reset_template_form', 2),
-    'access arguments' => array('administer layout paragraphs'),
     'type' => MENU_CALLBACK,
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(2),
     'file' => 'layout_paragraphs.admin.inc',
   );
 
   return $items;
+}
+
+/**
+ * Access callback for dialog and Ajax paths while using Layout Paragraphs.
+ *
+ * @param Layout $layout
+ *   The layout currently in use.
+ *
+ * @return bool
+ */
+function layout_paragraphs_access(Layout $layout) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
+  $entity = entity_load($entity_type, $entity_id);
+  return entity_access('update', $entity_type, $entity);
 }
 
 /**
