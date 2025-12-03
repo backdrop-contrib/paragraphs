@@ -44,7 +44,7 @@
   <?php endif; ?>
 
   <div class="content"<?php (empty($content_attributes)) ? '' : print backdrop_attributes($content_attributes); ?>>
-    <?php if ($page) : ?>
+    <?php if ($page && !empty($property)) : ?>
       <div class="paragraphs-library-item--properties">
           <?php print render($property); ?>
       </div>
