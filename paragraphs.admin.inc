@@ -575,12 +575,14 @@ function paragraphs_modal_admin_sort_form($form, &$form_state, $paragraphs_item)
 
       if ($has_markup) {
         // Display collapsed if there is something to preview.
+        $summary_preview = trim(filter_xss(truncate_utf8(strip_tags($item_markup), 140, TRUE, TRUE, 150)));
+        $summary = t('Preview') . ($summary_preview ? '<span class="paragraphs--preview-description">: ' . $summary_preview . '</span>' : '');
         $form['paragraphs_items'][$item['value']]['preview'] = array(
           '#type' => 'details',
-          '#summary' => t('Preview: ' . $bundle->name),
+          '#summary' => $summary,
           '#details' => $item_markup,
           '#attributes' => array(
-            'class' => array('paragraphs-preview'),
+            'class' => array('paragraphs--collapsible-preview'),
           ),
         );
       }
