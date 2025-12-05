@@ -1424,24 +1424,34 @@ function layout_paragraphs_template_delete_form($form, &$form_state, LayoutFlexi
   $description = t('This action cannot be undone.');
   backdrop_set_title($question, PASS_THROUGH);
 
-  // Check if this template is in use.
-  // @todo: Adjust this check for Layout Paragraphs usage
-  $errors = array();
-  foreach (layout_load_all() as $layout) {
-    if ($layout->layout_template == $layout_paragraphs_template->name) {
-      $errors[] = check_plain($layout->title);
-    }
+  $all_templates = layout_flexible_template_load_all('paragraphs');
+  unset($all_templates[$layout_paragraphs_template->name]);
+  $replacement_templates = array();
+  foreach ($all_templates as $template) {
+    $replacement_templates[$template->name] = $template->title;
   }
+  // Check if this template is in use.
+  $in_use = _layout_paragraphs_template_in_use($layout_paragraphs_template->name);
 
-  if (!empty($errors)) {
-    backdrop_set_message(t('The "@title" layout template is currently in use in the following layouts and may not be deleted: !list', array('@title' => $layout_paragraphs_template->title, '!list' => theme('item_list', array('items' => $errors)))), 'error');
+  if (!empty($in_use)) {
+    $form['replacement'] = array(
+      '#title' => t('Replacement layout template'),
+      '#type' => 'select',
+      '#options' => $replacement_templates,
+      '#required' => TRUE,
+    );
+    $description = t('This template is currently in use, so you must select a replacement layout template. If regions in the two templates do not match, all Paragraphs will be moved to a default region in the new template, which may not be ideal. Please test first and be sure you wish to remove this template.') . ' ' . $description;
   }
   else {
-    $form['description'] = array(
-      '#markup' => $description,
+    $form['replacement'] = array(
+      '#type' => 'hidden',
+      '#value' => FALSE,
     );
   }
 
+  $form['description'] = array(
+    '#markup' => $description,
+  );
   $form['actions'] = array(
     '#type' => 'actions',
   );
@@ -1471,11 +1481,39 @@ function layout_paragraphs_template_delete_form($form, &$form_state, LayoutFlexi
 function layout_paragraphs_template_delete_form_submit(&$form, &$form_state) {
   /* @var LayoutFlexibleTemplate $layout_paragraphs_template */
   $layout_paragraphs_template = &$form_state['flexible_template'];
+  $replacement_template_name = check_plain($form_state['values']['replacement']);
+  if (!empty($replacement_template_name)) {
+    db_update('layout_paragraphs')
+      ->fields(['layout_template' => $replacement_template_name])
+      ->condition('layout_template', $layout_paragraphs_template->name)
+      ->execute();
+  }
   $layout_paragraphs_template->delete();
   layout_paragraphs_reset_caches();
 
   backdrop_set_message(t('The layout template "@title" has been deleted.', array('@title' => $layout_paragraphs_template->title)));
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts';
+}
+
+/**
+ * Helper to check if a layout template is in use.
+ *
+ * @param string $layout_template_name
+ *   The layout template machine name.
+ *
+ * @return array
+ *   An array of lp_id values where the layout template is in use, or an empty
+ *   array if not in use.
+ */
+function _layout_paragraphs_template_in_use(string $layout_template_name) {
+  $in_use = [];
+  $layouts = db_query("SELECT id FROM {layout_paragraphs} WHERE layout_template = :layout_template", [
+    ':layout_template' => $layout_template_name,
+  ])->fetchAll();
+  foreach ($layouts as $layout) {
+    $in_use[] = $layout->id;
+  }
+  return $in_use;
 }
 
 /**
