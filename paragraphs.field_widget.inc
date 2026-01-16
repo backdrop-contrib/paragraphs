@@ -1055,7 +1055,7 @@ function _paragraphs_multiple_field_validate($elements, &$form_state) {
       }
 
       // Get non-empty items.
-      $field_values = _field_filter_items($field_info, $field_values);
+      $field_values = _field_filter_items($field_info, $field_values, $field_state['instance']);
     }
 
     if (count($field_values) < 1) {
