@@ -1094,7 +1094,7 @@ function paragraphs_item_is_empty(ParagraphsItemEntity $item) {
         // If at least one paragraph is not empty; the
         // paragraph item is not empty.
         foreach ($item->{$field_name}[$langcode] as $field_item) {
-          if (!module_invoke($field['module'], 'field_is_empty', $field_item, $field)) {
+          if (!module_invoke($field['module'], 'field_is_empty', $field_item, $field, $instance)) {
             $is_empty = FALSE;
           }
         }
