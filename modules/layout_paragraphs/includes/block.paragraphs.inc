@@ -64,7 +64,6 @@ class BlockParagraphs extends Block {
     $this->is_orphaned = !empty($data['orphan']);
 
     // $this->host_entity_id = end(preg_split('/./', $data['layout_name']));
-
     $this->field_instance = _layout_paragraphs_get_field_instance($data['layout_name']);
     $this->bundle = paragraphs_bundle_load($this->delta);
     if (!empty($data['paragraphs_item_id'])) {
@@ -118,7 +117,7 @@ class BlockParagraphs extends Block {
   }
 
   /**
-   *  Paragraphs don't have front-facing titles, so this returns an empty string.
+   *  Paragraphs don't have front-facing titles, so return an empty string.
    */
   public function getTitle() {
     return '';

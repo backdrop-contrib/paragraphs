@@ -8,7 +8,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    *
    * @var Layout
    */
-  var $layout;
+  public $layout;
 
   /**
    * Deprecated. Now replaced by $layout_template_info.
@@ -16,49 +16,49 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    * @var NULL
    * @deprecated since 1.29.0
    */
-  var $layout_info;
+  public $layout_info;
 
   /**
    * The information from hook_layout_template_info() for the layout template.
    *
    * @var array
    */
-  var $layout_template_info;
+  public $layout_template_info;
 
   /**
    * The complete rendered editor.
    *
    * @var array
    */
-  var $rendered_editor = array();
+  public $rendered_editor = array();
 
   /**
    * TRUE if this renderer is rendering in administrative mode.
    *
    * @var bool
    */
-  var $admin = TRUE;
+  public $admin = TRUE;
 
   /**
    * Include rendered HTML prior to the layout.
    *
    * @var string
    */
-  var $prefix = '';
+  public $prefix = '';
 
   /**
    * Include rendered HTML after the layout.
    *
    * @var string
    */
-  var $suffix = '';
+  public $suffix = '';
 
   /**
    * An array of dropbutton links to administrative actions on editor rows.
    *
    * @var array
    */
-  var $region_buttons = array();
+  public $region_buttons = array();
 
   /**
    * Construct the object that will be used to render the editor.
@@ -68,7 +68,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    * @param array $renderer_plugin
    *   The definition of the renderer plugin.
    */
-  function __construct(Layout $layout, array $renderer_plugin = array()) {
+  public function __construct(Layout $layout, array $renderer_plugin = array()) {
     $template_id = $layout->layout_template;
 
     $template_info = layout_paragraphs_get_layout_template_info($template_id);
@@ -90,7 +90,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    * @return string
    *   Themed & rendered HTML output.
    */
-  function render() {
+  public function render() {
     $this->addMeta();
 
     $output = '<div id="layout-paragraphs-edit-main">';
@@ -109,7 +109,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
    * @return string
    *   The HTML string representing the entire rendered, themed template editor.
    */
-  function renderEditor() {
+  public function renderEditor() {
     $this->renderRowButtons();
 
     module_load_include('inc', 'layout', 'layout.theme');
@@ -134,7 +134,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
   /**
    * Attach page metadata.
    */
-  function addMeta() {
+  public function addMeta() {
     backdrop_add_library('system', 'backdrop.ajax');
     backdrop_add_library('system', 'ui.sortable');
     backdrop_add_js(backdrop_get_path('module', 'layout') . '/js/layout.admin.js');
@@ -145,7 +145,7 @@ class LayoutRendererParagraphs extends LayoutRendererFlexible {
   /**
    * Render row dropbuttons.
    */
-  function renderRowButtons() {
+  public function renderRowButtons() {
     foreach ($this->layout_template_info['regions'] as $region_id => $title) {
       $this->region_buttons[$region_id] = $this->getRowButtons($region_id);
     }

@@ -320,6 +320,8 @@ function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, strin
  * @param Layout $layout
  *   The layout instance to load the block from.
  *
+ * @return BlockParagraphs|bool
+ *
  */
 function layout_paragraphs_tempstore_block_retrieve(string $layout_block_uuid, Layout $layout) {
   $block = FALSE;
@@ -694,6 +696,7 @@ function layout_paragraphs_layout_flexible_types_alter(&$types) {
  */
 function layout_paragraphs_reset_caches() {
   layout_flexible_reset_caches('paragraphs');
+  cache('cache')->delete('layout_paragraphs_info');
 }
 
 /**
@@ -977,6 +980,7 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
       foreach ($uuids as $block_index => $uuid) {
         if (!empty($uuid)) {
           // Load block with Paragraphs item attached from tempstore.
+          /* var BlockParagraphs $block */
           $block = $layout->content[$uuid] ?? layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
           if (!empty($block->paragraphs_item)) {
             $block_save_needed = ($block->is_new || $block->paragraphs_item->being_edited);

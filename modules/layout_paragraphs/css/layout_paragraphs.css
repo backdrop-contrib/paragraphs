@@ -243,3 +243,19 @@
     flex-grow: 12;
   }
 }
+
+.layout-editor-region {
+  display: flex;
+  flex-direction: column;
+
+  .layout-editor-region-title {
+    flex-grow: 0;
+  }
+  .layout-editor-region-content {
+    flex-grow: 1;
+  }
+}
+
+.layout--paragraphs-edit-main {
+  margin-block-end: 3rem;
+}

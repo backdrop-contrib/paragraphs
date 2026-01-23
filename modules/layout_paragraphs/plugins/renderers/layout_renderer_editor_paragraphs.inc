@@ -17,7 +17,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function __construct(Layout $layout, array $renderer_plugin) {
+  public function __construct(Layout $layout, array $renderer_plugin) {
     $template_id = $layout->layout_template ?? 'default';
 
     $template_info = layout_paragraphs_get_layout_template_info($template_id);
@@ -39,7 +39,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function addMeta() {
+  public function addMeta() {
     parent::addMeta();
     backdrop_add_library('system', 'ui.sortable');
     backdrop_add_js(backdrop_get_path('module', 'layout') . '/js/layout.admin.js');
@@ -49,7 +49,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function render() {
+  public function render() {
     $this->addMeta();
 
     $output = '<div class="layout--paragraphs-edit-main">';
@@ -71,7 +71,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
    * @return string
    *   The HTML string representing the entire rendered, themed layout.
    */
-  function renderLayout() {
+  public function renderLayout() {
     if (empty($this->prep_run)) {
       $this->prepare();
     }
@@ -102,7 +102,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function renderRegion($region_id, $blocks) {
+  public function renderRegion($region_id, $blocks) {
     $output = '';
     $content = implode('', $blocks);
     $region_buttons = $this->getRegionLinks($region_id);
@@ -121,7 +121,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * Render the Page Title region in the Layout Editor.
    */
-  function renderTitleRegion($region_id) {
+  public function renderTitleRegion($region_id) {
     $region_buttons = $this->getRegionLinks($region_id);
     $description = layout_get_title_description($this->layout);
 
@@ -139,7 +139,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function renderBlock($block) {
+  public function renderBlock($block) {
     $aria_label = $this->getAriaLabel($block);
     $buttons = $this->getBlockLinks($block);
     $content = $block->getAdminPreview();
@@ -175,7 +175,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
    * Overrides LayoutRendererStandard::prepareBlocks() to process Layout
    * Paragraphs blocks.
    */
-  function prepareBlocks(array $blocks) {
+  public function prepareBlocks(array $blocks) {
     // Use local variables as writing to them is very slightly faster.
     $first = $normal = $last = array();
 
@@ -234,7 +234,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * {@inheritdoc}
    */
-  function renderBlocks() {
+  public function renderBlocks() {
     $this->rendered['blocks'] = array();
     foreach ($this->prepared['blocks'] as $uuid => $block) {
       $block->uuid = $uuid;
@@ -246,7 +246,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
   /**
    * Returns an aria label for a block.
    */
-  function getAriaLabel($block) {
+  public function getAriaLabel($block) {
     return t('Draggable block !title', array('!title' => strip_tags($block->getAdminTitle())));
   }
 
@@ -262,7 +262,7 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
    * @return string
    *   A Backdrop menu path.
    */
-  function getUrl($command) {
+  public function getUrl($command) {
     $args = func_get_args();
     $command = array_shift($args);
     $url = 'admin/structure/paragraphs/layouts/manage/' . $this->layout->name . '/' . $command . '/' . $this->plugin['name'];

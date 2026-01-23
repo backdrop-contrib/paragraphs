@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  */
@@ -8,13 +7,13 @@
  * Outputs information about a Layout Paragraphs template . Used in the
  * Paragraphs layout template listing page.
  *
- * @param $variables
+ * @param array $variables
  *   An array with a single value: "template_info", which contains information
  *   about the layout template.
  *
  * @return string
  */
-function theme_layout_paragraphs_template_info($variables) {
+function theme_layout_paragraphs_template_info(array $variables) {
   $template_info = $variables['template_info'];
 
   // Get the label and machine name.
@@ -40,7 +39,7 @@ function theme_layout_paragraphs_template_option($variables) {
   $output = '';
   $output .= '<div class="layout-template">';
   $output .= $template_info->preview;
-  // $output .= '<div class="layout-caption">' . check_plain($template_info->title) . '</div>';
+  $output .= '<div class="layout-caption">' . check_plain($template_info->title) . '</div>';
   $output .= '</div>';
   return $output;
 }

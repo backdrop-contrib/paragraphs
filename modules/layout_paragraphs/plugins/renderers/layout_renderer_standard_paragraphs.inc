@@ -22,18 +22,21 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    *
    * @param Layout $layout
    *   The layout object to be rendered.
-   * @param array $plugin
+   * @param array $renderer_plugin
    *   The definition of the renderer plugin.
    *
    * @throws LayoutMissingException
    */
-  function __construct(Layout $layout, array $renderer_plugin) {
+  public function __construct(Layout $layout, array $renderer_plugin) {
     $this->plugin = $renderer_plugin;
     $layout_template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
     $this->layout = &$layout;
 
     if (empty($layout_template_info)) {
-      throw new LayoutMissingException(t('The layout plugin "@plugin" could not been found to display the "@title" layout.', array('@plugin' => $layout->layout_template, '@title' => $layout->title)));
+      throw new LayoutMissingException(t('The layout plugin "@plugin" could not been found to display the "@title" layout.', array(
+        '@plugin' => $layout->layout_template,
+        '@title' => $layout->title,
+      )));
     }
     else {
       $this->layout_template_info = $layout_template_info;
@@ -46,7 +49,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
    * @return array
    *   An array of regions prepared for rendering.
    */
-  function prepareRegions(array $region_block_list, array $settings) {
+  public function prepareRegions(array $region_block_list, array $settings) {
     // Initialize defaults to be used for regions without their own explicit
     // settings. Use display settings if they exist, else hardcoded defaults.
     $default = array(
@@ -173,7 +176,11 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
       $classes = array_filter($classes);
     }
 
-    return theme('layout_region_inner', array('blocks' => $blocks, 'tag' => $tag, 'classes' => $classes));
+    return theme('layout_region_inner', array(
+      'blocks' => $blocks,
+      'tag' => $tag,
+      'classes' => $classes,
+    ));
   }
 
   /**
@@ -197,7 +204,7 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
   /**
    * Overrides LayoutRendererStandard::renderBlock().
    *
-   * @param Block $block
+   * @param mixed $block
    *   The block to be rendered.
    *
    * @return string
@@ -215,7 +222,10 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
         );
       }
       // Add the contextual links.
-      $content['#contextual_links']['layout'] = array('admin/structure/layouts/manage/' . $this->layout->name . '/modal', array($block->uuid));
+      $content['#contextual_links']['layout'] = array(
+        'admin/structure/layouts/manage/' . $this->layout->name . '/modal',
+        array($block->uuid),
+      );
 
       $data = array(
         'content' => $content,
@@ -227,14 +237,23 @@ class LayoutRendererStandardParagraphs extends LayoutRendererStandard {
       );
 
       if (isset($style) && isset($style['block theme'])) {
-        $output = theme($style['block theme'] . '__' . $block->module . '__' . strtr($block->delta, '-', '_'), array('content' => $content, 'layout' => $this->layout, 'block' => $block, 'style' => $style, 'settings' => $block->style->settings));
+        $output = theme($style['block theme'] . '__' . $block->module . '__' . strtr($block->delta, '-', '_'), array(
+          'content' => $content,
+          'layout' => $this->layout,
+          'block' => $block,
+          'style' => $style,
+          'settings' => $block->style->settings,
+        ));
       }
       else {
         // Fallback.
-        $output = theme('block', array('content' => $content, 'layout' => $this->layout, 'block' => $block));
+        $output = theme('block', array(
+          'content' => $content,
+          'layout' => $this->layout,
+          'block' => $block,
+        ));
       }
     }
     return $output;
   }
-
 }
