@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Holds relevant functions for paragraph field formatters.

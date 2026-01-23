@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The standard render for a Layout Paragraphs display object.
  *

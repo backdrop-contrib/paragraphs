@@ -1,10 +1,12 @@
 <?php
-
 /**
  * @file
  * Provides basic class for importing Paragraphs via Migrate API.
  */
 
+/**
+ *
+ */
 class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
 
   /**
@@ -122,7 +124,10 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
       if (isset($paragraphs_item->item_id)) {
         if ($paragraphs_item->item_id != $row->migrate_map_destid1) {
           throw new MigrateException(t("Incoming item_id !item_id and map destination item_id !destid1 don't match",
-            array('!item_id' => $paragraphs_item->item_id, '!destid1' => $row->migrate_map_destid1)));
+            array(
+              '!item_id' => $paragraphs_item->item_id,
+              '!destid1' => $row->migrate_map_destid1,
+            )));
         }
       }
       else {

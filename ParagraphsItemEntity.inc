@@ -1,10 +1,12 @@
 <?php
-
 /**
  * @file
  * Entity implementation for the paragraphs entity.
  */
 
+/**
+ *
+ */
 class ParagraphsItemEntity extends Entity {
 
   /**
@@ -191,7 +193,7 @@ class ParagraphsItemEntity extends Entity {
    *   - create
    *   - view
    *   - update
-   *   - delete
+   *   - delete.
    * @param User|AnonymousUser|object $account
    *   (optional) The user to check for. Leave it to NULL to check for the
    *   global user.

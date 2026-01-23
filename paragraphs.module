@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Paragraphs hooks and common functions.
@@ -700,7 +699,7 @@ function paragraphs_field_instance_settings_form($field, $instance) {
       '#default_value' => isset($settings['default_edit_mode']) ? $settings['default_edit_mode'] : PARAGRAPHS_DEFAULT_EDIT_MODE,
       '#required' => TRUE,
     );
-    
+
     $element['default_edit_mode_override'] = array(
       '#type' => 'number',
       '#title' => t('Edit mode override'),
@@ -1706,7 +1705,7 @@ function paragraphs_modules_uninstalled($modules) {
  * Access callback for separate edit/sort/delete form.
  *
  * @param ParagraphsItemEntity $paragraphs_item
- *  The paragraphs item entity to check access for.
+ *   The paragraphs item entity to check access for.
  *
  * @return bool
  */

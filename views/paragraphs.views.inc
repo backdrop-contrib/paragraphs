@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Views implementations for paragraphs.
@@ -47,7 +46,10 @@ function paragraphs_field_views_data($field) {
         '@field' => $label,
         '@field_name' => $field['field_name'],
       )),
-      'help' => t('Relate each @entity using @field.', array('@entity' => $entity, '@field' => $label)),
+      'help' => t('Relate each @entity using @field.', array(
+        '@entity' => $entity,
+        '@field' => $label,
+      )),
       'handler' => 'views_handler_relationship_entity_reverse',
       'field_name' => $field['field_name'],
       'field table' => _field_sql_storage_tablename($field),

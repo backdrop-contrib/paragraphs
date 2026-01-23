@@ -1,10 +1,12 @@
 <?php
-
 /**
  * @file
  * Entity Plus Controller implementation for the paragraphs entity.
  */
 
+/**
+ *
+ */
 class ParagraphsItemEntityController extends EntityPlusController {
 
   /**

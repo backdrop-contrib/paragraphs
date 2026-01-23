@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Admin functions for the paragraphs module.
@@ -930,7 +929,8 @@ function paragraphs_modal_admin_add_form_submit($form, &$form_state) {
   $host_entity_type = $form['host_entity_type']['#value'];
   $mode = $form['mode']['#value'];
 
-  // We have to perform a host save if we are adding the first paragraph in the paragraph field.
+  // We have to perform a host save if we are adding the first paragraph in the
+  // paragraph field.
   $skip_host_save = $mode == 'scratch' ? FALSE : TRUE;
 
   // Set host entity for new paragraph.
@@ -949,7 +949,8 @@ function paragraphs_modal_admin_add_form_submit($form, &$form_state) {
       ),
     );
 
-    // Load the paragraphs field from the host entity and insert the new paragraph item in the correct position.
+    // Load the paragraphs field from the host entity and insert the new
+    // paragraph item in the correct position.
     if ($paragraphs = field_get_items($host_entity_type, $host_entity, $paragraphs_item->field_name)) {
       array_splice($paragraphs, $paragraphs_item->position, 0, $new_paragraph);
     }
