@@ -21,7 +21,8 @@
   }
 }
 
-.form-type-radio.form-item-layout-paragraphs-templates {
+.form-type-radio.form-item-available,
+.form-type-radio.form-item-active {
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -45,7 +46,7 @@
       height: var(--layout-paragraph-template-height);
       max-width: var(--layout-paragraph-template-width);
       max-height: var(--layout-paragraph-template-height);
-      background-color: #efefef;
+      background-color: var(--gin-bg-input, #f5f5f5);
       border-radius: 5px;
     }
 
@@ -53,7 +54,7 @@
       margin: 10px;
       width: calc(100% - 30px);
       height: calc(100% - 30px);
-      color: blue;
+      color: var(--gin-color-text, #000);
       transition: all 0.3s ease-in-out;
       border: 5px solid transparent;
     }
@@ -77,31 +78,40 @@
     background-color: transparent;
     opacity: 0;
   }
+}
+.form-type-radio.form-item-available {
+  .description svg {
+    color: var(--gin-color-primary, #0074bd);
+  }
 
   input {
-    &:hover {
-      border: 5px solid green;
+    &:checked {
+      border: 5px solid var(--gin-color-text, #0074bd);
 
-      ~ .description svg {
-        color: green;
+      ~ .description {
+        .layout-icon {
+          background-color: var(--gin-bg-layer2, #d3d3d3);
+        }
+
+        svg {
+          background-color: var(--gin-bg-input, #d3d3d3);
+        }
       }
     }
 
     &:focus {
-      border: 5px solid red;
+      border: 5px solid var(--gin-color-focus, #005e99);
 
       ~ .description svg {
-        color: red;
-        border: 5px solid blue;
+        border: 5px solid var(--gin-color-focus, #0074bd);
       }
     }
 
-    &:checked,
-    &:focus:checked {
-      border: 5px solid purple;
+    &:hover {
+      border: 5px solid var(--gin-color-primary-hover, #0074bd);
 
       ~ .description svg {
-        color: purple;
+        color: var(--gin-color-primary-hover, #0074bd);
       }
     }
 
@@ -150,6 +160,17 @@
 
 .layout-paragraphs-dialog {
   max-width: min(95vw, 48em);
+
+  .layout-paragraphs-templates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .layout-active {
+      opacity: .85;
+    }
+  }
 
   .ui-dialog-content:has(#layout-paragraphs-select-template-form)  {
     + .ui-dialog-buttonpane {
@@ -222,29 +243,3 @@
     flex-grow: 12;
   }
 }
-
-/** Temporary CSS **/
-/*
-.layout-paragraphs--wrapper {
-  .block-content {
-    padding: 1rem;
-  }
-
-  .container,
-  .container-fluid {
-    padding-inline: 0;
-  }
-
-  .flexible-row {
-    min-height: 2rem;
-    background: #efefef;
-    margin: 0.5rem;
-    padding: 0;
-
-    .l-col {
-      border-right: white .5rem solid;
-      min-height: 2rem;
-    }
-  }
-}
-*/

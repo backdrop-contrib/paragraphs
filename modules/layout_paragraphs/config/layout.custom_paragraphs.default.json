@@ -1,10 +1,11 @@
 {
-  "_config_name": "layout.paragraphs.default",
+  "_config_name": "layout.custom_paragraphs.default",
   "name": "default",
   "title": "Default",
   "module": "layout_paragraphs",
   "description": "The default Paragraphs layout template in its simplest form.",
-  "layout_template_type": "paragraphs",
+  "layout_template_type": "custom_paragraphs",
+  "is_full_page": false,
   "rows": {
     "paragraphs-layout-default-template": {
       "contains": "region_12",

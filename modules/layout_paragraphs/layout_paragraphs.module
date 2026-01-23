@@ -51,7 +51,10 @@ function layout_paragraphs_menu() {
     'title callback' => 'layout_paragraphs_template_title_callback',
     'title arguments' => array(5),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('layout_paragraphs_template_settings_edit_form', 4),
+    'page arguments' => array(
+      'layout_paragraphs_template_settings_edit_form',
+      4,
+    ),
     'access arguments' => array('administer layout paragraphs'),
     'file' => 'layout_paragraphs.admin.inc',
     'type' => MENU_CALLBACK,
@@ -62,7 +65,10 @@ function layout_paragraphs_menu() {
     'title callback' => 'layout_paragraphs_template_title_callback',
     'title arguments' => array(5),
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('layout_paragraphs_template_settings_edit_form', 4),
+    'page arguments' => array(
+      'layout_paragraphs_template_settings_edit_form',
+      4,
+    ),
     'access arguments' => array('administer layout paragraphs'),
     'file' => 'layout_paragraphs.admin.inc',
     'type' => MENU_NORMAL_ITEM,
@@ -111,7 +117,11 @@ function layout_paragraphs_menu() {
   $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/select-widths'] = array(
     'title' => 'Choose region widths',
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('layout_paragraphs_template_region_style_select', 4, 6),
+    'page arguments' => array(
+      'layout_paragraphs_template_region_style_select',
+      4,
+      6,
+    ),
     'access arguments' => array('administer layout paragraphs'),
     'type' => MENU_CALLBACK,
     'weight' => -10,
@@ -131,7 +141,12 @@ function layout_paragraphs_menu() {
   $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/configure/%'] = array(
     'title' => 'Add row',
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('layout_paragraphs_template_edit_row_form', 4, 6, 8),
+    'page arguments' => array(
+      'layout_paragraphs_template_edit_row_form',
+      4,
+      6,
+      8,
+    ),
     'access arguments' => array('administer layout paragraphs'),
     'type' => MENU_CALLBACK,
     'weight' => -10,
@@ -144,7 +159,12 @@ function layout_paragraphs_menu() {
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/configure-region/%/%'] = array(
     'title' => 'Configure region',
     'page callback' => 'backdrop_get_form',
-    'page arguments' => array('layout_paragraphs_configure_region_page', 5, 7 , 8),
+    'page arguments' => array(
+      'layout_paragraphs_configure_region_page',
+      5,
+      7,
+      8,
+    ),
     'access arguments' => array('administer layout paragraphs'),
     'access arguments' => array('administer layout paragraphs'),
     'file' => 'layout_paragraphs.admin.inc',
@@ -188,7 +208,7 @@ function layout_paragraphs_menu() {
   );
   $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/toggle-block-status/%/%layout_paragraphs_tempstore_block'] += $base;
   $items['layout_paragraphs/template_change/%layout_paragraphs_instance'] = array(
-    'title' => 'Layout Paragraphs template change dialog',
+    'title' => 'Change layout template',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('layout_paragraphs_select_template_form', 2),
     'type' => MENU_CALLBACK,
@@ -480,9 +500,6 @@ function layout_paragraphs_tempstore_load(string $flexible_template_name) {
  *
  * @param string $instance_name
  *   The layout name machine name of the instance to load.
- * @param bool $reload
- *   Force reload the instance from the database and skip checking the
- *   tempstore.
  *
  * @return Layout|false
  *   The Layout paragraphs instance, or false if it couldn't be loaded.
@@ -645,7 +662,7 @@ function layout_paragraphs_layout_style_info() {
  * Implements hook_config_info().
  */
 function layout_paragraphs_config_info() {
-  $prefixes['layout.paragraphs'] = array(
+  $prefixes['layout.custom_paragraphs'] = array(
     'name_key' => 'name',
     'label_key' => 'title',
     'group' => t('Layout Paragraphs'),
@@ -664,24 +681,6 @@ function layout_paragraphs_layout_context_info() {
   );
   return $info;
 }
-
-/**
- * Implements hook_layout_relationship_info().
- */
-// @todo relationships needed? E.g. host entity from paragraph?
-/*
-function layout_paragraphs_layout_relationship_info() {
-  $info['author_from_node'] = array(
-    'title' => t('Author of content'),
-    'class' => 'LayoutRelationshipAuthorFromNode',
-    'context' => 'node',
-    'context_label' => t('Content'),
-    'description' => t('Creates a user context from the author of a piece of content.'),
-  );
-
-  return $info;
-}
-*/
 
 /**
  * Alters the list of flexible layout types to add Layout Paragraphs.

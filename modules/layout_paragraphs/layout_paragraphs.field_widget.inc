@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Holds functions for the Layout Paragraphs widgets.
@@ -55,8 +54,8 @@ function layout_paragraphs_field_widget_settings_form($field, $instance) {
 function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   switch ($instance['widget']['type']) {
     case 'layout_paragraphs':
-      // Return paragraphs_field_multiple_value_form($field, $instance, $langcode, $items, $form, $form_state, $delta, $element);
-      // Add the layout functionality directly to the form; return the placeholder for the Paragraphs data.
+      // Add the layout functionality directly to the form; return the
+      // placeholder for the Paragraphs data.
       return layout_paragraphs_edit_content($form, $form_state, $field, $instance, $langcode, $items, $delta, $element);
   }
 }
@@ -86,7 +85,7 @@ function layout_paragraphs_field_widget_form(&$form, &$form_state, $field, $inst
  * @see layout_paragraphs_edit_content_submit()
  * @ingroup forms
  */
-function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
+function layout_paragraphs_edit_content(array &$form, array &$form_state, array $field, array $instance, string $langcode, array $items, int $delta, array $element) {
   if ($instance['widget']['type'] == 'layout_paragraphs') {
     $return = [];
     form_load_include($form_state, 'inc', 'layout_paragraphs', 'layout_paragraphs.admin');
@@ -202,12 +201,20 @@ function layout_paragraphs_edit_content(&$form, &$form_state, $field, $instance,
         }
       }
     }
-    $template_name = $template_options['active']->name ?? reset($template_options['available'])->name;
+    $active_template = $template_options['active']->name ?? '';
+    $template_name = (!empty($active_template)) ? $active_template : reset($template_options['available'])->name;
     // Ensure the layout template is allowed. If not, reset to one that is.
-    if ($template_name != $template_options['active']->name) {
+    if (empty($active_template)) {
+      $layout->layout_template = 'default';
+    }
+    if ($template_name != $active_template) {
       $layout->setLayoutTemplate($template_name);
+      if (empty($active_template)) {
+        _layout_paragraphs_add_paragraphs_to_layout($layout, 'database');
+      }
       backdrop_set_message(t('The previously selected layout template is no longer available here. The layout has been reset to use the "@template" template.', ['@template' => $template_name]), 'warning');
-      // Update form and form_state positions to match new layout template regions.
+      // Update form and form_state positions to match new layout template
+      // regions.
       $form_state['values']['content']['positions'] = [];
       foreach ($layout->positions as $region => $blocks) {
         $form_state['values']['content']['positions'][$region] = implode(',', $blocks);
@@ -351,11 +358,6 @@ function layout_paragraphs_edit_content_validate($form, &$form_state) {
  * - Saves the selected Layout Paragraphs template to the database.
  * - Saves Paragraphs items to the database with default/fallback weights.
  * - Saves Layout Paragraphs block positions to the database.
- *
- * @param array $form
- *   An associative array containing the structure of a portion of the form.
- * @param array $form_state
- *   A keyed array containing the current state of the form.
  *
  * @return void
  *

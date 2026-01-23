@@ -14,30 +14,52 @@ function layout_paragraphs_select_template_form($form, &$form_state, $layout) {
     'class' => array('layout-paragraphs-settings-form'),
   );
 
+  $intro_text = '';
+  $intro_text .= '<p class="messages warning description">' . t('If you have unsaved content in fields that are outside of the layout, you may wish to close this dialog and save first to ensure you do not lose those changes.') . '</div>';
+  $intro_text .= t(
+    '<p class="description">The currently selected layout template is "@template". You may select a different layout template from the options below. Existing content within the current layout will need to be shifted around to fit into the new template.</p>',
+    array('@template' => $template_options['active']->title)
+  );
   $build['intro'] = array(
-    '#markup' => t(
-      '<p class="description">The currently selected layout template is "@template". You may select a different layout template from the options below. Existing content within the current layout will need to be shifted around to fit into the new template. If you have unsaved content in fields that are outside of the layout, you may wish to close this dialog and save first to ensure you do not lose those changes.</p>',
-      array('@template' => $template_options['active']->title)
-    ),
+    '#markup' => $intro_text,
   );
   $build['layout_paragraphs_layout_name'] = array(
     '#type' => 'hidden',
     '#value' => $layout->name,
   );
   $build['layout_paragraphs_templates'] = array(
-    '#title' => t('Other available layout templates'),
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('layout-paragraphs-templates'),
+    ),
+  );
+  $build['layout_paragraphs_templates']['active'] = array(
+    '#title' => t('Active template'),
+    '#type' => 'radios',
+    '#default_value' => $template_options['active']->name,
+    '#options' => array(
+      $template_options['active']->name => $template_options['active']->title,
+    ),
+    '#wrapper_attributes' => array(
+      'class' => array('layout-active'),
+    ),
+    '#disabled' => TRUE,
+  );
+  $build['layout_paragraphs_templates']['active'][$template_options['active']->name]['#description'] = $template_options['active']->preview;
+  $build['layout_paragraphs_templates']['available'] = array(
+    '#title' => t('Other available templates'),
     '#type' => 'radios',
     '#default_value' => '',
     '#options' => array(),
     '#wrapper_attributes' => array(
-      'class' => array('clearfix', 'layout-options'),
+      'class' => array('layout-options'),
     ),
     '#required' => TRUE,
   );
 
   foreach ($template_options['available'] as $template_name => $template_info) {
-    $build['layout_paragraphs_templates']['#options'][$template_name] = $template_info->title;
-    $build['layout_paragraphs_templates'][$template_name]['#description'] = $template_info->preview;
+    $build['layout_paragraphs_templates']['available']['#options'][$template_name] = $template_info->title;
+    $build['layout_paragraphs_templates']['available'][$template_name]['#description'] = $template_info->preview;
   }
   $build['actions'] = array(
     '#type' => 'actions',
@@ -114,7 +136,7 @@ function layout_paragraphs_reset_template_form($form, &$form_state, $layout) {
  * Submit handler for layout_paragraphs_select_template_form().
  */
 function layout_paragraphs_select_template_change_submit(&$form, &$form_state) {
-  $new_template_name = $form_state['input']['layout_paragraphs_templates'];
+  $new_template_name = $form_state['input']['available'];
   $layout_paragraphs_layout_name = $form_state['input']['layout_paragraphs_layout_name'];
   list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_paragraphs_layout_name);
   $layout = layout_paragraphs_get_layout_tempstore($layout_paragraphs_layout_name);
@@ -228,9 +250,6 @@ function layout_paragraphs_configure_region_page_submit($form, &$form_state) {
  * Ajax callback for layout_paragraphs_select_template_form() to return the
  * updated (hidden) form value for the Layout Paragraphs template.
  *
- * @param array $form
- * @param array $form_state
- *
  * @return void
  */
 function layout_paragraphs_select_template_change_ajax(&$form, &$form_state) {
@@ -238,7 +257,8 @@ function layout_paragraphs_select_template_change_ajax(&$form, &$form_state) {
 }
 
 /**
- * Returns the paragraphs context, which is available for Layout Paragraphs only.
+ * Returns the paragraphs context, which is available for Layout Paragraphs
+ * only.
  *
  * @return EntityLayoutContext
  *   The layout context for paragraphs.
@@ -480,10 +500,10 @@ function layout_paragraphs_template_settings_add_form() {
  *   An array of template machine names that are available for this field.
  *
  * @return string $layout_template
- *   The machine name of the layout template, or `default` if there was no database
- *   entry.
+ *   The machine name of the layout template, or 'default' if there was no
+ *   database entry.
  */
-function _layout_paragraphs_determine_layout_template($entity_id, $entity_type, $bundle, $field_name, $available_templates) {
+function _layout_paragraphs_determine_layout_template(int $entity_id, string $entity_type, string $bundle, string $field_name, array $available_templates) {
   $allow_all = TRUE;
   foreach ($available_templates as $template_name) {
     if (!empty($template_name)) {
@@ -598,7 +618,9 @@ function layout_paragraphs_template_settings_form_submit($form, &$form_state) {
 
   layout_paragraphs_template_tempstore_set($layout_paragraphs_template);
   layout_paragraphs_reset_caches();
-  backdrop_set_message(t('Layout paragraphs template "@title" saved.', array('@title' => $layout_paragraphs_template->title)));
+  backdrop_set_message(t('Layout paragraphs template "@title" saved.', array(
+    '@title' => $layout_paragraphs_template->title,
+  )));
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts/' . $form_state['values']['machine_name'] . '/configure';
 }
 
@@ -676,7 +698,12 @@ function layout_paragraphs_template_configure_form($form, &$form_state, LayoutFl
   $form['content']['add_row'] = array(
     '#type' => 'submit',
     '#value' => t('Add row'),
-    '#attributes' => array('class' => array('layout-flexible-add-row', 'button-secondary')),
+    '#attributes' => array(
+      'class' => array(
+        'layout-flexible-add-row',
+        'button-secondary',
+      ),
+    ),
     '#submit' => array(
       'layout_paragraphs_template_add_row',
     ),
@@ -732,12 +759,11 @@ function layout_paragraphs_template_clone_form($form, &$form_state, LayoutFlexib
 }
 
 /**
- * Form to manage cloning a Layout Paragraphs template.
- *
- * @param LayoutFlexibleTemplate $layout_paragraphs_template
- *   The template configuration being edited.
+ * Submit handler for managing cloning a Layout Paragraphs template.
  *
  * @ingroup forms
+ *
+ * @see layout_paragraphs_template_clone_form()
  */
 function layout_paragraphs_template_clone_form_submit($form, &$form_state) {
   $template = $form_state['flexible_template_source'];
@@ -793,7 +819,9 @@ function layout_paragraphs_template_configure_form_submit($form, &$form_state) {
 
   tempstore_clear('layout.paragraphs', $form_state['flexible_template_name']);
   layout_paragraphs_reset_caches();
-  backdrop_set_message(t('Layout Paragraphs template "@title" saved.', array('@title' => $layout_paragraphs_template->title)));
+  backdrop_set_message(t('Layout Paragraphs template "@title" saved.', array(
+    '@title' => $layout_paragraphs_template->title,
+  )));
 }
 
 /**
@@ -1189,16 +1217,16 @@ function layout_paragraphs_template_edit_row_form($form, &$form_state, LayoutFle
  * the region classes are not required to be unique. It will accept any
  * machine_name.
  *
- * @param $machine_name
+ * @param string $machine_name
  *   The machine name for a region.
  *
- * @return
+ * @return bool
  *   Whether or not the region name is taken.
  *
  * @see layout_paragraphs_template_edit_row_form()
  * @see form_validate_machine_name()
  */
-function _layout_paragraphs_template_region_name_exists($machine_name, $element, $form_state) {
+function _layout_paragraphs_template_region_name_exists(string $machine_name, $element, $form_state) {
   $layout_paragraphs_template = layout_paragraphs_tempstore_load($form_state['flexible_template_name']);
   foreach ($layout_paragraphs_template->rows as $row) {
     foreach ($row['region_names'] as $region_name) {
@@ -1407,7 +1435,9 @@ function layout_paragraphs_template_delete_row(LayoutFlexibleTemplate $layout_pa
     );
   }
   else {
-    backdrop_set_message(t('Row "@title" removed.', array('@title' => $layout_paragraphs_template->title)));
+    backdrop_set_message(t('Row "@title" removed.', array(
+      '@title' => $layout_paragraphs_template->title,
+    )));
     backdrop_goto('admin/structure/paragraphs/layouts/' . $layout_paragraphs_template_name . '/configure');
     return array();
   }
@@ -1420,7 +1450,9 @@ function layout_paragraphs_template_delete_row(LayoutFlexibleTemplate $layout_pa
  */
 function layout_paragraphs_template_delete_form($form, &$form_state, LayoutFlexibleTemplate $layout_paragraphs_template) {
   $form_state['flexible_template'] = &$layout_paragraphs_template;
-  $question = t('Delete flexible template @title?', array('@title' => $layout_paragraphs_template->title));
+  $question = t('Delete flexible template @title?', array(
+    '@title' => $layout_paragraphs_template->title,
+  ));
   $description = t('This action cannot be undone.');
   backdrop_set_title($question, PASS_THROUGH);
 
@@ -1483,15 +1515,49 @@ function layout_paragraphs_template_delete_form_submit(&$form, &$form_state) {
   $layout_paragraphs_template = &$form_state['flexible_template'];
   $replacement_template_name = check_plain($form_state['values']['replacement']);
   if (!empty($replacement_template_name)) {
+    // Update all layouts using this template to use the replacement template.
     db_update('layout_paragraphs')
       ->fields(['layout_template' => $replacement_template_name])
       ->condition('layout_template', $layout_paragraphs_template->name)
       ->execute();
+
+    // Update field instances that allow the old template to use the new one.
+    $field_instances_all = field_info_instances();
+    $field_changes = FALSE;
+    foreach ($field_instances_all as $field_instance_entity_type) {
+      foreach ($field_instance_entity_type as $field_instance_bundle) {
+        foreach ($field_instance_bundle as $field_instance) {
+          if ($field_instance['widget']['type'] == 'layout_paragraphs' &&
+              in_array($layout_paragraphs_template->name, $field_instance['widget']['settings']['available_layout_templates'])) {
+                $config = config('field.instance.' . $field_instance['entity_type'] . '.' . $field_instance['bundle'] . '.' . $field_instance['field_name']);
+                $available_layout_templates = $config->get('widget.settings.available_layout_templates');
+                $available_layout_templates = array_diff(
+                  $field_instance['widget']['settings']['available_layout_templates'],
+                  [$layout_paragraphs_template->name]
+                );
+                $available_layout_templates[$replacement_template_name] = $replacement_template_name;
+                $config->set('widget.settings.available_layout_templates', $available_layout_templates);
+                $config->save();
+                $field_changes = TRUE;
+          }
+        }
+      }
+    }
+    if ($field_changes) {
+      field_cache_clear();
+    }
   }
+
   $layout_paragraphs_template->delete();
   layout_paragraphs_reset_caches();
 
-  backdrop_set_message(t('The layout template "@title" has been deleted.', array('@title' => $layout_paragraphs_template->title)));
+  $message = t('The layout template "@title" has been deleted.', array(
+    '@title' => $layout_paragraphs_template->title,
+  ));
+  if (!empty($replacement_template_name)) {
+    $message .= ' ' . t('All layouts using this template have been updated to use the "@title" template instead.', array('@title' => $replacement_template_name));
+  }
+  backdrop_set_message($message);
   $form_state['redirect'] = 'admin/structure/paragraphs/layouts';
 }
 
@@ -1521,13 +1587,13 @@ function _layout_paragraphs_template_in_use(string $layout_template_name) {
  * @todo If this goes in core it may be possible to use that and remove this.
  * @see https://github.com/backdrop/backdrop-issues/issues/4104
  *
- * @param $template
+ * @param object $template
  *   A layout template object.
  *
  * @return string $svg
  *   The SVG of the generated thumbnail image.
  */
-function _layout_paragraphs_template_generate_svg($template) {
+function _layout_paragraphs_template_generate_svg(object $template) {
   $template_rows = $template->rows;
   $flexi_styles = layout_flexible_row_styles();
   $thumbnail_rows = array();
@@ -1601,7 +1667,8 @@ function layout_paragraphs_block_add_title($layout, $renderer_name, $region_name
 }
 
 /**
- * Menu callback; Display a list of new Paragraph blocks to be added to a layout.
+ * Menu callback for adding a Paragraph block into a layout. Displays a list of
+ * new Paragraph blocks to be added to a layout.
  */
 function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $region_name, $paragraphs_block_key = NULL) {
   // Ensure the latest version of the layout is loaded, e.g. in case of an
@@ -1618,7 +1685,8 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
     return MENU_NOT_FOUND;
   }
 
-  // If a Paragraphs block has been selected, return the block configuration form.
+  // If a Paragraphs block has been selected, return the block configuration
+  // form.
   if (isset($paragraphs_block_key)) {
     list($module, $delta) = explode(':', $paragraphs_block_key);
     $block_info = layout_paragraphs_get_block_info($delta);
@@ -2062,10 +2130,10 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
           $region_id = $placed_blocks[$paragraph_id]->region_id ?? '';
           if (!isset($placed_blocks[$paragraph_id]) || empty($region_id) || !isset($layout->positions[$region_id])) {
             // Consider any Paragraphs items that are:
-            //  * not explicitly placed, for example if the Layout UI was turned
-            //    on after content was created with the Embedded widget.
-            //  * explicitly placed but in a region that is not in the current
-            //    layout.
+            // - not explicitly placed, for example if the Layout UI was turned
+            //   on after content was created with the Embedded widget.
+            // - explicitly placed but in a region that is not in the current
+            //   layout.
             backdrop_set_message('Expecting region: ' . $region_id . ' but it was not found.');
             $orphan_block_count++;
             $block_info = new stdClass();
