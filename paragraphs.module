@@ -589,7 +589,10 @@ function paragraphs_form_field_ui_field_edit_form_alter(&$form, $form_state) {
 function paragraphs_field_edit_form_submit($form, &$form_state) {
   $instance = $form['#instance'];
   $destination = backdrop_get_destination();
-  $form_state['redirect'] = array('admin/structure/paragraphs/types/' . $instance['bundle'] . '/fields/' . $instance['field_name'] . '/delete', array('query' => $destination));
+  $form_state['redirect'] = array(
+    'admin/structure/paragraphs/types/' . $instance['bundle'] . '/fields/' . $instance['field_name'] . '/delete',
+    array('query' => $destination),
+  );
 }
 
 /**
@@ -1345,7 +1348,10 @@ function paragraphs_field_get_entity(&$item, $bundle = NULL, $field_name = NULL)
     return $entity;
   }
   elseif (!isset($item['entity']) && isset($bundle) && isset($field_name)) {
-    $item['entity'] = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
+    $item['entity'] = entity_create('paragraphs_item', array(
+      'bundle' => $bundle,
+      'field_name' => $field_name,
+    ));
     return $item['entity'];
   }
   return FALSE;
@@ -1407,7 +1413,10 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
 
     $header = array(
       array(
-        'data' => '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>',
+        'data' => '<label>' . t('!title !required', array(
+          '!title' => $element['#title'],
+          '!required' => $required,
+        )) . '</label>',
         'colspan' => 2,
         'class' => array('field-label'),
       ),
@@ -1433,7 +1442,10 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
           'class' => array('delta-order'),
         ),
       );
-      $class = !empty($item['#bundle']) ? array('draggable', backdrop_html_class('paragraphs_item_type_' . $item['#bundle'])) : array();
+      $class = !empty($item['#bundle']) ? array(
+        'draggable',
+        backdrop_html_class('paragraphs_item_type_' . $item['#bundle']),
+      ) : array();
       $rows[] = array(
         'data' => $cells,
         'class' => $class,
@@ -1454,7 +1466,10 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
   // If the field can only hold one item, display it without the table wrapper.
   else {
     $value_id = backdrop_html_id($element['#field_name'] . '_value');
-    $field_content = '<label for="' . $value_id . '">' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . '</label>';
+    $field_content = '<label for="' . $value_id . '">' . t('!title !required', array(
+      '!title' => $element['#title'],
+      '!required' => $required,
+    )) . '</label>';
     if (count($items)) {
       // We don't need to render a weight field when there can only be one item.
       unset($items[0]['_weight']);
@@ -1487,7 +1502,10 @@ function theme_paragraphs_field_multiple_value_form(array $variables) {
       $add_text = t('No @title_multiple added yet. Select a @title type and press the button below to add one.', $replacements);
     }
 
-    $output .= '<label>' . t('!title !required', array('!title' => $element['#title'], '!required' => $required)) . "</label>";
+    $output .= '<label>' . t('!title !required', array(
+      '!title' => $element['#title'],
+      '!required' => $required,
+    )) . "</label>";
     $output .= '<p><em>' . $add_text . '</em></p>';
   }
   $output .= $element['#description'] ? '<div class="description">' . $element['#description'] . '</div>' : '';
@@ -1883,7 +1901,10 @@ function paragraphs_modal_admin_links($paragraphs_item) {
       );
 
       /** @var ParagraphsItemEntity $entity_shell */
-      $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
+      $entity_shell = entity_create('paragraphs_item', array(
+        'bundle' => $machine_name,
+        'field_name' => $field_name,
+      ));
       $entity_shell->setHostEntity($host_entity_type, $host_entity, $langcode, FALSE);
 
       if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
@@ -1917,7 +1938,10 @@ function paragraphs_modal_admin_links($paragraphs_item) {
         }
       }
     }
-    $admin_links['#attached']['library'][] = array('paragraphs', 'paragraphs_modal_admin');
+    $admin_links['#attached']['library'][] = array(
+      'paragraphs',
+      'paragraphs_modal_admin',
+    );
   }
   return $admin_links;
 }
@@ -2074,10 +2098,15 @@ function _paragraphs_theme_css($theme = NULL) {
  * Helper function to get the available bundles for a field instance.
  *
  * @param array $instance
+ *   The field instance array.
+ * @param array $original_element
+ *   The original form element for the field.
+ * @param string $langcode
+ *   (optional) The language code for which to get the bundles.
  *
  * @return array
  */
-function _paragraphs_get_field_instance_bundles($instance, $original_element, $langcode = LANGUAGE_NONE) {
+function _paragraphs_get_field_instance_bundles(array $instance, array $original_element, string $langcode = LANGUAGE_NONE) {
   $instance_bundles = array();
   $instance_bundles_weighted = array();
   $available_bundles = paragraphs_bundle_load();
@@ -2117,7 +2146,10 @@ function _paragraphs_get_field_instance_bundles($instance, $original_element, $l
     );
 
     /* @var $entity_shell ParagraphsItemEntity */
-    $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $instance['field_name']));
+    $entity_shell = entity_create('paragraphs_item', array(
+      'bundle' => $machine_name,
+      'field_name' => $instance['field_name'],
+    ));
     $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
 
     if (!entity_access('create', 'paragraphs_item', $entity_shell)) {

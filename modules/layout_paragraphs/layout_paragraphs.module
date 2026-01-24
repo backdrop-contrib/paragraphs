@@ -891,12 +891,14 @@ function layout_paragraphs_store_field_data(Entity $entity, string $layout_name 
           // Load block with Paragraphs item attached from tempstore.
           $block = layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
           if (!empty($block->paragraphs_item)) {
-            if ($block->paragraphs_item->is_new) {
-              $block->paragraphs_item->setHostEntity($entity_type, $entity);
-              $block->paragraphs_item->being_edited = FALSE;
-              $block->paragraphs_item->is_new = FALSE;
-              $block->paragraphs_item->save();
-            }
+            // @todo: Remove below if determined unnecessary. There is no
+            // is_new property on Paragraphs items.
+            // if ($block->paragraphs_item->is_new) {
+            //   $block->paragraphs_item->setHostEntity($entity_type, $entity);
+            //   $block->paragraphs_item->being_edited = FALSE;
+            //   $block->paragraphs_item->is_new = FALSE;
+            //   $block->paragraphs_item->save();
+            // }
             $block_data = json_encode([
               'layout_name' => $layout_name,
             ]);
@@ -969,7 +971,6 @@ function layout_paragraphs_entity_presave($entity, $entity_type) {
     return;
   }
   $layout_name = $entity->content['layout_name'] ?? '';
-  $is_new = empty($entity->id());
   $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   if (!empty($layout)) {
     $field_instance = _layout_paragraphs_get_field_instance($layout_name);
