@@ -413,7 +413,6 @@ class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
  */
 class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
   const HOST_ENTITY_TYPE = 'paragraph-test';
-  const PARAGRAPHS_ITEM_CLASSLIST = "paragraphs-item paragraphs-item-ptest paragraphs-item-full paragraphs-item-1";
 
   public function setUp() {
     $modules = array(
@@ -491,10 +490,19 @@ class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
     config_set('system.core', 'theme_debug', TRUE);
     $this->createNode();
     // Print template theme_debug to troubleshoot failing test.
-    preg_match('<!-- BEGIN OUTPUT .+?paragraphs-item\.tpl\.php.+?>', $this->content, $matches);
-    if ($matches[0]) {
-      $this->assertRaw('BEGIN', $matches[0]);
+    if (strpos($this->content, '<!-- BEGIN OUTPUT')) {
+      preg_match('<!-- BEGIN OUTPUT .+?paragraphs-item\.tpl\.php.+?>', $this->content, $matches);
+      if ($matches[0]) {
+        $this->assertRaw('zzBEGIN', $matches[0]);
+      }
+      else {
+        $this->assertRaw('zzBEGIN', '<!-- BEGIN OUTPUT found but not for tpl');
+      }
     }
+    else {
+      $this->assertRaw('zzBEGIN', '<!-- BEGIN OUTPUT not found');
+    }
+    $this->verbose('Verbose message');
 //    $tpl_identifier = "paragraphs/theme/paragraphs-item.tpl.php' -->";
 //    $this->assertRaw($tpl_identifier, 'Using paragraphs-item.tpl.php from module.');
   }
