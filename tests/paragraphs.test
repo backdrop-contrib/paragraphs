@@ -489,22 +489,8 @@ class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
     config_set('system.core', 'theme_default', 'ptest_theme_1');
     config_set('system.core', 'theme_debug', TRUE);
     $this->createNode();
-    // Print template theme_debug to troubleshoot failing test.
-    if (strpos($this->content, '<!-- BEGIN OUTPUT')) {
-      preg_match('<!-- BEGIN OUTPUT .+?paragraphs-item\.tpl\.php.+?>', $this->content, $matches);
-      if ($matches[0]) {
-        $this->assertRaw('zzBEGIN', $matches[0]);
-      }
-      else {
-        $this->assertRaw('zzBEGIN', '<!-- BEGIN OUTPUT found but not for tpl');
-      }
-    }
-    else {
-      $this->assertRaw('zzBEGIN', '<!-- BEGIN OUTPUT not found');
-    }
-    $this->verbose('Verbose message');
-//    $tpl_identifier = "paragraphs/theme/paragraphs-item.tpl.php' -->";
-//    $this->assertRaw($tpl_identifier, 'Using paragraphs-item.tpl.php from module.');
+    $tpl_identifier = 'paragraphs/theme/paragraphs-item.tpl.php';
+    $this->assertRaw($tpl_identifier, 'Using paragraphs-item.tpl.php from module.');
   }
 
   /**
