@@ -431,7 +431,7 @@ class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
     $paragraphs_type->bundle = 'ptest';
     $paragraphs_type->name = 'PTest';
     $paragraphs_type->label = 'PTest';
-    $paragraphs_type->description =  'This is the PTest item.';
+    $paragraphs_type->description = 'This is the PTest item.';
     $paragraphs_type->locked = 1;
     $paragraphs_type->allow_unpublish = 0;
     paragraphs_bundle_save($paragraphs_type);
@@ -451,7 +451,7 @@ class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
       'bundle_weights' => array(
         'ptest' => '2',
       ),
-      'user_register_form' => false,
+      'user_register_form' => FALSE,
     );
     $this->createParagraphsField('field_paragraphs', 'paragraph_test', $field_settings, $instance_settings);
     $this->createParagraphsTypeTextField('field_ptest_text', 'ptest', array(), array('required' => 1));
