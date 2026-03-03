@@ -1,5 +1,6 @@
 <?php
 /**
+ * @file
  * Defines tests for paragraphs.
  */
 
@@ -414,6 +415,9 @@ class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
 class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
   const HOST_ENTITY_TYPE = 'paragraph-test';
 
+  /**
+   * Set up.
+   */
   public function setUp() {
     $modules = array(
       'paragraphs',
