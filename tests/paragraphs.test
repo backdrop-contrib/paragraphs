@@ -404,3 +404,127 @@ class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
     $this->assertNoFieldById('edit-field-paragraphs-und-0-actions-togglepublish-button', 'Publish toggle button not showing.');
   }
 }
+
+/**
+ * Test paragraphs item templates.
+ */
+class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
+  const HOST_ENTITY_TYPE = 'paragraph-test';
+
+  /**
+   * Set up.
+   */
+  public function setUp() {
+    $modules = array(
+      'paragraphs',
+    );
+
+    parent::setUp($modules);
+
+    // Create a content type with a Paragraphs field.
+    $this->backdropCreateContentType(array(
+      'type' => 'paragraph_test',
+      'name' => 'Paragraph Test',
+    ));
+    $paragraphs_type = new StdClass();
+    $paragraphs_type->bundle = 'ptest';
+    $paragraphs_type->name = 'PTest';
+    $paragraphs_type->label = 'PTest';
+    $paragraphs_type->description = 'This is the PTest item.';
+    $paragraphs_type->locked = 1;
+    $paragraphs_type->allow_unpublish = 0;
+    paragraphs_bundle_save($paragraphs_type);
+    $field_settings = array(
+      'cardinality' => 5,
+    );
+    $instance_settings = array(
+      'title' => 'Paragraph',
+      'title_multiple' => 'Paragraphs',
+      'default_edit_mode' => 'preview',
+      'default_edit_mode_override' => 2,
+      'add_mode' => 'select',
+      'modal_admin' => 0,
+      'allowed_bundles' => array(
+        'ptest' => 'ptest',
+      ),
+      'bundle_weights' => array(
+        'ptest' => '2',
+      ),
+      'user_register_form' => FALSE,
+    );
+    $this->createParagraphsField('field_paragraphs', 'paragraph_test', $field_settings, $instance_settings);
+    $this->createParagraphsTypeTextField('field_ptest_text', 'ptest', array(), array('required' => 1));
+
+    // Create a user with appropriate permissions and log them in.
+    $this->privilegedUser = $this->backdropCreateUser(array(
+      'create paragraph_test content',
+      'edit own paragraph_test content',
+      'edit any paragraph_test content',
+      'delete own paragraph_test content',
+      'delete any paragraph_test content',
+    ));
+    $this->backdropLogin($this->privilegedUser);
+  }
+
+  /**
+   * Helper to create a host entity containing a paragraphs item.
+   */
+  private function createNode() {
+    $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    $title = $this->randomString(20);
+    $value1 = $this->randomString(20);
+    $create_edit = array(
+      'title' => $title,
+      'field_paragraphs[und][0][field_ptest_text][und][0][value]' => $value1,
+    );
+    $this->backdropPost(NULL, $create_edit, t('Save'));
+  }
+
+  /**
+   * Are we using module-provided paragraph-item.tpl.php?
+   */
+  public function testTemplate() {
+    theme_enable(array('ptest_theme_1'));
+    config_set('system.core', 'theme_default', 'ptest_theme_1');
+    config_set('system.core', 'theme_debug', TRUE);
+    $this->createNode();
+    $tpl_identifier = 'paragraphs/theme/paragraphs-item.tpl.php';
+    $this->assertRaw($tpl_identifier, 'Using paragraphs-item.tpl.php from module.');
+  }
+
+  /**
+   * Are we using theme-provided paragraphs-item.tpl.php?
+   */
+  public function testOverriddenTemplate() {
+    theme_enable(array('ptest_theme_2'));
+    config_set('system.core', 'theme_default', 'ptest_theme_2');
+    $this->createNode();
+    $tpl_identifier = '<p>This is the base template.</p>';
+    $this->assertRaw($tpl_identifier, 'Using paragraphs-item.tpl.php from custom theme.');
+  }
+
+  /**
+   * Are we using theme-provided paragraphs-item-{bundle}.tpl.php.
+   */
+  public function testBundleTemplate() {
+    theme_enable(array('ptest_theme_3'));
+    config_set('system.core', 'theme_default', 'ptest_theme_3');
+    $this->createNode();
+    $tpl_identifier = '<p>This is the bundle template.</p>';
+    $this->assertRaw($tpl_identifier, 'Using paragraphs-item-ptest.tpl.php from custom theme.');
+  }
+
+  /**
+   * Are we using theme-provided paragraphs-item-{bundle}.tpl.php, when the
+   * theme also has paragraphs-item.tpl.php?
+   */
+  public function testOverriddenAndBundleTemplate() {
+    theme_enable(array('ptest_theme_4'));
+    config_set('system.core', 'theme_default', 'ptest_theme_4');
+    $this->createNode();
+    $tpl_identifier = '<p>This is the bundle template.</p>';
+    $this->assertRaw($tpl_identifier, 'Using paragraphs-item-ptest.tpl.php from custom theme.');
+  }
+
+}

@@ -1528,6 +1528,25 @@ function paragraphs_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function paragraphs_theme_registry_alter(&$theme_registry) {
+  unset($theme_registry['paragraphs_item']['base hook']);
+}
+
+/**
+ * Implements hook_system_theme_info().
+ */
+function paragraphs_system_theme_info() {
+  $path = backdrop_get_path('module', 'paragraphs');
+  $themes['ptest_theme_1'] = $path . '/tests/ptest_theme_1/ptest_theme_1.info';
+  $themes['ptest_theme_2'] = $path . '/tests/ptest_theme_2/ptest_theme_2.info';
+  $themes['ptest_theme_3'] = $path . '/tests/ptest_theme_3/ptest_theme_3.info';
+  $themes['ptest_theme_4'] = $path . '/tests/ptest_theme_4/ptest_theme_4.info';
+  return $themes;
+}
+
+/**
  * Implements hook_field_create_field().
  */
 function paragraphs_field_create_field($field) {
