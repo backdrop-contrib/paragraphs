@@ -780,6 +780,13 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#markup' => t('To specify a default value, configure it via the regular default value setting of each field that is part of the Paragraph type. To do so, go to the <a href="!url">Manage fields</a> screen of the Paragraph type.', array('!url' => url('admin/structure/paragraphs/types'))),
     '#suffix' => '</p>',
   );
+
+  $element['confirm_delete'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Confirm deletion'),
+    '#description' => t('If enabled, users will be asked to confirm before a paragraph is deleted.'),
+    '#default_value' => isset($settings['confirm_delete']) ? $settings['confirm_delete'] : TRUE,
+  );
   return $element;
 }
 

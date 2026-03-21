@@ -269,6 +269,35 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'Value of paragraph was rendered.');
   }
+
+  /**
+   * Tests the "Confirm Deletion" option.
+   */
+  public function testConfirmDeletionOption() {
+    $this->backdropLogin($this->privilegedUser);
+
+    // 1. Test with confirm_deletion = TRUE (default).
+    $this->backdropGet('node/add/paragraph-test');
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    $this->assertText(t('Remove'), 'Remove button exists.');
+    $this->backdropPost(NULL, array(), t('Remove'));
+    $this->assertText(t('Confirm Deletion'), 'Confirm Deletion button is visible when confirm_delete is TRUE.');
+    $this->assertText(t('Restore'), 'Restore button is visible when confirm_delete is TRUE.');
+
+    // 2. Test with confirm_deletion = FALSE.
+    // Update field instance settings.
+    $instance = field_info_instance('node', 'field_paragraphs', 'paragraph_test');
+    $instance['settings']['confirm_delete'] = 0;
+    field_update_instance($instance);
+
+    $this->backdropGet('node/add/paragraph-test');
+    $this->backdropPost(NULL, array(), t('Add new Paragraph'));
+    $this->assertText(t('Remove'), 'Remove button exists.');
+    $this->backdropPost(NULL, array(), t('Remove'));
+    $this->assertNoText(t('Confirm Deletion'), 'Confirm Deletion button is NOT visible when confirm_delete is FALSE.');
+    $this->assertNoText(t('Restore'), 'Restore button is NOT visible when confirm_delete is FALSE.');
+    $this->assertNoText(t('This Paragraph has been removed.'), 'Removal message is NOT visible when confirm_delete is FALSE.');
+  }
 }
 
 class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
