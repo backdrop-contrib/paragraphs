@@ -224,8 +224,6 @@ class BlockParagraphs extends Block {
    * Submit handler to save the block form settings.
    */
   public function formSubmit($form, &$form_state) {
-    parent::formSubmit($form, $form_state);
-
     $this->settings['admin_label'] = trim($form_state['values']['admin_label']);
     $this->settings['admin_description'] = trim($form_state['values']['admin_description']);
   }

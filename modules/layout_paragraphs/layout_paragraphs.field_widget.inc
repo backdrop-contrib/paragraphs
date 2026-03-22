@@ -295,12 +295,18 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
   $templates = [];
   $all_templates = layout_flexible_template_load_all('paragraphs');
   $instance = _layout_paragraphs_get_field_instance($layout_name);
-  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   if (!empty($instance)) {
     $templates = $instance['widget']['settings']['available_layout_templates'];
   }
-  $default_template = $layout->layout_template;
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  $default_template = $layout->layout_template ?? 'default';
   if (!empty($templates)) {
+    if (empty($templates[$default_template])) {
+      // If the default template is not in the allowed list, reload from the db.
+      $layout = layout_paragraphs_layout_load($layout_name, TRUE, 'database');
+      layout_paragraphs_set_layout_tempstore($layout);
+      $default_template = $layout->layout_template;
+    }
     foreach ($templates as $template_name => $enabled) {
       if (!empty($all_templates[$template_name]) && !empty($enabled)) {
         if ($template_name == $default_template || (empty($template_options['active']) && $new_content)) {
