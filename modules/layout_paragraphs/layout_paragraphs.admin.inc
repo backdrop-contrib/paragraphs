@@ -440,7 +440,7 @@ function _layout_paragraphs_settings_get_group_operations($template_info, $is_de
         'href' => 'admin/config/development/configuration/single/export',
         'query' => array(
           'group' => t('Layout Paragraphs'),
-          'name' => 'layout.paragraphs.' . $template_info['name'],
+          'name' => 'layout.custom_paragraphs.' . $template_info['name'],
         ),
       );
     }
