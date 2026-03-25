@@ -10,7 +10,10 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
   protected $privilegedUser;
 
   function setUp() {
-    parent::setUp('paragraphs');
+    parent::setUp(array(
+      'paragraphs',
+      'paragraphs_theme_tester',
+    ));
     $this->privilegedUser = $this->backdropCreateUser(array(
       'access content',
       'access administration pages',
@@ -412,58 +415,10 @@ class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
   const HOST_ENTITY_TYPE = 'paragraph-test';
 
   /**
-   * Set up.
+   * Set up content type as in ParagraphsWebTestCase.
    */
   public function setUp() {
-    $modules = array(
-      'paragraphs',
-    );
-
-    parent::setUp($modules);
-
-    // Create a content type with a Paragraphs field.
-    $this->backdropCreateContentType(array(
-      'type' => 'paragraph_test',
-      'name' => 'Paragraph Test',
-    ));
-    $paragraphs_type = new StdClass();
-    $paragraphs_type->bundle = 'ptest';
-    $paragraphs_type->name = 'PTest';
-    $paragraphs_type->label = 'PTest';
-    $paragraphs_type->description = 'This is the PTest item.';
-    $paragraphs_type->locked = 1;
-    $paragraphs_type->allow_unpublish = 0;
-    paragraphs_bundle_save($paragraphs_type);
-    $field_settings = array(
-      'cardinality' => 5,
-    );
-    $instance_settings = array(
-      'title' => 'Paragraph',
-      'title_multiple' => 'Paragraphs',
-      'default_edit_mode' => 'preview',
-      'default_edit_mode_override' => 2,
-      'add_mode' => 'select',
-      'modal_admin' => 0,
-      'allowed_bundles' => array(
-        'ptest' => 'ptest',
-      ),
-      'bundle_weights' => array(
-        'ptest' => '2',
-      ),
-      'user_register_form' => FALSE,
-    );
-    $this->createParagraphsField('field_paragraphs', 'paragraph_test', $field_settings, $instance_settings);
-    $this->createParagraphsTypeTextField('field_ptest_text', 'ptest', array(), array('required' => 1));
-
-    // Create a user with appropriate permissions and log them in.
-    $this->privilegedUser = $this->backdropCreateUser(array(
-      'create paragraph_test content',
-      'edit own paragraph_test content',
-      'edit any paragraph_test content',
-      'delete own paragraph_test content',
-      'delete any paragraph_test content',
-    ));
-    $this->backdropLogin($this->privilegedUser);
+    parent::setUp();
   }
 
   /**
