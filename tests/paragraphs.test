@@ -411,7 +411,7 @@ class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
 /**
  * Test paragraphs item templates.
  */
-class ParagraphsThemingTestCase extends ParagraphsFieldTestCase {
+class ParagraphsThemingTestCase extends ParagraphsWebTestCase {
   const HOST_ENTITY_TYPE = 'paragraph-test';
 
   /**
