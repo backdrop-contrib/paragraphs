@@ -445,6 +445,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
   $default_edit_mode_override = isset($instance['settings']['default_edit_mode_override']) ? $instance['settings']['default_edit_mode_override'] : PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE;
   $force_open = (!empty($instance['widget']['paragraphs_edit_mode_open']) || count($items) < $default_edit_mode_override);
   $preview_collapsed = isset($instance['settings']['preview_collapsed']) ? $instance['settings']['preview_collapsed'] : PARAGRAPHS_PREVIEW_MODE_COLLAPSED;
+  $show_up_down = isset($instance['settings']['show_up_down']) ? $instance['settings']['show_up_down'] : PARAGRAPHS_DEFAULT_SHOW_UP_DOWN;
 
   $being_edited_paragraph = ($default_edit_mode === 'open');
 
@@ -631,6 +632,48 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           $element['must_be_saved'] = array(
             '#markup' => $markup,
             '#weight' => 1000,
+          );
+        }
+
+        if ($show_up_down) {
+          $element['paragraph_bundle_header']['inner_actions']['up_button'] = array(
+            '#delta' => $delta,
+            '#name' => implode('_', $parents) . '_up_button',
+            '#type' => 'submit',
+            '#value' => t('Up'),
+            '#validate' => array(),
+            '#submit' => array('paragraphs_up_submit'),
+            '#limit_validation_errors' => array(),
+            '#ajax' => array(
+              'callback' => '_paragraphs_ajax_update_callback',
+              'effect' => 'fade',
+              'wrapper' => $element['#wrapper_id'],
+            ),
+            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
+            '#weight' => 997,
+            '#attributes' => array(
+              'class' => array('paragraphs-up-button'),
+            ),
+          );
+
+          $element['paragraph_bundle_header']['inner_actions']['down_button'] = array(
+            '#delta' => $delta,
+            '#name' => implode('_', $parents) . '_down_button',
+            '#type' => 'submit',
+            '#value' => t('Down'),
+            '#validate' => array(),
+            '#submit' => array('paragraphs_down_submit'),
+            '#limit_validation_errors' => array(),
+            '#ajax' => array(
+              'callback' => '_paragraphs_ajax_update_callback',
+              'effect' => 'fade',
+              'wrapper' => $element['#wrapper_id'],
+            ),
+            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
+            '#weight' => 998,
+            '#attributes' => array(
+              'class' => array('paragraphs-down-button'),
+            ),
           );
         }
 
@@ -1215,6 +1258,72 @@ function paragraphs_togglepublish_submit(array $form, array &$form_state) {
   backdrop_array_set_nested_value($form_state['input'], $address, $input);
   field_form_set_state($parents, $field_name, $langcode, $form_state, $field_state);
 
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit callback to move an item up.
+ */
+function paragraphs_up_submit(array $form, array &$form_state) {
+  $button = $form_state['triggering_element'];
+  $delta = $button['#delta'];
+
+  // Where in the form we'll find the parent element.
+  $address = array_slice($button['#array_parents'], 0, -4);
+
+  $input = backdrop_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting.
+  unset($input['add_more']);
+  uasort($input, '_field_sort_items_helper');
+
+  $keys = array_keys($input);
+  $index = array_search($delta, $keys);
+
+  if ($index > 0) {
+    $swappable_delta = $keys[$index - 1];
+    $tmp_weight = $input[$swappable_delta]['_weight'];
+    $input[$swappable_delta]['_weight'] = $input[$delta]['_weight'];
+    $input[$delta]['_weight'] = $tmp_weight;
+
+    // After swapping, we should re-sort to ensure consistency.
+    uasort($input, '_field_sort_items_helper');
+  }
+
+  backdrop_array_set_nested_value($form_state['input'], $address, $input);
+  $form_state['rebuild'] = TRUE;
+}
+
+/**
+ * Submit callback to move an item down.
+ */
+function paragraphs_down_submit(array $form, array &$form_state) {
+  $button = $form_state['triggering_element'];
+  $delta = $button['#delta'];
+
+  // Where in the form we'll find the parent element.
+  $address = array_slice($button['#array_parents'], 0, -4);
+
+  $input = backdrop_array_get_nested_value($form_state['input'], $address);
+  // Sort by weight,
+  // but first remove garbage values to ensure proper '_weight' sorting.
+  unset($input['add_more']);
+  uasort($input, '_field_sort_items_helper');
+
+  $keys = array_keys($input);
+  $index = array_search($delta, $keys);
+
+  if ($index !== FALSE && $index < count($keys) - 1) {
+    $swappable_delta = $keys[$index + 1];
+    $tmp_weight = $input[$swappable_delta]['_weight'];
+    $input[$swappable_delta]['_weight'] = $input[$delta]['_weight'];
+    $input[$delta]['_weight'] = $tmp_weight;
+
+    // After swapping, we should re-sort to ensure consistency.
+    uasort($input, '_field_sort_items_helper');
+  }
+
+  backdrop_array_set_nested_value($form_state['input'], $address, $input);
   $form_state['rebuild'] = TRUE;
 }
 

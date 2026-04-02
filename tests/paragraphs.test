@@ -117,6 +117,66 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
  class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
 
   /**
+   * Test the up and down buttons.
+   */
+  function testUpDownButtons() {
+    $admin_user = $this->backdropCreateUser(array(
+      'administer paragraphs types',
+      'administer nodes',
+      'bypass node access',
+      'administer content types',
+      'administer fields',
+    ));
+    $this->backdropLogin($admin_user);
+
+    // Create a paragraph type.
+    $this->backdropPost('admin/structure/paragraphs/types/add', array(
+      'name' => 'Test Paragraph',
+      'bundle' => 'test_paragraph',
+    ), t('Save'));
+
+    // Create a content type with a paragraphs field.
+    $this->backdropPost('admin/structure/types/add', array(
+      'name' => 'Test Content Type',
+      'type' => 'test_content_type',
+    ), t('Save and add fields'));
+
+    $this->backdropPost(NULL, array(
+      'fields[_add_new_field][label]' => 'Paragraphs Field',
+      'fields[_add_new_field][field_name]' => 'paragraphs_field',
+      'fields[_add_new_field][type]' => 'paragraphs',
+      'fields[_add_new_field][widget_type]' => 'paragraphs_embed',
+    ), t('Save'));
+
+    $this->backdropPost(NULL, array(), t('Save field settings'));
+
+    // Enable the Up and Down buttons and set default edit mode to preview.
+    $this->backdropPost(NULL, array(
+      'instance[settings][default_edit_mode]' => 'preview',
+      'instance[settings][show_up_down]' => TRUE,
+      'field[cardinality]' => -1,
+    ), t('Save settings'));
+
+    // Create a node with three paragraphs.
+    $this->backdropGet('node/add/test-content-type');
+    $this->backdropPost(NULL, array(), t('Add Test Paragraph'));
+    $this->backdropPost(NULL, array(), t('Add Test Paragraph'));
+    $this->backdropPost(NULL, array(), t('Add Test Paragraph'));
+
+    // Check if Up and Down buttons are present in preview mode.
+    $this->assertFieldByName('field_paragraphs_field_und_0_up_button', t('Up'), 'Up button found for delta 0');
+    $this->assertFieldByName('field_paragraphs_field_und_0_down_button', t('Down'), 'Down button found for delta 0');
+
+    // Middle item (1) should have both.
+    $this->assertFieldByName('field_paragraphs_field_und_1_up_button', t('Up'), 'Up button found for delta 1');
+    $this->assertFieldByName('field_paragraphs_field_und_1_down_button', t('Down'), 'Down button found for delta 1');
+
+    // Last item (2) should also have both.
+    $this->assertFieldByName('field_paragraphs_field_und_2_up_button', t('Up'), 'Up button found for delta 2');
+    $this->assertFieldByName('field_paragraphs_field_und_2_down_button', t('Down'), 'Down button found for delta 2');
+  }
+
+  /**
    * A user object for the privileged user.
    *
    * @var object

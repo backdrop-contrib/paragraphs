@@ -15,6 +15,7 @@ define('PARAGRAPHS_DEFAULT_EDIT_MODE_OVERRIDE', 1);
 define('PARAGRAPHS_PREVIEW_MODE_COLLAPSED', FALSE);
 define('PARAGRAPHS_DEFAULT_ADD_MODE', 'select');
 define('PARAGRAPHS_DEFAULT_MODAL_ADMIN', FALSE);
+define('PARAGRAPHS_DEFAULT_SHOW_UP_DOWN', FALSE);
 
 // Modules should return this value from hook_paragraphs_item_access() to allow
 // access to a paragraphs item.
@@ -751,6 +752,13 @@ function paragraphs_field_instance_settings_form($field, $instance) {
     '#title' => t('Enable modal administration (experimental)'),
     '#description' => t('Enables a dropbutton per paragraph for performing administrative tasks in a modal dialog on the front end.'),
     '#default_value' => isset($settings['modal_admin']) ? $settings['modal_admin'] : PARAGRAPHS_DEFAULT_MODAL_ADMIN,
+  );
+
+  $element['show_up_down'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Show "Up" and "Down" buttons'),
+    '#description' => t('In "Preview" edit mode, show "Up" and "Down" buttons to easily move paragraphs.'),
+    '#default_value' => isset($settings['show_up_down']) ? $settings['show_up_down'] : PARAGRAPHS_DEFAULT_SHOW_UP_DOWN,
   );
 
   if (!count($bundles)) {
