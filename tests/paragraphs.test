@@ -119,7 +119,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
   /**
    * Test the up and down buttons.
    */
-  function testUpDownButtons() {
+  public function testUpDownButtons() {
     $admin_user = $this->backdropCreateUser(array(
       'administer paragraphs types',
       'administer nodes',
@@ -174,6 +174,20 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     // Last item (2) should also have both.
     $this->assertFieldByName('field_paragraphs_field_und_2_up_button', t('Up'), 'Up button found for delta 2');
     $this->assertFieldByName('field_paragraphs_field_und_2_down_button', t('Down'), 'Down button found for delta 2');
+
+    // Change edit mode to "open" and check if buttons are still present.
+    $this->backdropPost('admin/structure/types/manage/test-content-type/fields/field_paragraphs_field', array(
+      'instance[settings][default_edit_mode]' => 'open',
+    ), t('Save settings'));
+
+    $this->backdropGet('node/add/test-content-type');
+    $this->backdropPost(NULL, array(), t('Add Test Paragraph'));
+    $this->backdropPost(NULL, array(), t('Add Test Paragraph'));
+
+    $this->assertFieldByName('field_paragraphs_field_und_0_up_button', t('Up'), 'Up button found for delta 0 in Open mode');
+    $this->assertFieldByName('field_paragraphs_field_und_0_down_button', t('Down'), 'Down button found for delta 0 in Open mode');
+    $this->assertFieldByName('field_paragraphs_field_und_1_up_button', t('Up'), 'Up button found for delta 1 in Open mode');
+    $this->assertFieldByName('field_paragraphs_field_und_1_down_button', t('Down'), 'Down button found for delta 1 in Open mode');
   }
 
   /**

@@ -541,6 +541,49 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     if (!$deleted_paragraph) {
 
       field_attach_form('paragraphs_item', $paragraphs_item, $element, $form_state, $language);
+
+      if ($show_up_down) {
+        $element['paragraph_bundle_header']['inner_actions']['up_button'] = array(
+          '#delta' => $delta,
+          '#name' => implode('_', $parents) . '_up_button',
+          '#type' => 'submit',
+          '#value' => t('Up'),
+          '#validate' => array(),
+          '#submit' => array('paragraphs_up_submit'),
+          '#limit_validation_errors' => array(),
+          '#ajax' => array(
+            'callback' => '_paragraphs_ajax_update_callback',
+            'effect' => 'fade',
+            'wrapper' => $element['#wrapper_id'],
+          ),
+          '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
+          '#weight' => 997,
+          '#attributes' => array(
+            'class' => array('paragraphs-up-button'),
+          ),
+        );
+
+        $element['paragraph_bundle_header']['inner_actions']['down_button'] = array(
+          '#delta' => $delta,
+          '#name' => implode('_', $parents) . '_down_button',
+          '#type' => 'submit',
+          '#value' => t('Down'),
+          '#validate' => array(),
+          '#submit' => array('paragraphs_down_submit'),
+          '#limit_validation_errors' => array(),
+          '#ajax' => array(
+            'callback' => '_paragraphs_ajax_update_callback',
+            'effect' => 'fade',
+            'wrapper' => $element['#wrapper_id'],
+          ),
+          '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
+          '#weight' => 998,
+          '#attributes' => array(
+            'class' => array('paragraphs-down-button'),
+          ),
+        );
+      }
+
       if ($being_edited_paragraph) {
         if (!$is_new_paragraph && !entity_access('update', 'paragraphs_item', $paragraphs_item)) {
           foreach (element_children($element) as $key) {
@@ -632,48 +675,6 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           $element['must_be_saved'] = array(
             '#markup' => $markup,
             '#weight' => 1000,
-          );
-        }
-
-        if ($show_up_down) {
-          $element['paragraph_bundle_header']['inner_actions']['up_button'] = array(
-            '#delta' => $delta,
-            '#name' => implode('_', $parents) . '_up_button',
-            '#type' => 'submit',
-            '#value' => t('Up'),
-            '#validate' => array(),
-            '#submit' => array('paragraphs_up_submit'),
-            '#limit_validation_errors' => array(),
-            '#ajax' => array(
-              'callback' => '_paragraphs_ajax_update_callback',
-              'effect' => 'fade',
-              'wrapper' => $element['#wrapper_id'],
-            ),
-            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
-            '#weight' => 997,
-            '#attributes' => array(
-              'class' => array('paragraphs-up-button'),
-            ),
-          );
-
-          $element['paragraph_bundle_header']['inner_actions']['down_button'] = array(
-            '#delta' => $delta,
-            '#name' => implode('_', $parents) . '_down_button',
-            '#type' => 'submit',
-            '#value' => t('Down'),
-            '#validate' => array(),
-            '#submit' => array('paragraphs_down_submit'),
-            '#limit_validation_errors' => array(),
-            '#ajax' => array(
-              'callback' => '_paragraphs_ajax_update_callback',
-              'effect' => 'fade',
-              'wrapper' => $element['#wrapper_id'],
-            ),
-            '#access' => entity_access('update', 'paragraphs_item', $paragraphs_item),
-            '#weight' => 998,
-            '#attributes' => array(
-              'class' => array('paragraphs-down-button'),
-            ),
           );
         }
 
