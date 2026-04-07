@@ -214,6 +214,9 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
     $this->assertText(check_plain($value2), 'Second value of paragraph was rendered.');
 
+    // Check classes.
+    $class_list = '"paragraphs-item paragraphs-item-ptest paragraphs-item-full paragraphs-item-1"';
+    $this->assertRaw($class_list, 'Correct class list for paragraphs-item.');
   }
 
   /**
