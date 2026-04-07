@@ -1,0 +1,5 @@
+name = Paragraphs test theme 3
+description = Test bundle-specific paragraphs-item template
+type = theme
+backdrop = 1.x
+hidden = TRUE

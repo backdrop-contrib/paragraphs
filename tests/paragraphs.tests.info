@@ -9,3 +9,9 @@ name = Paragraphs item and bundles status visibility
 description = Test status functionality for Paragraphs bundles and items.
 group = Paragraphs
 file = paragraphs.test
+
+[ParagraphsThemingTestCase]
+name = Paragraphs theming
+description = Test theme-related functionality for Paragraphs.
+group = Paragraphs
+file = paragraphs.test

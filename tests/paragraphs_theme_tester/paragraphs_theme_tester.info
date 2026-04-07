@@ -1,0 +1,8 @@
+name = Paragraphs Theme Tester
+description = Enables test themes for testing.
+backdrop = 1.x
+type = module
+package = Paragraphs
+hidden = TRUE
+
+dependencies[] = paragraphs

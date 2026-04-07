@@ -1,0 +1,5 @@
+name = Paragraphs test theme 1
+description = The simplest possible custom theme
+type = theme
+backdrop = 1.x
+hidden = TRUE

@@ -1,0 +1,5 @@
+name = Paragraphs test theme 2
+description = Test overriding paragraphs-item.tpl.php
+type = theme
+backdrop = 1.x
+hidden = TRUE
