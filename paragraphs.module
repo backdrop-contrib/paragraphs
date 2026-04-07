@@ -1528,6 +1528,13 @@ function paragraphs_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function paragraphs_theme_registry_alter(&$theme_registry) {
+  unset($theme_registry['paragraphs_item']['base hook']);
+}
+
+/**
  * Implements hook_field_create_field().
  */
 function paragraphs_field_create_field($field) {
