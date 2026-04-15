@@ -67,14 +67,14 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
   /**
    * Returns a list of fields available to be mapped for the node type (bundle).
    *
-   * @param Migration $migration
+   * @param ?Migration $migration
    *   Optionally, the migration containing this destination.
    *
    * @return array
    *   Keys: machine names of the fields (to be passed to addFieldMapping)
    *   Values: Human-friendly descriptions of the fields.
    */
-  public function fields(Migration $migration = NULL) {
+  public function fields(?Migration $migration = NULL) {
     $fields = array();
 
     $fields['field_name'] = t('Field name');
