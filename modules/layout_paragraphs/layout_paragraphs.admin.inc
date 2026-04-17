@@ -368,46 +368,51 @@ function layout_paragraphs_template_listing_page($form, &$form_state) {
   );
 
   backdrop_set_title(t('Layout Paragraphs templates'));
+  $disabled_templates = config_get('layout_paragraphs.settings', 'disabled_templates') ?? [];
 
-  $rows = array();
-  $options = array();
-  $default_template_name = 'default';
+  $rows = array(
+    'enabled' => array(),
+    'disabled' => array(),
+  );
   $form_state['hidden_templates'] = array();
   $all_templates = layout_flexible_template_load_all('paragraphs');
 
   foreach ($all_templates as $template_name => $template) {
     // Build the default values list.
-    $is_default = ($template_name == $default_template_name);
-    (empty($template->hidden)) ? $template->hidden = 0 : $template->hidden = 1;
+    $enabled_by_default = FALSE;
+    if (!in_array($template_name, $disabled_templates)) {
+      $enabled_by_default = $default[$template_name] = TRUE;
+    }
+    $enabled_status = $enabled_by_default ? 'enabled' : 'disabled';
+
     $template_info = array(
       'preview' => (!empty($template->preview)) ? $template->preview : '',
       'title' => $template->title,
       'name' => $template_name,
     );
 
-    // Build the list of possible options, either enabled or not hidden.
-    if ($is_default || !$template->hidden) {
-      $rows[$template_name] = array(
+    // Build the list of possible options, either enabled or disabled.
+    $rows[$enabled_status][$template_name] = array(
+      'data' => array(
         'layout_paragraphs_template_info' => theme('layout_paragraphs_template_info', array(
           'template_info' => $template_info,
         )),
         'type' => t('Paragraphs'),
-      );
-      $rows[$template_name]['operations']['data'] = array(
-        '#type' => 'dropbutton',
-        '#links' => _layout_paragraphs_settings_get_group_operations($template_info, $is_default),
-      );
-    }
-    // For disabled and hidden templates, save the fact they are disabled.
-    elseif ($template->hidden) {
-      $form_state['hidden_templates'][] = $template_name;
-    }
+        'operations' => array(
+          'data' => array(
+            '#type' => 'dropbutton',
+            '#links' => _layout_paragraphs_settings_get_group_operations($template_info, $enabled_by_default),
+          ),
+        ),
+      ),
+      'class' => array($enabled_status),
+    );
   }
 
   $form['templates'] = array(
     '#theme' => 'table',
     '#header' => $header,
-    '#rows' => $rows,
+    '#rows' => $rows['enabled'] + $rows['disabled'],
     '#empty' => t('There are no Layout Paragraphs templates.'),
     '#attributes' => array('class' => array('layout-list')),
   );
@@ -418,7 +423,8 @@ function layout_paragraphs_template_listing_page($form, &$form_state) {
   /**
    * Given a path, return a list of operations for a group of layouts.
    */
-function _layout_paragraphs_settings_get_group_operations($template_info, $is_default) {
+function _layout_paragraphs_settings_get_group_operations($template_info, $enabled_by_default) {
+  $is_default = ($template_info['name'] == 'default');
   $links = array();
 
   if (user_access('administer paragraphs layouts')) {
@@ -449,18 +455,18 @@ function _layout_paragraphs_settings_get_group_operations($template_info, $is_de
         'title' => t('Delete'),
         'href' => 'admin/structure/paragraphs/layouts/' . $template_info['name'] . '/delete',
       );
-      if (empty($template_info['hidden'])) {
+      if ($enabled_by_default) {
         $links['disable'] = array(
           'title' => t('Disable'),
-          'href' => 'admin/structure/layouts/settings/toggle/' . $template_info['name'] . '/disable',
-          'query' => array('token' => backdrop_get_token('layout-template-' . $template_info['name'])),
+          'href' => 'admin/structure/paragraphs/layouts/settings/toggle/' . $template_info['name'] . '/disable',
+          'query' => array('token' => backdrop_get_token('layout-paragraphs-template-' . $template_info['name'])),
         );
       }
       else {
         $links['enable'] = array(
           'title' => t('Enable'),
-          'href' => 'admin/structure/layouts/settings/toggle/' . $template_info['name'] . '/enable',
-          'query' => array('token' => backdrop_get_token('layout-template-' . $template_info['name'])),
+          'href' => 'admin/structure/paragraphs/layouts/settings/toggle/' . $template_info['name'] . '/enable',
+          'query' => array('token' => backdrop_get_token('layout-paragraphs-template-' . $template_info['name'])),
         );
       }
     }
@@ -528,6 +534,9 @@ function _layout_paragraphs_determine_layout_template(int $entity_id, string $en
 
 /**
  * Determine whether a layout paragraph template name already exists.
+ *
+ * @see layout_paragraphs_template_settings_edit_form()
+ * @see form_validate_machine_name()
  */
 function _layout_paragraphs_template_exists($template_name) {
   $template = layout_flexible_template_load($template_name, 'paragraphs');
@@ -742,9 +751,23 @@ function layout_paragraphs_template_configure_form($form, &$form_state, LayoutFl
  */
 function layout_paragraphs_template_clone_form($form, &$form_state, LayoutFlexibleTemplate $layout_paragraphs_template) {
   backdrop_set_title(t('Clone template'));
+  $new_name = $layout_paragraphs_template->name . '_clone';
+  $new_title = $layout_paragraphs_template->title . ' ' . t('(Clone)');
+  $all_templates = layout_flexible_template_load_all('paragraphs');
+  $i = 1;
+  $max = count($all_templates) + 1;
+  for (; $i < $max; $i++) {
+    if (isset($all_templates[$new_name])) {
+      $new_name = $layout_paragraphs_template->name . '_clone_' . $i;
+      $new_title = $layout_paragraphs_template->title . ' ' . t('(Clone @number)', array('@number' => $i));
+    }
+    else {
+      break;
+    }
+  }
+  $layout_paragraphs_template->name = $new_name;
+  $layout_paragraphs_template->title = $new_title;
   $layout_paragraphs_template->is_new = TRUE;
-  $layout_paragraphs_template->name .= '_clone';
-  $layout_paragraphs_template->title .= ' ' . t('(Clone)');
   $build = backdrop_get_form('layout_paragraphs_template_settings_edit_form', $layout_paragraphs_template);
   $build['help'] = array(
     '#type' => 'help',
@@ -2060,6 +2083,51 @@ function layout_paragraphs_block_configure_ajax_update($form, &$form_state) {
     '#type' => 'ajax',
     '#commands' => $commands,
   );
+}
+
+/**
+ * Menu callback; Enable or disable a layout paragraphs template.
+ */
+function layout_paragraphs_template_toggle_enabled($template_name, $status) {
+  if (backdrop_get_token('layout-paragraphs-template-' . $template_name) !== $_GET['token']) {
+    return MENU_ACCESS_DENIED;
+  }
+  $template_info = layout_get_layout_template_info($template_name, NULL, 'paragraphs');
+  if (!$template_info) {
+    return MENU_NOT_FOUND;
+  }
+
+  $config = config('layout_paragraphs.settings');
+  $disabled_templates = $config->get('disabled_templates') ?? [];
+  $errors = FALSE;
+
+  if (!$status) {
+    if (!in_array($template_name, $disabled_templates)) {
+      $disabled_templates[] = $template_name;
+    }
+    // Check which layout templates are in use.
+    $templates_in_use = _layout_paragraphs_get_templates_in_use();
+    if (in_array($template_name, $templates_in_use)) {
+      $errors = TRUE;
+    }
+    if ($errors) {
+      backdrop_set_message(t('The "@title" layout template is currently in use and may not be disabled.', array('@title' => $template_info['title'])), 'error');
+    }
+    else {
+      backdrop_set_message(t('Layout template "@title" has been disabled.', array('@title' => $template_info['title'])));
+    }
+  }
+  else {
+    $disabled_templates = array_diff($disabled_templates, array($template_name));
+    backdrop_set_message(t('Layout template "@title" has been enabled.', array('@title' => $template_info['title'])));
+  }
+
+  if (!$errors) {
+    $config->set('disabled_templates', $disabled_templates);
+    $config->save();
+  }
+
+  backdrop_goto('admin/structure/paragraphs/layouts');
 }
 
 /**

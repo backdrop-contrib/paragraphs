@@ -37,6 +37,26 @@ function layout_paragraphs_menu() {
     'file' => 'layout_paragraphs.admin.inc',
   );
 
+  $items['admin/structure/paragraphs/layouts/settings/toggle/%/enable'] = array(
+    'title' => 'Enable layout template',
+    'page callback' => 'layout_paragraphs_template_toggle_enabled',
+    'page arguments' => array(6, TRUE),
+    'type' => MENU_CALLBACK,
+    'file' => 'layout_paragraphs.admin.inc',
+    'access arguments' => array('administer layout paragraphs'),
+    'theme callback' => 'ajax_base_page_theme',
+  );
+
+  $items['admin/structure/paragraphs/layouts/settings/toggle/%/disable'] = array(
+    'title' => 'Disable layout template',
+    'page callback' => 'layout_paragraphs_template_toggle_enabled',
+    'page arguments' => array(6, FALSE),
+    'type' => MENU_CALLBACK,
+    'file' => 'layout_paragraphs.admin.inc',
+    'access arguments' => array('administer layout paragraphs'),
+    'theme callback' => 'ajax_base_page_theme',
+  );
+
   $items['admin/structure/paragraphs/layouts/add'] = array(
     'title' => 'Add Paragraphs layout template',
     'page callback' => 'layout_paragraphs_template_settings_add_form',
@@ -669,6 +689,10 @@ function layout_paragraphs_config_info() {
     'label_key' => 'title',
     'group' => t('Layout Paragraphs'),
   );
+  $prefixes['layout_paragraphs.settings'] = array(
+    'label' => t('Layout Paragraphs settings'),
+    'group' => t('Configuration'),
+  );
   return $prefixes;
 }
 
@@ -695,6 +719,7 @@ function layout_paragraphs_layout_flexible_types_alter(&$types) {
  * Reset all caches provided by Layout Paragraphs module.
  */
 function layout_paragraphs_reset_caches() {
+  backdrop_static_reset('layout_paragraphs_get_layout_template_info');
   layout_flexible_reset_caches('paragraphs');
   cache('cache')->delete('layout_paragraphs_info');
 }
@@ -1151,3 +1176,22 @@ function _layout_paragraphs_get_default_region(array $regions) {
   $default_region = (!empty($regions['paragraphs-layout-default-template--0'])) ? 'paragraphs-layout-default-template--0' : key($regions);
   return $default_region;
 }
+
+/**
+ * Helper: Get the templates that are currently in use.
+ *
+ * @return array
+ *   The layout templates that are in use, always including 'default'.
+ */
+function _layout_paragraphs_get_templates_in_use() {
+  $templates_in_use = db_select('layout_paragraphs', 'lp')
+    ->distinct()
+    ->fields('lp', array('layout_template'))
+    ->execute()
+    ->fetchCol();
+  if (!in_array('default', $templates_in_use)) {
+    $templates_in_use[] = 'default';
+  }
+  return $templates_in_use;
+}
+
