@@ -52,16 +52,16 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
   /**
    * Return an options array for node destinations.
    *
-   * @param string $language
-   *   Default language for nodes created via this destination class.
+   * @param string $langcode
+   *   Default langcode for nodes created via this destination class.
    * @param string $text_format
    *   Default text format for nodes created via this destination class.
    *
    * @return array
    *   An array of options.
    */
-  public static function options($language, $text_format) {
-    return compact('language', 'text_format');
+  public static function options($langcode, $text_format) {
+    return compact('langcode', 'text_format');
   }
 
   /**
@@ -164,7 +164,7 @@ class MigrateDestinationParagraphsItem extends MigrateDestinationEntity {
     else {
       // Set some default properties.
       $defaults = array(
-        'language' => $this->language,
+        'langcode' => $this->langcode,
         'bundle' => $this->bundle,
         'field_name' => $this->field_name,
         'archived' => 0,
