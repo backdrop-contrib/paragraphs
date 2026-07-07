@@ -1729,7 +1729,10 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
   $blocks = layout_paragraphs_get_block_info();
 
   // Assemble all blocks into a single list and sort.
-  $block_list = array();
+  $block_list = array(
+    'selected' => array(),
+    'deselected' => array(),
+  );
   $field_instance = _layout_paragraphs_get_field_instance($layout->name);
   foreach ($blocks as $module => $module_blocks) {
     if (empty($module_blocks)) {
@@ -1744,13 +1747,8 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
       }
     }
   }
-  if (empty($block_list['selected'])) {
-    // If none are selected, all are allowed.
-    $block_list = $block_list['deselected'];
-  }
-  else {
-    $block_list = $block_list['selected'];
-  }
+  // If none are selected, all are allowed.
+  $block_list = (empty($block_list['selected'])) ? $block_list['deselected'] : $block_list['selected'];
   backdrop_sort($block_list, array('info' => SORT_STRING));
 
   $output['search'] = array(
