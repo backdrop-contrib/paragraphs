@@ -1,9 +1,11 @@
-name: Functional Tests
-
+name: Simpletest
 on: [pull_request]
-
 jobs:
-  phpcs:
-    uses: backdrop-ops/gha/.github/workflows/contrib-functional-tests.yml@main
-    with:
-          dependencies: entity_plus
+  functional_test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Tests
+        uses: backdrop-ops/gha/actions/simpletest@v1
+        with:
+          module_dependencies: entity_plus
