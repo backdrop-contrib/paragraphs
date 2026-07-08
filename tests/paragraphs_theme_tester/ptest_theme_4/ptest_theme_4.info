@@ -1,0 +1,5 @@
+name = Paragraphs test theme 4
+description = Test bundle-specific template when base template is overridden in the theme
+type = theme
+backdrop = 1.x
+hidden = TRUE

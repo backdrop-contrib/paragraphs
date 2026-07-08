@@ -28,19 +28,18 @@ function template_preprocess_paragraphs_items(&$variables, $hook) {
  */
 function template_preprocess_paragraphs_item(&$variables, $hook) {
   $variables['view_mode'] = $variables['elements']['#view_mode'];
-  $paragraphs_item_type = $variables['elements']['#entity_plus_type'];
-  $variables['entity_type'] = $paragraphs_item_type;
+  $variables['entity_type'] = 'paragraphs_item';
   $paragraphs_item = $variables['elements']['#entity'];
-  $variables[$paragraphs_item_type] = $paragraphs_item;
+  $variables['paragraphs_item'] = $paragraphs_item;
 
-  list(, , $bundle) = entity_extract_ids($paragraphs_item_type, $paragraphs_item);
+  list(, , $bundle) = entity_extract_ids('paragraphs_item', $paragraphs_item);
   $variables['bundle'] = $bundle;
 
-  $paragraphs_item_id = entity_plus_id($paragraphs_item_type, $paragraphs_item);
+  $paragraphs_item_id = entity_plus_id('paragraphs_item', $paragraphs_item);
 
-  $variables['title'] = check_plain(entity_label($paragraphs_item_type, $paragraphs_item));
+  $variables['title'] = check_plain(entity_label('paragraphs_item', $paragraphs_item));
 
-  $uri = entity_uri($paragraphs_item_type, $paragraphs_item);
+  $uri = entity_uri('paragraphs_item', $paragraphs_item);
   $variables['url'] = $uri && !empty($uri['path']) ? url($uri['path'], $uri['options']) : FALSE;
 
   if (isset($variables['elements']['#page'])) {
@@ -57,23 +56,21 @@ function template_preprocess_paragraphs_item(&$variables, $hook) {
     $variables['content'][$key] = $variables['elements'][$key];
   }
   // Make the field variables available with the appropriate language.
-  field_attach_preprocess($paragraphs_item_type, $paragraphs_item, $variables['content'], $variables);
+  field_attach_preprocess('paragraphs_item', $paragraphs_item, $variables['content'], $variables);
 
   // Generate a unique HTML id for the paragraph item to support anchor links.
   $variables['html_id'] = backdrop_html_id('paragraphs-item-' . $paragraphs_item_id);
 
   // Gather css classes.
-  $variables['classes_array'][] = backdrop_html_class($paragraphs_item_type);
-  $variables['classes_array'][] = backdrop_html_class($paragraphs_item_type . '-' . $bundle);
+  $variables['classes_array'][] = 'paragraphs-item';
   $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $bundle);
-  $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $variables['elements']['#view_mode']);
+  $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $variables['view_mode']);
   $variables['classes_array'][] = backdrop_html_class('paragraphs-item-' . $paragraphs_item_id);
 
   // Add suggestions.
-  $variables['theme_hook_suggestions'][] = $paragraphs_item_type;
-  $variables['theme_hook_suggestions'][] = $paragraphs_item_type . '__' . $bundle;
-  $variables['theme_hook_suggestions'][] = $paragraphs_item_type . '__' . $bundle . '__' . $variables['view_mode'];
-  $variables['theme_hook_suggestions'][] = $paragraphs_item_type . '__' . $paragraphs_item_id;
+  $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle;
+  $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $bundle . '__' . $variables['view_mode'];
+  $variables['theme_hook_suggestions'][] = 'paragraphs_item__' . $paragraphs_item_id;
 
   // Add the modal css class if enabled.
   $modal_admin_enabled = !empty($variables['elements']['#modal_admin']) || !empty($paragraphs_item->modal_admin);

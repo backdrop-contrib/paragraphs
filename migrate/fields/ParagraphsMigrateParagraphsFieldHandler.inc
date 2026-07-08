@@ -45,7 +45,7 @@ class ParagraphsMigrateParagraphsFieldHandler extends MigrateSimpleFieldHandler 
       $arguments = $values['arguments'];
       unset($values['arguments']);
     }
-    $language = $this->getFieldLanguage($entity, $field_info, $arguments);
+    $langcode = $this->getFieldLanguage($entity, $field_info, $arguments);
 
     // Let the derived class skip empty values.
     if ($this->skipEmpty) {
@@ -62,13 +62,13 @@ class ParagraphsMigrateParagraphsFieldHandler extends MigrateSimpleFieldHandler 
     // Setup the Field API array for saving.
     $delta = 0;
     foreach ($values as $value) {
-      if (is_array($language)) {
-        $current_language = $language[$delta];
+      if (is_array($langcode)) {
+        $current_langcode = $langcode[$delta];
       }
       else {
-        $current_language = $language;
+        $current_langcode = $langcode;
       }
-      $return[$current_language][] = array(
+      $return[$current_langcode][] = array(
         $this->fieldValueKey => $value,
         'revision_id' => $revision_ids[$delta],
       );
