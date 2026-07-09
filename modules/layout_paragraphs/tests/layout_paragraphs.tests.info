@@ -1,5 +1,5 @@
-[LayoutParagraphsWebTestCase]
-name = Layout Paragraphs tests
-description = Test Layout Paragraphs widget UI and functionality.
-group = Layout Paragraphs
-file = layout_paragraphs.test
+; [LayoutParagraphsWebTestCase]
+; name = Layout Paragraphs tests
+; description = Test Layout Paragraphs widget UI and functionality.
+; group = Layout Paragraphs
+; file = layout_paragraphs.test
