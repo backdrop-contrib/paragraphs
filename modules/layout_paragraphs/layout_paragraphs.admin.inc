@@ -285,7 +285,7 @@ function layout_paragraphs_content_form(&$form, &$form_state, Layout &$layout, $
     $form_state['renderer'] = $renderer;
   }
 
-  /* @var LayoutRendererEditorParagraphs $renderer */
+  /** @var LayoutRendererEditorParagraphs $renderer */
   $renderer = $form_state['renderer'];
 
   $build['#attached'] = array(
@@ -613,7 +613,7 @@ function layout_paragraphs_template_settings_form_cancel($form, &$form_state) {
  * @see layout_paragraphs_template_settings_edit_form()
  */
 function layout_paragraphs_template_settings_form_submit($form, &$form_state) {
-  /* @var LayoutFlexibleTemplate $layout_paragraphs_template */
+  /** @var LayoutFlexibleTemplate $layout_paragraphs_template */
   $layout_paragraphs_template = $form_state['flexible_template'];
   $layout_paragraphs_template->name = $form_state['values']['machine_name'];
   $layout_paragraphs_template->title = $form_state['values']['name'];
@@ -1340,7 +1340,7 @@ function layout_paragraphs_template_edit_row_validate($form, &$form_state) {
  */
 function layout_paragraphs_template_edit_row_form_submit($form, &$form_state) {
   form_load_include($form_state, 'inc', 'layout', 'layout.admin');
-  /* @var LayoutFlexibleTemplate $layout_paragraphs_template */
+  /** @var LayoutFlexibleTemplate $layout_paragraphs_template */
   $layout_paragraphs_template = $form_state['flexible_template'];
   $original_row = $form_state['original_row'];
 
@@ -1534,7 +1534,7 @@ function layout_paragraphs_template_delete_form($form, &$form_state, LayoutFlexi
  * @see layout_paragraphs_template_delete_form()
  */
 function layout_paragraphs_template_delete_form_submit(&$form, &$form_state) {
-  /* @var LayoutFlexibleTemplate $layout_paragraphs_template */
+  /** @var LayoutFlexibleTemplate $layout_paragraphs_template */
   $layout_paragraphs_template = &$form_state['flexible_template'];
   $replacement_template_name = check_plain($form_state['values']['replacement']);
   if (!empty($replacement_template_name)) {
@@ -1700,7 +1700,7 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
   if ($tempstore_layout) {
     $layout = $tempstore_layout;
   }
-  /* @var Layout $layout */
+  /** @var Layout $layout */
   $layout->setContexts('paragraphs', layout_paragraphs_context());
   $form_state['layout'] = $layout;
   $template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
@@ -1874,7 +1874,7 @@ function layout_paragraphs_block_configure_form($form, &$form_state, Layout $lay
  * Form validate handler for layout_paragraphs_block_configure_form().
  */
 function layout_paragraphs_block_configure_form_validate($form, &$form_state) {
-  /* @var BlockParagraphs $block */
+  /** @var BlockParagraphs $block */
   $block = $form_state['block'];
 
   // Validate the block settings.
@@ -1890,16 +1890,16 @@ function layout_paragraphs_block_configure_form_validate($form, &$form_state) {
  * Form submit handler for layout_paragraphs_block_configure_form().
  */
 function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
-  /* @var BlockParagraphs $block */
+  /** @var BlockParagraphs $block */
   $block = $form_state['block'];
-  /* @var Layout $layout */
+  /** @var Layout $layout */
   $layout = layout_paragraphs_get_layout_tempstore($form_state['layout']->name);
   if (!$layout) {
     $layout = $form_state['layout'];
   }
-  /* @var LayoutStyle $style */
+  /** @var LayoutStyle $style */
   $style = $form_state['style'];
-  /* @var LayoutRendererStandard $renderer */
+  /** @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
 
   // Save the block settings.
@@ -2031,16 +2031,16 @@ function layout_paragraphs_block_disable_page(Layout $layout, Block $block, $ren
  * Layout Paragraphs block.
  */
 function layout_paragraphs_block_configure_ajax_update($form, &$form_state) {
-  /* @var Layout $layout */
+  /** @var Layout $layout */
   $layout = $form_state['layout'];
   // Get the latest version of the layout from tempstore.
   $tempstore_layout = layout_paragraphs_get_layout_tempstore($layout->name);
   if ($tempstore_layout) {
     $layout = $tempstore_layout;
   }
-  /* @var Block $block */
+  /** @var Block $block */
   $block = $form_state['block'];
-  /* @var LayoutRendererStandard $renderer */
+  /** @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
   $added_to_region = $block->is_new ? ($layout->in_progress['region_name'] ?? $form_state['values']['region']) : FALSE;
 
@@ -2239,7 +2239,7 @@ function _layout_paragraphs_add_paragraphs_to_layout(Layout $layout, string $sou
         }
         else {
           // Set a broken block.
-          $block = new BlockBroken($paragraphs_block_key, (array) json_decode($block_info->block_data));
+          $block = new BlockBroken($paragraphs_block_key ?? 'layout_paragraphs:unknown', (array) json_decode($block_info->block_data));
           $block->status = FALSE;
         }
         $layout->content[$block_info->uuid] = $block;

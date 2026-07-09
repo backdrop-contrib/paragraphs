@@ -201,13 +201,10 @@ function layout_paragraphs_edit_content(array &$form, array &$form_state, array 
         }
       }
     }
-    $active_template = $template_options['active']->name ?? '';
-    $first_available_template = (!empty($template_options['available'])) ? reset($template_options['available'])->name : '';
-    $template_name = (!empty($active_template)) ? $active_template : $first_available_template;
     // Ensure the layout template is allowed. If not, reset to one that is.
-    if (empty($active_template)) {
-      $layout->layout_template = 'default';
-    }
+    $active_template = $template_options['active']->name ?? '';
+    $first_available_template = (!empty($template_options['available'])) ? reset($template_options['available'])->name : 'default';
+    $template_name = (!empty($active_template)) ? $active_template : $first_available_template;
     if ($template_name != $active_template) {
       $layout->setLayoutTemplate($template_name);
       if (empty($active_template)) {

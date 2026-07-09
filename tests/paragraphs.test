@@ -5,15 +5,16 @@
  */
 
  /**
- * This class provides methods specifically for testing Paragraph's field handling.
+ * This class provides methods specifically for testing Paragraph's field
+ * handling.
  */
 class ParagraphsFieldTestCase extends BackdropWebTestCase {
   protected $privilegedUser;
 
   /**
- *
+   * Sets up the test environment.
  */
-  function setUp() {
+  public function setUp() {
     parent::setUp(array(
       'paragraphs',
       'paragraphs_theme_tester',
@@ -40,18 +41,18 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
   /**
    * Create a new Paragraphs field on a node type.
    *
-   * @param $name
+   * @param string $name
    *   The name of the new field (all lowercase).
-   * @param $type_name
+   * @param string $content_type_name
    *   The node type that this field will be added to.
-   * @param $field_settings
+   * @param array $field_settings
    *   A list of field settings that will be added to the defaults.
-   * @param $instance_settings
+   * @param array $instance_settings
    *   A list of instance settings that will be added to the instance defaults.
-   * @param $widget_settings
+   * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    */
-  function createParagraphsField($name, $type_name, $field_settings = array(), $instance_settings = array(), $widget_settings = array()) {
+  public function createParagraphsField($name, $content_type_name, array $field_settings = array(), array $instance_settings = array(), array $widget_settings = array()) {
     $field = array(
       'field_name' => $name,
       'type' => 'paragraphs',
@@ -65,7 +66,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
       'field_name' => $name,
       'entity_type' => 'node',
       'label' => $name,
-      'bundle' => $type_name,
+      'bundle' => $content_type_name,
       'required' => !empty($instance_settings['required']),
       'settings' => array(),
       'widget' => array(
@@ -74,7 +75,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
       ),
     );
     $instance['settings'] = array_merge($instance['settings'], $instance_settings);
-    $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
+    $instance['widget'] = array_merge($instance['widget'], $widget_settings);
     return field_create_instance($instance);
   }
 
@@ -82,18 +83,18 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
   /**
    * Create a new text field on a Paragraphs type.
    *
-   * @param $name
+   * @param string $name
    *   The name of the new field (all lowercase).
-   * @param $type_name
+   * @param string $paragraphs_type_name
    *   The Paragraphs type that this field will be added to.
-   * @param $field_settings
+   * @param array $field_settings
    *   A list of field settings that will be added to the defaults.
-   * @param $instance_settings
+   * @param array $instance_settings
    *   A list of instance settings that will be added to the instance defaults.
-   * @param $widget_settings
+   * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
    */
-  function createParagraphsTypeTextField($name, $type_name, $field_settings = array(), $instance_settings = array(), $widget_settings = array()) {
+  public function createParagraphsTypeTextField($name, $paragraphs_type_name, array $field_settings = array(), array $instance_settings = array(), array $widget_settings = array()) {
     $field = array(
       'field_name' => $name,
       'type' => 'text',
@@ -107,7 +108,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
       'field_name' => $field['field_name'],
       'entity_type' => 'paragraphs_item',
       'label' => $name,
-      'bundle' => $type_name,
+      'bundle' => $paragraphs_type_name,
       'required' => !empty($instance_settings['required']),
       'settings' => array(),
       'widget' => array(
@@ -120,6 +121,7 @@ class ParagraphsFieldTestCase extends BackdropWebTestCase {
     return field_create_instance($instance);
   }
 }
+
 /**
  *
  */
@@ -197,7 +199,6 @@ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
 
     // Add a new paragraph before saving node.
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
     $title = $this->randomString(20);
     $value1 = $this->randomString(20);
     $create_edit = array(
@@ -206,7 +207,10 @@ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
     );
     $this->backdropPost(NULL, $create_edit, t('Save'));
 
-    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertRaw(t('!post %title has been created.', array(
+      '!post' => 'Paragraph Test',
+      '%title' => $title,
+    )), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
 
     // Update the created node.
@@ -221,7 +225,10 @@ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
     );
     $this->backdropPost(NULL, $update_edit, t('Save'));
 
-    $this->assertRaw(t('!post %title has been updated.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node updated.');
+    $this->assertRaw(t('!post %title has been updated.', array(
+      '!post' => 'Paragraph Test',
+      '%title' => $title,
+    )), 'Paragraph test node updated.');
     $this->assertText(check_plain($value1), 'First value of paragraph was rendered.');
     $this->assertText(check_plain($value2), 'Second value of paragraph was rendered.');
 
@@ -240,7 +247,6 @@ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
 
     // Add a new paragraph before saving node.
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
     $title = $this->randomString(20);
 
     $create_edit = array(
@@ -279,10 +285,14 @@ class ParagraphsWebTestCase extends ParagraphsFieldTestCase {
     $this->backdropPost(NULL, $create_edit, t('Save'));
 
     // Node should save.
-    $this->assertRaw(t('!post %title has been created.', array('!post' => 'Paragraph Test', '%title' => $title)), 'Paragraph test node created.');
+    $this->assertRaw(t('!post %title has been created.', array(
+      '!post' => 'Paragraph Test',
+      '%title' => $title,
+    )), 'Paragraph test node created.');
     $this->assertText(check_plain($value1), 'Value of paragraph was rendered.');
   }
 }
+
 /**
  *
  */
@@ -356,7 +366,6 @@ class ParagraphStatusVisibilityTestCase extends ParagraphsFieldTestCase {
     // Create host entity with Paragraphs item.
     $this->backdropGet('node/add/' . $this::HOST_ENTITY_TYPE);
     $this->backdropPost(NULL, array(), t('Add new Paragraph'));
-    // $this->backdropPostAJAX(NULL, array(), array('field_paragraphs_add_more_add_more' => t('Add new Paragraph')));
     $title = $this->randomString(20);
     $value1 = $this->randomString(20);
 
