@@ -2152,7 +2152,7 @@ function _paragraphs_get_field_instance_bundles(array $instance, array $original
       'weight' => $weight,
     );
 
-    /* @var $entity_shell ParagraphsItemEntity */
+    /** @var ParagraphsItemEntity $entity_shell */
     $entity_shell = entity_create('paragraphs_item', array(
       'bundle' => $machine_name,
       'field_name' => $instance['field_name'],
