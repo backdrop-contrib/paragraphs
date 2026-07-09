@@ -231,14 +231,14 @@ function layout_paragraphs_edit_content(array &$form, array &$form_state, array 
     );
     layout_paragraphs_content_form($form, $form_state, $layout, 'paragraphs_editor');
     layout_paragraphs_set_layout_tempstore($layout);
-    // $form['layout_paragraphs']['entity_tempstore_id'] = $form['layout_paragraphs']['#entity_tempstore_id'] ?? '';
     $form['#validate'][] = 'layout_paragraphs_edit_content_validate';
     $form['#submit'][] = 'layout_paragraphs_edit_content_submit';
     if ($entity_type == 'taxonomy_term') {
       // @todo: Figure out why this seems to be needed for terms.
-      // Maybe because the submit handler is not explicitly set in taxonomy_form_term?
-      // Paragraphs don't seem to be saving on new terms, unless you save the term,
-      // then edit it again. Maybe tempstore needs to be set earlier?
+      // Maybe because the submit handler is not explicitly set in
+      // taxonomy_form_term?
+      // Paragraphs don't seem to be saving on new terms, unless you save the
+      // term, then edit it again. Maybe tempstore needs to be set earlier?
       $form['#submit'][] = 'taxonomy_form_term_submit';
     }
 
@@ -324,7 +324,7 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
  * Validate the layout settings form.
  */
 function layout_paragraphs_edit_content_validate($form, &$form_state) {
-  /* @var Layout $layout */
+  /** @var Layout $layout */
   $layout = layout_paragraphs_get_layout_tempstore($form['layout_paragraphs']['layout']['#layout']->name);
   if (!$layout) {
     $layout = $form['layout_paragraphs']['layout']['#layout'];
