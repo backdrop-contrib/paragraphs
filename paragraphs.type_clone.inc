@@ -11,13 +11,10 @@
  *   The form array.
  * @param array $form_state
  *   Reference to the form state array.
- * @param string $bundle
- *   The machine name of the source paragraph type.
+ * @param object $paragraph_type
+ *   The source paragraph type object.
  */
-function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_state, $bundle) {
-
-  // Load the paragraph type from machine name.
-  $paragraph_type = paragraphs_bundle_load($bundle);
+function paragraphs_admin_bundle_clone_create_form(array $form, array &$form_state, $paragraph_type) {
   // Prepare the new paragraph type machine name prefix.
   $paragraph_type_prefix = $paragraph_type->bundle . '_clone';
   // Get the next occurrence count to use in the names.
