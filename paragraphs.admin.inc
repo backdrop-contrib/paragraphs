@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Admin functions for the paragraphs module.
@@ -488,7 +487,8 @@ function paragraphs_modal_admin_save_close($form, &$form_state) {
 
   // Refresh display of Paragraph that was edited.
   if (is_object($form_state['build_info']['args'][0]) && !empty($form_state['build_info']['args'][0]->item_id)) {
-    $selector = '.paragraphs-item-' . $form_state['build_info']['args'][0]->item_id;
+    $paragraphs_id = $form_state['build_info']['args'][0]->item_id;
+    $selector = '.paragraphs-item-' . $paragraphs_id;
     $revision_id = $form_state['build_info']['args'][0]->revision_id;
     $fresh_paragraph = paragraphs_item_revision_load($revision_id)->view();
     $new_element = '<div class=\'messages status paragraphs-modal-admin-message\'>' . t('Paragraph !type has been updated.', array('!type' => $bundle->name)) . '</div>';
@@ -929,7 +929,8 @@ function paragraphs_modal_admin_add_form_submit($form, &$form_state) {
   $host_entity_type = $form['host_entity_type']['#value'];
   $mode = $form['mode']['#value'];
 
-  // We have to perform a host save if we are adding the first paragraph in the paragraph field.
+  // We have to perform a host save if we are adding the first paragraph in the
+  // paragraph field.
   $skip_host_save = $mode == 'scratch' ? FALSE : TRUE;
 
   // Set host entity for new paragraph.
@@ -948,7 +949,8 @@ function paragraphs_modal_admin_add_form_submit($form, &$form_state) {
       ),
     );
 
-    // Load the paragraphs field from the host entity and insert the new paragraph item in the correct position.
+    // Load the paragraphs field from the host entity and insert the new
+    // paragraph item in the correct position.
     if ($paragraphs = field_get_items($host_entity_type, $host_entity, $paragraphs_item->field_name)) {
       array_splice($paragraphs, $paragraphs_item->position, 0, $new_paragraph);
     }

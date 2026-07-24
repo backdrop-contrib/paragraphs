@@ -1,7 +1,9 @@
-name: Coding Standards
-
-on: [push, pull_request]
-
+name: Coding standards
+on: [pull_request]
 jobs:
-  phpcs:
-    uses: backdrop-ops/gha/.github/workflows/phpcs.yml@main
+  coding_standards:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run PHP_CodeSniffer
+        uses: backdrop-ops/gha/actions/phpcs_full@v1

@@ -1,0 +1,121 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the Layout Paragraphs module.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function layout_paragraphs_install() {
+  module_set_weight('layout', 61);
+}
+
+
+/**
+ * Implements hook_schema().
+ */
+function layout_paragraphs_schema() {
+  $schema = array();
+
+  $schema['layout_paragraphs'] = array(
+    'fields' => array(
+      'id' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The primary identifier for this layout paragraph definition.'),
+      ),
+      'entity_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The host entity ID.'),
+      ),
+      'entity_type' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => t('The host entity type.'),
+      ),
+      'bundle' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => t('The host entity bundle.'),
+      ),
+      'field_name' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => t('The field name on the host entity.'),
+      ),
+      'module' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => '255',
+        'description' => t('The module that provides this layout paragraph.'),
+      ),
+      'layout_template' => array(
+        'type' => 'varchar',
+        'not null' => TRUE,
+        'length' => '255',
+        'description' => t('The layout template to use for this layout paragraph instance.'),
+      ),
+      // Settings below is currently unused, but here for potential future use
+      // and consistency with other Layout implementations.
+      'settings' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'description' => t('The settings for this Layout Paragraph instance.'),
+      ),
+    ),
+    'primary key' => array('id'),
+  );
+  $schema['layout_paragraphs_blocks'] = array(
+    'fields' => array(
+      'lp_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The layout paragraph ID.'),
+      ),
+      'paragraphs_item_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The Paragraphs item ID.'),
+      ),
+      'uuid' => array(
+        'type' => 'varchar',
+        'length' => '40',
+        'not null' => TRUE,
+        'description' => t('The UUID of the block.'),
+      ),
+      'region_id' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => t('The region ID that the block is placed in.'),
+      ),
+      'block_index' => array(
+        'type' => 'int',
+        'default' => 0,
+        'not null' => TRUE,
+        'description' => t('The index/weight of the block in the region.'),
+      ),
+      'block_data' => array(
+        'type' => 'text',
+        'size' => 'big',
+        'description' => t('The block data/contextual information to help with instantiating the block.'),
+      ),
+    ),
+    'primary key' => array('uuid'),
+    'indexes' => array(
+      'lp_id_uuid' => array('lp_id', 'uuid'),
+      'lp_id' => array('lp_id'),
+      'uuid' => array('uuid'),
+    ),
+  );
+  return $schema;
+}

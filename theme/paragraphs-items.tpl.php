@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Default theme implementation for a group of paragraph items.
@@ -26,7 +25,5 @@
 ?>
 
 <div class="<?php print implode(' ', $classes); ?>"<?php print backdrop_attributes($attributes); ?>>
-  <?php
-    print $content;
-  ?>
+  <?php print $content; ?>
 </div>

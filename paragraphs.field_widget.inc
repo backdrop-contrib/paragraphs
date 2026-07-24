@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Holds functions for the paragraphs widgets.
@@ -126,7 +125,10 @@ function paragraphs_field_multiple_value_form($field, $instance, $langcode, $ite
           'items' => $items,
           'delta' => $delta,
         );
-        backdrop_alter(array('paragraphs_field_widget_form', 'paragraphs_field_widget_' . $instance['widget']['type'] . '_form'), $element, $form_state, $context);
+        backdrop_alter(array(
+          'paragraphs_field_widget_form',
+          'paragraphs_field_widget_' . $instance['widget']['type'] . '_form',
+        ), $element, $form_state, $context);
 
         $field_elements[$delta] = $element;
       }
@@ -182,60 +184,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
   $parents = (!empty($form_state['field']['#parents'])) ? $form_state['field']['#parents'] : array();
   // Add 'add more' button, if not working with a programmed form.
   if (empty($form_state['programmed'])) {
-    $available_bundles = paragraphs_bundle_load();
-    $select_bundles = array();
-    $select_bundles_weighted = array();
-
-    // By default, consider that no bundle has been explicitly picked.
-    $explicitly_enabled = FALSE;
-    foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
-      if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
-        $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
-
-        // If an item has been explicitly selected, raise our flag.
-        $explicitly_enabled = TRUE;
-      }
-      elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
-        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
-      }
-    }
-
-    // If no bundle has been explicitly selected, give access to all of them.
-    if (!$explicitly_enabled) {
-      $select_bundles = $select_bundles_weighted;
-      foreach ($available_bundles as $bundle) {
-        if (!isset($select_bundles[$bundle->bundle])) {
-          $select_bundles[$bundle->bundle] = $bundle->label;
-        }
-      }
-    }
-
-    $removed_a_bundle = FALSE;
-
-    $weight = 0;
-
-    foreach ($select_bundles as $machine_name => $bundle) {
-      $select_bundles[$machine_name] = array(
-        'name' => $bundle,
-        'weight' => $weight,
-      );
-
-      /** @var ParagraphsItemEntity $entity_shell */
-      $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
-      $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
-
-      if (!entity_access('create', 'paragraphs_item', $entity_shell)) {
-        unset($select_bundles[$machine_name]);
-        $removed_a_bundle = TRUE;
-      }
-      elseif (isset($instance['settings']['bundle_weights'][$machine_name])) {
-        $select_bundles[$machine_name]['weight'] = $instance['settings']['bundle_weights'][$machine_name];
-      }
-      $weight++;
-    }
-
-    $field_elements['#select_bundles'] = $select_bundles;
-    if ($removed_a_bundle && count($select_bundles) === 0) {
+    $instance_bundles = _paragraphs_get_field_instance_bundles($instance, $original_element, $langcode);
+    $field_elements['#select_bundles'] = $instance_bundles['selected'];
+    if ($instance_bundles['removed_a_bundle'] && count($instance_bundles['selected']) === 0) {
       $field_elements['add_more'] = array(
         '#type' => 'container',
         '#tree' => TRUE,
@@ -245,9 +196,8 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
         '#markup' => '<em>' . t('You are not allowed to add any of the bundles.') . '</em>',
       );
     }
-    elseif (count($select_bundles)) {
-      // uasort($select_bundles, 'backdrop_sort_weight');.
-      backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
+    elseif (count($instance_bundles['selected'])) {
+      backdrop_sort($instance_bundles['selected'], array('weight' => SORT_NUMERIC));
 
       if ($field['cardinality'] == FIELD_CARDINALITY_UNLIMITED || $field_state['real_items_count'] < $field['cardinality']) {
         if (!isset($instance['settings']['title'])) {
@@ -263,10 +213,13 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
         $add_mode = (isset($instance['settings']['add_mode']) ? $instance['settings']['add_mode'] : PARAGRAPHS_DEFAULT_ADD_MODE);
 
         if ($add_mode == 'button') {
-          foreach ($select_bundles as $machine_name => $bundle) {
+          foreach ($instance_bundles['selected'] as $machine_name => $bundle) {
 
             /** @var ParagraphsItemEntity $entity_shell */
-            $entity_shell = entity_create('paragraphs_item', array('bundle' => $machine_name, 'field_name' => $field_name));
+            $entity_shell = entity_create('paragraphs_item', array(
+              'bundle' => $machine_name,
+              'field_name' => $field_name,
+            ));
             $entity_shell->setHostEntity($original_element['#entity_type'], $original_element['#entity'], $langcode, FALSE);
             $field_elements['add_more']['add_more_bundle_' . $machine_name] = array(
               '#type' => 'submit',
@@ -290,11 +243,13 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
           }
         }
         else {
-          // uasort($select_bundles, 'backdrop_sort_weight');.
-          backdrop_sort($select_bundles, array('weight' => SORT_NUMERIC));
+          // uasort($instance_bundles['selected'], 'backdrop_sort_weight');.
+          backdrop_sort($instance_bundles['selected'], array(
+            'weight' => SORT_NUMERIC,
+          ));
 
           $select_list = array();
-          foreach ($select_bundles as $machine_name => $bundle) {
+          foreach ($instance_bundles['selected'] as $machine_name => $bundle) {
             $select_list[$machine_name] = $bundle['name'];
           }
 
@@ -360,7 +315,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
 }
 
 /**
- * Widget form implementation for paragraphs.
+ * Embedded widget form implementation for paragraphs.
  *
  * @param array $form
  *   The form structure where widgets are being attached to. This might be a
@@ -474,7 +429,10 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
     // Show an empty collection if we have no existing one or it does not load.
     if (empty($paragraphs_item) && $bundle) {
       /** @var ParagraphsItemEntity $paragraphs_item */
-      $paragraphs_item = entity_create('paragraphs_item', array('bundle' => $bundle, 'field_name' => $field_name));
+      $paragraphs_item = entity_create('paragraphs_item', array(
+        'bundle' => $bundle,
+        'field_name' => $field_name,
+      ));
       $paragraphs_item->being_edited = TRUE;
       $being_edited_paragraph = TRUE;
       $is_new_paragraph = TRUE;
@@ -511,7 +469,10 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         ),
       );
       $element['paragraph_bundle_header']['paragraph_bundle_title']['info'] = array(
-        '#markup' => t('@title type: %bundle', array('@title' => $instance_title, '%bundle' => $bundle_info->label)),
+        '#markup' => t('@title type: %bundle', array(
+          '@title' => $instance_title,
+          '%bundle' => $bundle_info->label,
+        )),
       );
     }
     $element['paragraph_bundle_header']['inner_actions'] = array(

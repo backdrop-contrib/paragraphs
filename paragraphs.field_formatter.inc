@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Holds relevant functions for paragraph field formatters.
@@ -88,13 +87,20 @@ function paragraphs_field_prepare_view($entity_type, $entities, $field, $instanc
 
 /**
  * Implements hook_field_formatter_view().
+ *
+ * We consider the widget that is in use because if Layout Paragraphs is in use,
+ * we'll place the Paragraphs items inside the layout.
+ *
+ * @todo: Decide if we want to make this a manual step with a Layout UI field
+ * formatter, or if we want to do it automatically here since LP is an official
+ * Paragraphs module.
+ *
  */
 function paragraphs_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
 
   switch ($display['type']) {
     case 'paragraphs_view':
-
       $in_preview = &backdrop_static('in_preview');
       if (!isset($in_preview)) {
         $in_preview = !empty($entity->in_preview);
@@ -131,13 +137,19 @@ function paragraphs_field_formatter_view($entity_type, $entity, $field, $instanc
         // There are Paragraphs items, but none of them are visible.
         return $element;
       }
-      $element['#theme_wrappers'] = array('paragraphs_items');
-      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items');
-      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
-      $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-field-' . $instance['field_name']);
-      $element['#paragraphs_items_view_mode'] = $view_mode;
 
-      break;
+      if (module_exists('layout_paragraphs') && ($instance['widget']['type'] == 'layout_paragraphs')) {
+        $element['#theme_wrappers'] = array('layout_paragraphs_items');
+        $element['#layout_name'] = $entity_type . '.' . $entity->bundle() . '.' . $field['field_name'] . '.' . $entity->id();
+      }
+      else {
+        $element['#theme_wrappers'] = array('paragraphs_items');
+        $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items');
+        $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-view-mode-' . $view_mode);
+        $element['#attributes']['class'][] = backdrop_clean_css_identifier('paragraphs-items-field-' . $instance['field_name']);
+      }
+      $element['#paragraphs_items_view_mode'] = $view_mode;
+    break;
   }
 
   return $element;

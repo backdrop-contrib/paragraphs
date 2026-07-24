@@ -1,0 +1,1189 @@
+<?php
+/**
+ * @file
+ * Provides configurable Paragraphs layout templates.
+ *
+ * This provides the UI to list, create, edit and delete Paragraphs layouts.
+ */
+
+require_once dirname(__FILE__) . '/layout_paragraphs.field_widget.inc';
+
+/**
+ * Implements hook_permission().
+ */
+function layout_paragraphs_permission() {
+  $perms = array(
+    'administer layout paragraphs' => array(
+      'title' => t('Administer Layout Paragraphs'),
+      'description' => t('Is able to administer Layouts for the Paragraphs module'),
+    ),
+  );
+  return $perms;
+}
+
+/**
+ * Implements hook_menu().
+ */
+function layout_paragraphs_menu() {
+  $items = array();
+  $items['admin/structure/paragraphs/layouts'] = array(
+    'title' => 'Layout Paragraphs',
+    'description' => 'Manage layouts for use with Paragraphs',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_listing_page'),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/settings/toggle/%/enable'] = array(
+    'title' => 'Enable layout template',
+    'page callback' => 'layout_paragraphs_template_toggle_enabled',
+    'page arguments' => array(6, TRUE),
+    'type' => MENU_CALLBACK,
+    'file' => 'layout_paragraphs.admin.inc',
+    'access arguments' => array('administer layout paragraphs'),
+    'theme callback' => 'ajax_base_page_theme',
+  );
+
+  $items['admin/structure/paragraphs/layouts/settings/toggle/%/disable'] = array(
+    'title' => 'Disable layout template',
+    'page callback' => 'layout_paragraphs_template_toggle_enabled',
+    'page arguments' => array(6, FALSE),
+    'type' => MENU_CALLBACK,
+    'file' => 'layout_paragraphs.admin.inc',
+    'access arguments' => array('administer layout paragraphs'),
+    'theme callback' => 'ajax_base_page_theme',
+  );
+
+  $items['admin/structure/paragraphs/layouts/add'] = array(
+    'title' => 'Add Paragraphs layout template',
+    'page callback' => 'layout_paragraphs_template_settings_add_form',
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore'] = array(
+    'title' => 'Edit Paragraphs layout template settings',
+    'title callback' => 'layout_paragraphs_template_title_callback',
+    'title arguments' => array(5),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array(
+      'layout_paragraphs_template_settings_edit_form',
+      4,
+    ),
+    'access arguments' => array('administer layout paragraphs'),
+    'file' => 'layout_paragraphs.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/edit'] = array(
+    'title' => 'Edit Paragraphs layout template settings',
+    'title callback' => 'layout_paragraphs_template_title_callback',
+    'title arguments' => array(5),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array(
+      'layout_paragraphs_template_settings_edit_form',
+      4,
+    ),
+    'access arguments' => array('administer layout paragraphs'),
+    'file' => 'layout_paragraphs.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/configure'] = array(
+    'title' => 'Configure Paragraphs layout template regions',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_configure_form', 4),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/clone'] = array(
+    'title' => 'Clone layout template',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_clone_form', 4),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/delete'] = array(
+    'title' => 'Delete Paragraphs layout template',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_delete_form', 4),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_NORMAL_ITEM,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/delete'] = array(
+    'title' => 'Delete row',
+    'page callback' => 'layout_paragraphs_template_delete_row',
+    'page arguments' => array(4, 6),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_CALLBACK,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/select-widths'] = array(
+    'title' => 'Choose region widths',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array(
+      'layout_paragraphs_template_region_style_select',
+      4,
+      6,
+    ),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_CALLBACK,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/configure'] = array(
+    'title' => 'Add row',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_template_edit_row_form', 4, 6),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_CALLBACK,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  $items['admin/structure/paragraphs/layouts/%layout_paragraphs_tempstore/row/%/configure/%'] = array(
+    'title' => 'Add row',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array(
+      'layout_paragraphs_template_edit_row_form',
+      4,
+      6,
+      8,
+    ),
+    'access arguments' => array('administer layout paragraphs'),
+    'type' => MENU_CALLBACK,
+    'weight' => -10,
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $base = array(
+    'access arguments' => array('administer layout paragraphs'),
+    'theme callback' => 'ajax_base_page_theme',
+  );
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/configure-region/%/%'] = array(
+    'title' => 'Configure region',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array(
+      'layout_paragraphs_configure_region_page',
+      5,
+      7,
+      8,
+    ),
+    'access arguments' => array('administer layout paragraphs'),
+    'access arguments' => array('administer layout paragraphs'),
+    'file' => 'layout_paragraphs.admin.inc',
+  ) + $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/add-block/%/%'] = array(
+    'title callback' => 'layout_paragraphs_block_add_title',
+    'title arguments' => array(5, 7, 8),
+    'page callback' => 'layout_paragraphs_block_add_page',
+    'page arguments' => array(5, 7, 8),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
+    'file' => 'layout_paragraphs.admin.inc',
+  ) + $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/configure-block/%/%layout_paragraphs_tempstore_block'] = array(
+    'title' => 'Configure block',
+    'load arguments' => array(5),
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_block_configure_form', 5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
+    'file' => 'layout_paragraphs.admin.inc',
+  ) + $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/remove-block/%/%layout_paragraphs_tempstore_block'] = array(
+    'title' => 'Remove block',
+    'load arguments' => array(5),
+    'page callback' => 'layout_paragraphs_block_remove_page',
+    'page arguments' => array(5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/remove-block/%/%layout_paragraphs_tempstore_block'] += $base;
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/toggle-block-status/%/%layout_paragraphs_tempstore_block'] = array(
+    'title' => 'Disable block',
+    'load arguments' => array(5),
+    'page callback' => 'layout_paragraphs_block_disable_page',
+    'page arguments' => array(5, 8, 7),
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(5),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $items['admin/structure/paragraphs/layouts/manage/%layout_paragraphs_instance/toggle-block-status/%/%layout_paragraphs_tempstore_block'] += $base;
+  $items['layout_paragraphs/template_change/%layout_paragraphs_instance'] = array(
+    'title' => 'Change layout template',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_select_template_form', 2),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(2),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+  $items['layout_paragraphs/reset/%layout_paragraphs_instance'] = array(
+    'title' => 'Reset and lose all unsaved changes',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => array('layout_paragraphs_reset_template_form', 2),
+    'type' => MENU_CALLBACK,
+    'access callback' => 'layout_paragraphs_access',
+    'access arguments' => array(2),
+    'file' => 'layout_paragraphs.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Access callback for dialog and Ajax paths while using Layout Paragraphs.
+ *
+ * @param Layout $layout
+ *   The layout currently in use.
+ *
+ * @return bool
+ */
+function layout_paragraphs_access(Layout $layout) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout->name);
+  if (is_numeric($entity_id)) {
+    $entity = entity_load($entity_type, $entity_id);
+    $access = entity_access('update', $entity_type, $entity);
+  }
+  else {
+    $access = entity_access('create', $entity_type);
+  }
+  return $access;
+}
+
+/**
+ * Implements hook_admin_paths().
+ */
+function layout_paragraphs_admin_paths() {
+  // Re-use the node admin theme setting.
+  if (config_get('system.core', 'node_admin_theme')) {
+    $paths = array(
+      'layout_paragraphs/template_change/*' => TRUE,
+      'layout_paragraphs/reset/*' => TRUE,
+    );
+  }
+  return $paths ?? [];
+}
+
+
+/**
+ * Implements hook_library_info().
+ */
+function layout_paragraphs_library_info() {
+  $libraries['layout_paragraphs'] = array(
+    'title' => 'Layout Paragraphs',
+    'version' => '1.0',
+    'css' => array(
+      backdrop_get_path('module', 'layout') . '/css/layout.admin.css' => array(),
+      backdrop_get_path('module', 'layout_paragraphs') . '/css/layout_paragraphs.css' => array(),
+    ),
+    'js' => array(
+      backdrop_get_path('module', 'layout') . '/js/layout.admin.js' => array(),
+    ),
+    'dependencies' => array(
+      array('system', 'backdrop.ajax'),
+      array('system', 'ui.sortable'),
+    ),
+  );
+  return $libraries;
+}
+
+/**
+ * Menu loader to load a layout instance and retrieve an individual Paragraphs
+ * block from it.
+ *
+ * @param string $layout_block_uuid
+ *   The UUID of the block to load.
+ *
+ * @param string $layout_name
+ *   The layout instance to load the block from.
+ *
+ */
+function layout_paragraphs_tempstore_block_load(string $layout_block_uuid, string $layout_name) {
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  if (empty($layout)) {
+    $layout = layout_paragraphs_layout_load($layout_name, FALSE, 'database');
+  }
+  if (empty($layout)) {
+    return FALSE;
+  }
+  $block = layout_paragraphs_tempstore_block_retrieve($layout_block_uuid, $layout);
+
+  return $block;
+}
+
+
+/**
+ * Menu loader to load an individual Paragraphs block from a layout instance.
+ *
+ * @param string $layout_block_uuid
+ *   The UUID of the block to load.
+ *
+ * @param Layout $layout
+ *   The layout instance to load the block from.
+ *
+ * @return BlockParagraphs|bool
+ *
+ */
+function layout_paragraphs_tempstore_block_retrieve(string $layout_block_uuid, Layout $layout) {
+  $block = FALSE;
+
+  if (isset($layout->in_progress['block']) && $layout->in_progress['block']->uuid === $layout_block_uuid) {
+    $block = $layout->in_progress['block'];
+  }
+  elseif (isset($layout->content[$layout_block_uuid])) {
+    $block = $layout->content[$layout_block_uuid];
+  }
+
+  return $block;
+}
+
+/**
+ * Helper: Clear a layout instance from the tempstore.
+ *
+ * @param string $layout_name
+ *   The name of the layout instance to clear.
+ *
+ * @return void
+ */
+function layout_paragraphs_clear_layout_tempstore(string $layout_name) {
+  tempstore_clear_all('layout_paragraphs', $layout_name);
+}
+
+/**
+ * Helper: Save a layout instance to the tempstore.
+ *
+ * @param Layout $layout
+ *   The layout instance to save.
+ *
+ * @return void
+ */
+function layout_paragraphs_set_layout_tempstore(Layout $layout) {
+  $expire = REQUEST_TIME + settings_get('form_cache_expiration', config_get('system.core', 'form_cache_expiration'));
+  tempstore_set('layout_paragraphs:layout', $layout->name, $layout, $expire);
+}
+
+/**
+ * Helper: Get a layout instance from the tempstore.
+ *
+ * @param string $layout_name
+ *   The layout name of the instance to load.
+ *
+ * @return Layout|false
+ */
+function layout_paragraphs_get_layout_tempstore(string $layout_name) {
+  $layout = tempstore_get('layout_paragraphs:layout', $layout_name);
+  if (empty($layout)) {
+    return FALSE;
+  }
+  return $layout;
+}
+
+/**
+ * Implements hook_entity_delete().
+ *
+ * Remove layout_paragraphs entries when the entity is deleted.
+ *
+ */
+function layout_paragraphs_entity_delete($entity, $entity_type) {
+  $layout_paragraphs_id = db_select('layout_paragraphs', 'lp')
+    ->fields('lp', array('id'))
+    ->condition('entity_id', $entity->id())
+    ->condition('entity_type', $entity_type)
+    ->condition('bundle', $entity->bundle())
+    ->execute()
+    ->fetchField();
+  if ($layout_paragraphs_id) {
+    db_delete('layout_paragraphs')
+      ->condition('id', $layout_paragraphs_id)
+      ->execute();
+    db_delete('layout_paragraphs_blocks')
+      ->condition('lp_id', $layout_paragraphs_id)
+      ->execute();
+  }
+}
+
+/**
+ * Load a Layout Paragraphs layout by name from the database or tempstore and
+ * places any specifically added Paragraphs blocks.
+ *
+ * @param string $layout_paragraphs_template_name
+ *   The concatenated machine name of the layout template to load.
+ *   Example: 'node.page.field_layout_paragraphs.123'.
+ *
+ * @param bool $place_blocks
+ *   Whether to place blocks in the layout.
+ *
+ * @param string $source
+ *   The source of the layout, either 'tempstore' or 'database'.
+ *
+ * @return Layout
+ *   The loaded layout object.
+ */
+function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, bool $place_blocks = TRUE, string $source = 'tempstore') {
+  $lp_id = '';
+  module_load_include('inc', 'layout_paragraphs', 'layout_paragraphs.admin');
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_paragraphs_template_name);
+  if (is_numeric($entity_id)) {
+    $query = db_select('layout_paragraphs', 'lp')
+      ->fields('lp')
+      ->condition('lp.entity_type', $entity_type)
+      ->condition('lp.bundle', $bundle)
+      ->condition('lp.field_name', $field_name)
+      ->condition('lp.entity_id', $entity_id);
+    $result = $query->execute()->fetchAssoc();
+    $template_name = $result['layout_template'];
+    $lp_id = $result['id'];
+  }
+  else {
+    $field_instance = _layout_paragraphs_get_field_instance($layout_paragraphs_template_name);
+    foreach ($field_instance['widget']['settings']['available_layout_templates'] as $template_name => $enabled) {
+      if (!empty($enabled)) {
+        break;
+      }
+    }
+  }
+
+  if (empty($template_name)) {
+    $template_name = 'default';
+  }
+  $config = array(
+    'is_new' => TRUE,
+    'layout_template_type' => 'paragraphs',
+    'is_full_page' => FALSE,
+    'name' => $layout_paragraphs_template_name,
+  );
+  $layout = new Layout($config);
+  $layout->setContexts('paragraphs', layout_paragraphs_context());
+  // Load the template information.
+  $layout_template_info = layout_paragraphs_get_layout_template_info($template_name);
+  foreach ($layout_template_info['regions'] as $region_id => $region_name) {
+    // Add the regions to the layout.
+    $layout->positions[$region_id] = array();
+  }
+  $layout->layout_template = $template_name;
+  if ($place_blocks && !empty($lp_id)) {
+    _layout_paragraphs_add_paragraphs_to_layout($layout, $source, $lp_id);
+  }
+  return $layout;
+}
+
+/**
+ * Store changes to a flexible layout template in the temporary store.
+ *
+ * @param LayoutFlexibleTemplate $flexible_template
+ *   The loaded flexible template object.
+ */
+function layout_paragraphs_template_tempstore_set(LayoutFlexibleTemplate $flexible_template) {
+  layout_flexible_tempstore_set($flexible_template, 'paragraphs');
+}
+
+/**
+ * Get a layout paragraphs template currently being edited from the tempstore.
+ *
+ * If a template is not yet being edited, the template will be loaded from
+ * configuration.
+ *
+ * @param string $flexible_template_name
+ *   The machine name of the flexible template to load.
+ *
+ * @return LayoutFlexibleTemplate
+ *   The flexible template object.
+ */
+function layout_paragraphs_tempstore_load(string $flexible_template_name) {
+  return layout_flexible_tempstore_load($flexible_template_name, 'paragraphs');
+}
+
+/**
+ * Menu callback:
+ * Get a layout paragraphs template instance currently being edited from the
+ * tempstore.
+ *
+ * If an instance is not yet being edited, the instance will be loaded from
+ * configuration.
+ *
+ * @param string $instance_name
+ *   The layout name machine name of the instance to load.
+ *
+ * @return Layout|false
+ *   The Layout paragraphs instance, or false if it couldn't be loaded.
+ */
+function layout_paragraphs_instance_load(string $instance_name) {
+  if (empty($instance_name)) {
+    return NULL;
+  }
+  $layout = layout_paragraphs_get_layout_tempstore($instance_name);
+  if (!empty($layout)) {
+    return $layout;
+  }
+  $layout = layout_paragraphs_layout_load($instance_name, TRUE, 'database');
+  if (!empty($layout)) {
+    layout_paragraphs_set_layout_tempstore($layout);
+    return $layout;
+  }
+  return FALSE;
+}
+
+/**
+ * Helper to get the title of a Paragraphs layout template.
+ *
+ * @param object $template
+ *   The object of the template to get the title for.
+ */
+function layout_paragraphs_template_title_callback($template) {
+  return t('!name', array('!name' => $template->title));
+}
+
+/**
+ * Implements hook_theme().
+ */
+function layout_paragraphs_theme($existing, $type, $theme, $path) {
+  $base = array(
+    'path' => $path . '/theme',
+    'file' => 'layout_paragraphs.theme.inc',
+  );
+  return array(
+    'layout_paragraphs_template_info' => array(
+      'variables' => array('template_info' => NULL),
+    ) + $base,
+    'layout_paragraphs_template_style_option' => array(
+      'variables' => array('row_style' => NULL),
+    ) + $base,
+    'layout_paragraphs_template_option' => array(
+      'variables' => array('template_info' => NULL),
+    ) + $base,
+    'layout_paragraphs_items' => array(
+      'variables' => array(
+        'items' => array(),
+        'layout_name' => NULL,
+      ),
+    ) + $base,
+    'layout__paragraphs' => array(
+      'variables' => array(
+        'content' => NULL,
+        'settings' => NULL,
+        'layout' => NULL,
+        'layout_template_info' => NULL,
+        'renderer' => NULL,
+        'attributes' => array(),
+        'admin' => FALSE,
+      ),
+      'template' => 'layout--paragraphs',
+      'path' => $path . '/templates',
+      'theme path' => $path . '/templates',
+      'type' => 'module',
+      'base hook' => 'layout',
+      'attached' => array(
+        'library' => array(
+          array('layout_paragraphs', 'layout_paragraphs'),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ *
+ * Ensure the flexible layout template is registered, whether or not it is
+ * being used in core layouts.
+ */
+function layout_paragraphs_theme_registry_alter(&$theme_registry) {
+  if (!isset($theme_registry['layout__flexible'])) {
+    $theme_registry['layout__flexible'] = array(
+      'variables' => array(
+        'content' => NULL,
+        'settings' => NULL,
+        'layout' => NULL,
+        'layout_template_info' => NULL,
+        'renderer' => NULL,
+        'attributes' => array(),
+        'admin' => FALSE,
+      ),
+      'template' => 'layout--flexible',
+      'path' => backdrop_get_path('module', 'layout') . '/templates',
+      'theme path' => backdrop_get_path('module', 'layout') . '/templates',
+      'type' => 'module',
+      'base hook' => 'layout',
+    );
+  }
+}
+
+/**
+ * Helper to insert a new layout_paragraphs entry when one does not exist.
+ *
+ * @return int
+ *   The ID of the new entry, or 0 if it was unsuccessful.
+ */
+function layout_paragraphs_entity_template_insert(int $entity_id, string $entity_type, string $bundle, string $field_name, string $selected_template) {
+  $lp_id = db_insert('layout_paragraphs')
+    ->fields(array(
+      'entity_id' => $entity_id,
+      'entity_type' => $entity_type,
+      'bundle' => $bundle,
+      'field_name' => $field_name,
+      'module' => 'layout_paragraphs',
+      'layout_template' => $selected_template,
+    ))
+    ->execute();
+  return (!empty($lp_id) && is_numeric($lp_id)) ? $lp_id : 0;
+}
+
+/**
+ * Implements hook_layout_renderer_info().
+ */
+function layout_paragraphs_layout_renderer_info() {
+  $info = array(
+    'paragraphs_standard' => array(
+      'class' => 'LayoutRendererStandardParagraphs',
+    ),
+    'paragraphs' => array(
+      'class' => 'LayoutRendererParagraphs',
+    ),
+    'paragraphs_editor' => array(
+      'class' => 'LayoutRendererEditorParagraphs',
+    ),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_layout_style_info().
+ */
+function layout_paragraphs_layout_style_info() {
+  $info['paragraphs'] = array(
+    'title' => t('Paragraphs'),
+    'description' => t('The default Paragraphs block rendering style.'),
+    'block theme' => 'block',
+    'class' => 'LayoutStyleParagraphs',
+    'template' => 'templates/block_paragraphs',
+    'file' => 'layout_paragraphs.theme.inc',
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_config_info().
+ */
+function layout_paragraphs_config_info() {
+  $prefixes['layout.custom_paragraphs'] = array(
+    'name_key' => 'name',
+    'label_key' => 'title',
+    'group' => t('Layout Paragraphs'),
+  );
+  $prefixes['layout_paragraphs.settings'] = array(
+    'label' => t('Layout Paragraphs settings'),
+    'group' => t('Configuration'),
+  );
+  return $prefixes;
+}
+
+/**
+ * Implements hook_layout_context_info().
+ */
+function layout_paragraphs_layout_context_info() {
+  $info['paragraphs'] = array(
+    'title' => t('Paragraphs'),
+    'class' => 'ParagraphsLayoutContext',
+    'menu paths' => array(),
+  );
+  return $info;
+}
+
+/**
+ * Alters the list of flexible layout types to add Layout Paragraphs.
+ */
+function layout_paragraphs_layout_flexible_types_alter(&$types) {
+  $types['paragraphs'] = t('Layout Paragraphs');
+}
+
+/**
+ * Reset all caches provided by Layout Paragraphs module.
+ */
+function layout_paragraphs_reset_caches() {
+  backdrop_static_reset('layout_paragraphs_get_layout_template_info');
+  layout_flexible_reset_caches('paragraphs');
+  cache('cache')->delete('layout_paragraphs_info');
+}
+
+/**
+ * Implements hook_autoload_info().
+ */
+function layout_paragraphs_autoload_info() {
+  return array(
+    'LayoutRendererParagraphs' => 'plugins/renderers/layout_renderer_paragraphs.inc',
+    'LayoutRendererEditorParagraphs' => 'plugins/renderers/layout_renderer_editor_paragraphs.inc',
+    'LayoutRendererStandardParagraphs' => 'plugins/renderers/layout_renderer_standard_paragraphs.inc',
+    'BlockParagraphs' => 'includes/block.paragraphs.inc',
+    'ParagraphsLayoutContext' => 'includes/paragraphs_layout_context.inc',
+
+    // Styles.
+    'LayoutStyleParagraphs' => 'plugins/styles/layout_style_paragraphs.inc',
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function layout_paragraphs_block_info() {
+  $blocks = array();
+
+  // Layout Paragraphs blocks.
+  $blocks['paragraph'] = array(
+    'info' => t('Paragraph'),
+    'description' => t('Placeholder for Paragraphs block.'),
+    'class' => 'BlockParagraphs',
+    'required contexts' => array('paragraphs' => 'paragraphs'),
+  );
+  return $blocks;
+}
+
+/**
+ * Load the information of either a single Layout Paragraphs template or all
+ * available Layout Paragraphs templates.
+ *
+ * @param string $template_name
+ *   Optionally specify a name of a single Layout Paragraphs template, e.g.
+ *   "default". If no template name is specified, information for all
+ *   Layout Paragraphs templates will be returned.
+ *
+ * @param boolean $rebuild
+ *   Whether the list of layout template info needs to be rebuilt (see
+ *   https://github.com/backdrop/backdrop-issues/issues/984). The rebuild is
+ *   required only on specific cases, so this defaults to FALSE. That way, the
+ *   rest of the times the layout cache is used (when available) for performance
+ *   reasons.
+ *
+ * @return array
+ *   The Layout Paragraphs template information. We aren't using
+ *   hook_layout_template_info() because we're keeping these layouts out of the
+ *   main Layout UI.
+ */
+function layout_paragraphs_get_layout_template_info($template_name = NULL, $rebuild = FALSE) {
+  $info = &backdrop_static(__FUNCTION__);
+
+  // Try getting a cached list of layout info.
+  if (!isset($info) && !$rebuild) {
+    $cache = cache('cache')->get('layout_paragraphs_info');
+
+    if ($cache && $cache->data) {
+      $info = $cache->data;
+    }
+  }
+
+  // Rebuild the list of layout info.
+  if (!isset($info[$template_name]) || $rebuild) {
+    $info = array();
+    $styles = layout_flexible_row_styles();
+
+    $layout_paragraphs_templates = layout_flexible_template_load_all('paragraphs');
+    foreach ($layout_paragraphs_templates as $layout_paragraphs_template) {
+      $info[$layout_paragraphs_template->name] = array(
+        'title' => $layout_paragraphs_template->title,
+        'name' => $layout_paragraphs_template->name,
+        'regions' => array(),
+        'default region' => '',
+        'template' => 'layout--paragraphs',
+        'path' => backdrop_get_path('module', 'layout_paragraphs') . '/templates',
+        'flexible' => TRUE,
+        'layout_template_type' => 'paragraphs',
+        'is_full_page' => FALSE,
+        'module' => 'layout_paragraphs',
+        'preview' => "<svg width='50' height='75'><rect x='0' y='0' width='50' height='75' fill='rgb(102, 102, 102)' /><rect x='52' y='0' width='52' height='75' fill='rgb(102, 102, 102)' /></svg>",
+      );
+
+      foreach ($layout_paragraphs_template->rows as $row_name => $region) {
+        $region_style = $styles[$region['contains']];
+        for ($i = 0; $i < $region_style['region_count']; $i++) {
+          if (!empty($region['region_names']['region_' . $i]['label'])) {
+            $region_name = $region['region_names']['region_' . $i]['label'];
+          }
+          else {
+            $region_name = $row_name . ' ' . $i;
+          }
+          $info[$layout_paragraphs_template->name]['regions'][$row_name . '--' . $i] = $region_name;
+        }
+      }
+    }
+    // Populate defaults.
+    foreach ($info as $name => $layout_info) {
+      $info[$name] += array(
+        'hidden' => FALSE,
+        'preview' => "<svg width='50' height='75'><rect x='0' y='0' width='50' height='75' fill='rgb(102, 102, 102)' /></svg>",
+        'default region' => 'content',
+        'stylesheets' => array(
+          'all' => array(str_replace('_', '-', $name) . '.css'),
+        ),
+      );
+      if (!isset($info[$name]['template'])) {
+        $template_path = BACKDROP_ROOT . '/' . $layout_info['path'] . '/layout--' . str_replace('_', '-', $name) . '.tpl.php';
+
+        if (is_file($template_path)) {
+          $info[$name]['template'] = 'layout--' . str_replace('_', '-', $name);
+        }
+      }
+    }
+
+    // Sort the available layouts by display name.
+    backdrop_sort($info, array('title' => SORT_STRING));
+
+    cache('cache')->set('layout_paragraphs_info', $info);
+  }
+
+  if ($template_name) {
+    if (isset($info[$template_name])) {
+      return $info[$template_name];
+    }
+    else {
+      return [];
+    }
+  }
+  else {
+    return $info;
+  }
+}
+
+/**
+ * Implements hook_field_update_field().
+ *
+ * Make changes after a Layout Paragraphs-enabled field is updated.
+ */
+function layout_paragraphs_field_update_field($field, $prior_field, $has_data) {
+  $pause = 1;
+  // @todo: update the field's layout template settings (is this needed here?)
+}
+
+
+/**
+ * Helper to store the selected layout template and block positions from the
+ * tempstore to the database, and store the values needed in the Paragraphs
+ * field data table. Afterwards, clear the tempstore for this layout.
+ *
+ * @param Entity $entity
+ *   The entity being saved.
+ * @param string $layout_name
+ *   The name of the layout instance being used, if known.
+ *
+ * @return void
+ */
+function layout_paragraphs_store_field_data(Entity $entity, string $layout_name = '') {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  // Check if this entity already has a layout_paragraphs entry.
+  $result = db_select('layout_paragraphs', 'lp')
+    ->fields('lp')
+    ->condition('lp.entity_id', $entity_id)
+    ->condition('lp.entity_type', $entity_type)
+    ->condition('lp.bundle', $bundle)
+    ->condition('lp.field_name', $field_name)
+    ->execute()
+    ->fetchAssoc();
+
+  if (!empty($result)) {
+    $lp_id = $result['id'];
+    db_update('layout_paragraphs')
+      ->fields(array(
+        'layout_template' => $layout->layout_template,
+      ))
+      ->condition('id', $lp_id)
+      ->execute();
+  }
+  elseif (!empty($entity_id)) {
+    $lp_id = layout_paragraphs_entity_template_insert($entity_id, $entity_type, $bundle, $field_name, $layout->layout_template);
+  }
+  if (!empty($layout)) {
+    foreach ($layout->positions as $region_id => $uuids) {
+      foreach ($uuids as $block_index => $uuid) {
+        if (!empty($uuid)) {
+          // Load block with Paragraphs item attached from tempstore.
+          $block = layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
+          if (!empty($block->paragraphs_item)) {
+            $block_data = json_encode([
+              'layout_name' => $layout_name,
+            ]);
+            $block_info = [
+              'lp_id' => $lp_id,
+              'paragraphs_item_id' => $block->paragraphs_item->item_id,
+              'uuid' => $uuid,
+              'region_id' => $region_id,
+              'block_index' => $block_index,
+              'block_data' => $block_data,
+            ];
+            $exists = db_query('SELECT count(uuid) FROM {layout_paragraphs_blocks} WHERE uuid = :uuid', array(':uuid' => $uuid))->fetchField();
+            $primary_key = ($exists) ? ['uuid'] : [];
+            backdrop_write_record('layout_paragraphs_blocks', $block_info, $primary_key);
+          }
+        }
+      }
+    }
+  }
+  layout_paragraphs_clear_layout_tempstore($layout_name);
+}
+
+/**
+ * Implements hook_entity_insert().
+ *
+ * Handle insertion of new Paragraphs content once the entity ID has been
+ * created for a new entity.
+ */
+function layout_paragraphs_entity_insert($entity, $entity_type) {
+  if ($entity_type == 'paragraphs_item') {
+    return;
+  }
+  $layout_name = $entity->content['layout_name'] ?? '';
+  if (!empty($layout_name)) {
+    list($entity_type, $bundle, $field_name, $tempstore_id) = explode('.', $layout_name);
+    $insert_data = tempstore_get('layout_paragraphs_field', $tempstore_id);
+    // Replace the temporary ID with the actual entity ID and update the db and
+    // the tempstore before storing the data.
+    $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+    $layout_name = _layout_paragraphs_get_layout_name($insert_data['field_instance'], $entity->id());
+    $layout->name = $layout_name;
+    layout_paragraphs_set_layout_tempstore($layout);
+    layout_paragraphs_store_field_data($entity, $layout_name);
+    tempstore_clear('layout_paragraphs_field', $tempstore_id);
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ *
+ * Store Paragraphs content for an existing entity when updated.
+ */
+function layout_paragraphs_entity_update($entity, $entity_type) {
+  if ($entity_type == 'paragraphs_item') {
+    return;
+  }
+  $layout_name = $entity->content['layout_name'] ?? '';
+  if (!empty($layout_name)) {
+    layout_paragraphs_store_field_data($entity, $layout_name);
+  }
+}
+
+/**
+ * Add the Paragraphs field info here in order to have it save along with
+ * the host entity. This won't work for newly inserted content because we need
+ * the entity ID and it doesn't exist yet in that case.
+ */
+function layout_paragraphs_entity_presave($entity, $entity_type) {
+  if ($entity_type == 'paragraphs_item') {
+    return;
+  }
+  $layout_name = $entity->content['layout_name'] ?? '';
+  $layout = layout_paragraphs_get_layout_tempstore($layout_name);
+  if (!empty($layout)) {
+    $field_instance = _layout_paragraphs_get_field_instance($layout_name);
+    $field_name = $field_instance['field_name'] ?? '';
+    $langcode = $entity->langcode;
+    $delta = (!empty($entity->{$field_name}) && is_array($entity->{$field_name}[$langcode])) ? max(array_keys($entity->{$field_name}[$langcode])) + 1 : 0;
+    foreach ($layout->positions as $region_id => $uuids) {
+      foreach ($uuids as $block_index => $uuid) {
+        if (!empty($uuid)) {
+          // Load block with Paragraphs item attached from tempstore.
+          /** @var BlockParagraphs $block */
+          $block = $layout->content[$uuid] ?? layout_paragraphs_tempstore_block_retrieve($uuid, $layout);
+          if (!empty($block->paragraphs_item)) {
+            $block_save_needed = ($block->is_new || ($block->paragraphs_item->being_edited ?? FALSE));
+            // Mark Paragraph items as disabled if needed.
+            if ($block->status != $block->paragraphs_item->status) {
+              $block->paragraphs_item->status = $block->status;
+              $block_save_needed = TRUE;
+            }
+            if ($block_save_needed) {
+              $block->paragraphs_item->setHostEntity($entity_type, $entity);
+              $block->paragraphs_item->being_edited = FALSE;
+              $block->paragraphs_item->is_new = FALSE;
+              $block->paragraphs_item->save(TRUE);
+              $layout->content[$uuid]->paragraphs_item = $block->paragraphs_item;
+              // Add the Paragraphs item to the entity's field data to be saved.
+              $entity->{$field_name}[$langcode][$delta++] = [
+                'value' => $block->paragraphs_item->item_id,
+                'revision_id' => $block->paragraphs_item->revision_id,
+              ];
+            }
+            $layout->content[$uuid] = $block;
+          }
+        }
+      }
+    }
+    $deleted_block_paragraph_ids = [];
+    if (!empty($layout->in_progress['deleted_blocks'])) {
+      foreach ($layout->in_progress['deleted_blocks'] as $deleted_block) {
+        $deleted_block_paragraph_ids[] = $deleted_block->paragraphs_item->item_id;
+        $lp_id = _layout_paragraphs_get_lp_id($layout_name);
+        db_delete('layout_paragraphs_blocks')
+          ->condition('lp_id', $lp_id)
+          ->condition('paragraphs_item_id', $deleted_block->paragraphs_item->item_id)
+          ->execute();
+        if ($deleted_block->paragraphs_item) {
+          if ($entity->revision === 0) {
+            $deleted_block->paragraphs_item->setHostEntity($entity_type, $entity);
+            $deleted_block->paragraphs_item->delete();
+          }
+          else {
+            $deleted_block->paragraphs_item->archived = 1;
+            $deleted_block->paragraphs_item->save(TRUE);
+          }
+        }
+      }
+    }
+    if (!empty($entity->{$field_name})) {
+      // Clean up invalid block data from entity field data before saving.
+      foreach ($entity->{$field_name}[$langcode] as $key => $item) {
+        $paragraphs_item_id = $item['value'] ?? 0;
+        if (in_array($paragraphs_item_id, $deleted_block_paragraph_ids) || (empty($paragraphs_item_id) && is_object($item['entity']))) {
+          unset($entity->{$field_name}[$langcode][$key]);
+        }
+      }
+      // Re-index the array.
+      $entity->{$field_name}[$langcode] = array_values($entity->{$field_name}[$langcode]);
+    }
+    layout_paragraphs_set_layout_tempstore($layout);
+  }
+}
+
+/**
+ * Helper: return a field instance based on a Layout Paragraphs layout name.
+ *
+ * @param string $layout_name
+ *   The name of the layout to get the field instance for.
+ *
+ * @return array
+ *   The field instance array, or an empty array if not found.
+ */
+function _layout_paragraphs_get_field_instance(string $layout_name) {
+  if (empty($layout_name)) {
+    return [];
+  }
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  if (empty($entity_type) || empty($bundle) || empty($field_name)) {
+    return [];
+  }
+  $field_instance = field_info_instance($entity_type, $field_name, $bundle);
+  return $field_instance ?? [];
+}
+
+/**
+ * Helper: return a Layout Paragraphs layout name based on a field instance.
+ *
+ * @param array $field_instance
+ *   The field instance array.
+ * @param int|string $entity_id
+ *   The entity ID of the layout in question, or a temporary UUID string if no
+ *   entity has been saved yet and no entity ID exists.
+ *
+ * @return string
+ *   The name of the layout based on the field instance for, or an empty string
+ *   if unsuccessful.
+ */
+function _layout_paragraphs_get_layout_name(array $field_instance, int|string $entity_id) {
+  if (empty($field_instance['entity_type'])
+    || empty($field_instance['bundle'])
+    || empty($field_instance['field_name'])
+    || (is_numeric($entity_id) && $entity_id <= 0)) {
+    // Malformed field instance.
+    return '';
+  }
+  return $field_instance['entity_type'] . '.' . $field_instance['bundle'] . '.' . $field_instance['field_name'] . '.' . $entity_id;
+}
+
+/**
+ * Helper: Get the LP Id based on the layout name.
+ *
+ * @param string $layout_name
+ *   The name of the layout to get the LP ID for.
+ *
+ * @return int
+ *
+ */
+function _layout_paragraphs_get_lp_id(string $layout_name) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  if (empty($entity_type) || empty($bundle) || empty($field_name) || empty($entity_id)) {
+    return 0;
+  }
+  $query = db_select('layout_paragraphs', 'lp')
+    ->fields('lp', array('id'))
+    ->condition('lp.entity_type', $entity_type)
+    ->condition('lp.bundle', $bundle)
+    ->condition('lp.field_name', $field_name)
+    ->condition('lp.entity_id', $entity_id);
+  $lp_id = $query->execute()->fetchField();
+
+  return (!empty($lp_id) && is_numeric($lp_id)) ? $lp_id : 0;
+}
+
+/**
+ * Helper: Get the layout template based on the layout name.
+ *
+ * @param string $layout_name
+ *   The name of the layout to get the LP ID for.
+ *
+ * @return string
+ *
+ */
+function _layout_paragraphs_get_layout_template(string $layout_name) {
+  list($entity_type, $bundle, $field_name, $entity_id) = explode('.', $layout_name);
+  if (empty($entity_type) || empty($bundle) || empty($field_name) || empty($entity_id)) {
+    return 0;
+  }
+  $query = db_select('layout_paragraphs', 'lp')
+    ->fields('lp', array('layout_template'))
+    ->condition('lp.entity_type', $entity_type)
+    ->condition('lp.bundle', $bundle)
+    ->condition('lp.field_name', $field_name)
+    ->condition('lp.entity_id', $entity_id);
+  $layout_template = $query->execute()->fetchField();
+
+  return (!empty($layout_template)) ? $layout_template : 'default';
+}
+
+/**
+ * Helper: Get the default region from an array of regions.
+ *
+ * @param array $regions
+ *   The array, keyed by region names, to get the default region from.
+ *
+ * @return string
+ *   The default region name.
+ */
+function _layout_paragraphs_get_default_region(array $regions) {
+  $default_region = (!empty($regions['paragraphs-layout-default-template--0'])) ? 'paragraphs-layout-default-template--0' : key($regions);
+  return $default_region;
+}
+
+/**
+ * Helper: Get the templates that are currently in use.
+ *
+ * @return array
+ *   The layout templates that are in use, always including 'default'.
+ */
+function _layout_paragraphs_get_templates_in_use() {
+  $templates_in_use = db_select('layout_paragraphs', 'lp')
+    ->distinct()
+    ->fields('lp', array('layout_template'))
+    ->execute()
+    ->fetchCol();
+  if (!in_array('default', $templates_in_use)) {
+    $templates_in_use[] = 'default';
+  }
+  return $templates_in_use;
+}
+
