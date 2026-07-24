@@ -618,7 +618,7 @@ function layout_paragraphs_template_settings_form_submit($form, &$form_state) {
   $layout_paragraphs_template->name = $form_state['values']['machine_name'];
   $layout_paragraphs_template->title = $form_state['values']['name'];
   $layout_paragraphs_template->description = $form_state['values']['description'];
-  $layout_paragraphs_template->layout_template_type = 'paragraphs';
+  $layout_paragraphs_template->layout_template_type = 'custom_paragraphs';
   $layout_paragraphs_template->is_full_page = FALSE;
   unset($layout_paragraphs_template->is_new);
   $layout_paragraphs_template->preview = _layout_paragraphs_template_generate_svg($layout_paragraphs_template);
