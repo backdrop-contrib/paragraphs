@@ -98,7 +98,6 @@ function paragraphs_library_schema() {
         'type' => 'text',
         'not null' => TRUE,
         'size' => 'big',
-        'default' => '',
       ),
       'timestamp' => array(
         'description' => 'A Unix timestamp indicating when this version was created.',
