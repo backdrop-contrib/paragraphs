@@ -42,7 +42,7 @@ class ParagraphsLibraryItemController extends EntityPlusController {
    * @param Entity $entity
    *   Entity revision to save.
    */
-  protected function saveRevision(Entity $entity) {
+  protected function saveRevision($entity) {
     $entity->default_revision = TRUE;
     $entity->timestamp = REQUEST_TIME;
     if (!isset($entity->revision_uid)) {
