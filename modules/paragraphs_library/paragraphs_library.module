@@ -697,7 +697,7 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
  *
  * @see paragraphs_library_menu()
  */
-function _paragraphs_library_revision_access(ParagraphsLibraryItem $library_item, string $op = 'view', User $account = NULL) {
+function _paragraphs_library_revision_access(ParagraphsLibraryItem $library_item, string $op = 'view', ?User $account = NULL) {
   $access = &backdrop_static(__FUNCTION__, array());
 
   $map = array(
