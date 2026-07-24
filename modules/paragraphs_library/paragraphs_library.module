@@ -656,7 +656,7 @@ function paragraphs_library_entity_property_info_alter(&$info) {
  */
 function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = NULL, $account = NULL, $entity_type = NULL) {
   global $user;
-  if (!isset($account)) {
+  if (empty($account)) {
     $account = $user;
   }
   $access = FALSE;
@@ -674,9 +674,9 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
     case 'update':
     case 'edit':
     case 'delete':
-      $access = user_access('administer paragraphs_library_item entities')
-          || user_access('edit any paragraphs_library_item entities')
-          || (user_access('edit own paragraphs_library_item entities') && ($library_item->uid == $account->uid));
+      $access = user_access('administer paragraphs_library_item entities', $account)
+          || user_access('edit any paragraphs_library_item entities', $account)
+          || (user_access('edit own paragraphs_library_item entities', $account) && ($library_item->uid == $account->uid));
       break;
   }
   return $access;
@@ -689,7 +689,7 @@ function paragraphs_library_access($op, ?ParagraphsLibraryItem $library_item = N
  *   The library item to check.
  * @param string $op
  *   (optional) The specific operation being checked. Defaults to 'view'.
- * @param User $account
+ * @param User|null $account
  *   (optional) A user object representing the user for whom the operation is
  *   to be performed. Determines access for a user other than the current user.
  *
