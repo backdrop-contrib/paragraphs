@@ -542,6 +542,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             '#weight' => 999,
             '#attributes' => array(
               'class' => array('paragraphs-collapse-button'),
+              'title' => t('Collapse'),
             ),
           );
 
@@ -612,6 +613,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#weight' => 999,
           '#attributes' => array(
             'class' => array('paragraphs-edit-button'),
+            'title' => t('Edit'),
           ),
         );
       }
@@ -644,6 +646,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             '#weight' => 999,
             '#attributes' => array(
               'class' => array('paragraphs-togglepublish-button'),
+              'title' => $button_value,
             ),
           );
         }
@@ -664,6 +667,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           '#weight' => 999,
           '#attributes' => array(
             'class' => array('button-danger', 'paragraph-remove-button'),
+            'title' => t('Remove'),
           ),
         );
       }
@@ -737,6 +741,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#weight' => 1000,
         '#attributes' => array(
           'class' => array('paragraphs-restore-button'),
+          'title' => t('Restore'),
         ),
       );
       $element['paragraph_bundle_header']['inner_actions']['confirm_delete_button'] = array(
@@ -755,6 +760,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         '#weight' => 1001,
         '#attributes' => array(
           'class' => array('button-danger', 'paragraphs-deleteconfirm-button'),
+          'title' => t('Confirm Deletion'),
         ),
       );
     }
