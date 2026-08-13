@@ -285,7 +285,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
       'attributes' => array(
         'class' => array('use-ajax'),
         'data-dialog' => TRUE,
-        'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+        'data-dialog-options' => json_encode(array(
+          'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+        )),
       ),
     );
     $links['configure'] = array(
@@ -294,7 +296,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
       'attributes' => array(
         'class' => array('use-ajax'),
         'data-dialog' => TRUE,
-        'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+        'data-dialog-options' => json_encode(array(
+          'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+        )),
       ),
     );
 
@@ -331,7 +335,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
         'attributes' => array(
           'class' => array('use-ajax'),
           'data-dialog' => TRUE,
-          'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+          'data-dialog-options' => json_encode(array(
+            'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+          )),
         ),
       );
     }
@@ -343,7 +349,9 @@ class LayoutRendererEditorParagraphs extends LayoutRendererEditor {
         'attributes' => array(
           'class' => array('use-ajax'),
           'data-dialog' => TRUE,
-          'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+          'data-dialog-options' => json_encode(array(
+            'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+          )),
         ),
       );
     }

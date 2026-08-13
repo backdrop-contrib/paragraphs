@@ -152,7 +152,9 @@ function layout_paragraphs_edit_content(array &$form, array &$form_state, array 
               'use-ajax',
             ),
             'data-dialog' => 'true',
-            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+            'data-dialog-options' => json_encode(array(
+              'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+            )),
           ),
         );
       }
@@ -173,7 +175,9 @@ function layout_paragraphs_edit_content(array &$form, array &$form_state, array 
                 'use-ajax',
               ),
               'data-dialog' => 'true',
-              'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+              'data-dialog-options' => json_encode(array(
+                'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+              )),
             ),
           );
         }

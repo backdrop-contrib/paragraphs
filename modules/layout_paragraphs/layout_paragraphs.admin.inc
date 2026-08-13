@@ -1410,7 +1410,9 @@ function layout_paragraphs_template_edit_row_ajax($form, $form_state) {
     $html .= theme('status_messages');
     $html .= backdrop_render($form);
     $title = isset($form['#title']) ? $form['#title'] : backdrop_get_title();
-    $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'layout-paragraphs-dialog'));
+    $commands[] = ajax_command_open_modal_dialog($title, $html, array(
+      'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+    ));
   }
   else {
     $commands[] = ajax_command_close_modal_dialog();
@@ -1786,7 +1788,9 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
           'attributes' => array(
             'class' => array('use-ajax block-item'),
             'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+            'data-dialog-options' => json_encode(array(
+              'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+            )),
           ),
         )
       ),
@@ -2050,7 +2054,9 @@ function layout_paragraphs_block_configure_ajax_update($form, &$form_state) {
     $html .= theme('status_messages');
     $html .= backdrop_render($form);
     $title = isset($form['#title']) ? $form['#title'] : backdrop_get_title();
-    $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'layout-paragraphs-dialog'));
+    $commands[] = ajax_command_open_modal_dialog($title, $html, array(
+      'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+    ));
   }
   // If a new block, add to the bottom of the region.
   elseif ($added_to_region) {
