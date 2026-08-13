@@ -1816,7 +1816,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
             'class' => array_merge(array('paragraphs-edit'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
-              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'classes' => array('paragraphs-admin-links-dialog'),
               'width' => 700,
               'draggable' => TRUE,
             )),
@@ -1829,7 +1829,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
             'class' => array_merge(array('paragraphs-remove'), $classes),
             'data-dialog' => TRUE,
             'data-dialog-options' => json_encode(array(
-              'dialogClass' => 'paragraphs-admin-links-dialog',
+              'classes' => array('paragraphs-admin-links-dialog'),
               'width' => 700,
               'draggable' => TRUE,
             )),
@@ -1845,7 +1845,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
           'class' => array_merge(array('paragraphs-unpublish'), $classes),
           'data-dialog' => TRUE,
           'data-dialog-options' => json_encode(array(
-            'dialogClass' => 'paragraphs-admin-links-dialog',
+            'classes' => array('paragraphs-admin-links-dialog'),
             'width' => 700,
             'draggable' => TRUE,
           )),
@@ -1860,7 +1860,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
           'class' => array_merge(array('paragraphs-sort'), $classes),
           'data-dialog' => TRUE,
           'data-dialog-options' => json_encode(array(
-            'dialogClass' => 'paragraphs-admin-links-dialog',
+            'classes' => array('paragraphs-admin-links-dialog'),
             'width' => 700,
             'draggable' => TRUE,
           )),
@@ -1936,7 +1936,7 @@ function paragraphs_modal_admin_links($paragraphs_item) {
               'class' => array_merge(array('paragraphs-add'), $classes),
               'data-dialog' => TRUE,
               'data-dialog-options' => json_encode(array(
-                'dialogClass' => 'paragraphs-admin-links-dialog',
+                'classes' => array('paragraphs-admin-links-dialog'),
                 'width' => 700,
                 'draggable' => TRUE,
               )),
