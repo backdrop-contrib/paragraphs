@@ -1911,7 +1911,10 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $block->formSubmit($form, $form_state);
 
   // Save the style settings.
-  $style->formSubmit($form['style']['style_settings'], $form_state);
+  if (empty($form_state['values']['style_settings'])) {
+    $form_state['values']['style_settings'] = array();
+  }
+  $style->formSubmit($form, $form_state);
   $block->style = $style;
 
   // Generate a UUID for the block.
