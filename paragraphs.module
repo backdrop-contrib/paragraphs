@@ -1787,7 +1787,8 @@ function paragraphs_modal_admin_links($paragraphs_item) {
   $field_name = $paragraphs_item->field_name;
   $langcode = $paragraphs_item->langcode;
   $field = field_info_field($field_name);
-  $field_count = count($host_entity->{$field_info['field_name']}[$langcode]);
+  $field_items = $host_entity->{$field_name}[$langcode] ?? [];
+  $field_count = count($field_items);
   $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
   $admin_links = array();
 
