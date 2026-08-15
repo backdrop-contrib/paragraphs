@@ -1940,7 +1940,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $paragraph_type = $block->paragraphs_item->bundle;
   $paragraph_fields = field_info_instances('paragraphs_item', $paragraph_type);
   foreach ($paragraph_fields as $field_name => $field_instance) {
-    if (!empty($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'])) {
+    if (isset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid']) || $block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'] === null) {
       foreach ($block->paragraphs_item->{$field_name}[LANGUAGE_NONE] as $delta => $item) {
         if (empty($item['fid'])) {
           unset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][$delta]);
