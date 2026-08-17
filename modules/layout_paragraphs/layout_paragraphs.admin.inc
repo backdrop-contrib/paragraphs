@@ -1936,6 +1936,20 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     // Clean up the in_progress value now that we're fully done.
     $layout->in_progress = NULL;
   }
+  // Cleanup if needed for multi-value fields to remove empty slot.
+  $paragraph_type = $block->paragraphs_item->bundle;
+  $paragraph_fields = field_info_instances('paragraphs_item', $paragraph_type);
+  foreach ($paragraph_fields as $field_name => $field_instance) {
+    if (isset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid']) || $block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'] === null) {
+      foreach ($block->paragraphs_item->{$field_name}[LANGUAGE_NONE] as $delta => $item) {
+        if (empty($item['fid'])) {
+          unset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][$delta]);
+        }
+      }
+      // Re-index the array.
+      $block->paragraphs_item->{$field_name}[LANGUAGE_NONE] = array_values($block->paragraphs_item->{$field_name}[LANGUAGE_NONE]);
+    }
+  }
   layout_paragraphs_reset_caches();
   tempstore_set('layout_paragraphs_block_tempstore_link', $block->uuid, $layout->name, time() + 60 * 60 * 24);
   layout_paragraphs_set_layout_tempstore($layout);
