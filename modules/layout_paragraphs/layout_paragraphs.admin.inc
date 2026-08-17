@@ -1410,7 +1410,9 @@ function layout_paragraphs_template_edit_row_ajax($form, $form_state) {
     $html .= theme('status_messages');
     $html .= backdrop_render($form);
     $title = isset($form['#title']) ? $form['#title'] : backdrop_get_title();
-    $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'layout-paragraphs-dialog'));
+    $commands[] = ajax_command_open_modal_dialog($title, $html, array(
+      'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+    ));
   }
   else {
     $commands[] = ajax_command_close_modal_dialog();
@@ -1786,7 +1788,9 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
           'attributes' => array(
             'class' => array('use-ajax block-item'),
             'data-dialog' => TRUE,
-            'data-dialog-options' => json_encode(array('dialogClass' => 'layout-paragraphs-dialog')),
+            'data-dialog-options' => json_encode(array(
+              'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+            )),
           ),
         )
       ),
@@ -1940,6 +1944,20 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     // Clean up the in_progress value now that we're fully done.
     $layout->in_progress = NULL;
   }
+  // Cleanup if needed for multi-value fields to remove empty slot.
+  $paragraph_type = $block->paragraphs_item->bundle;
+  $paragraph_fields = field_info_instances('paragraphs_item', $paragraph_type);
+  foreach ($paragraph_fields as $field_name => $field_instance) {
+    if (isset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid']) || $block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'] === null) {
+      foreach ($block->paragraphs_item->{$field_name}[LANGUAGE_NONE] as $delta => $item) {
+        if (empty($item['fid'])) {
+          unset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][$delta]);
+        }
+      }
+      // Re-index the array.
+      $block->paragraphs_item->{$field_name}[LANGUAGE_NONE] = array_values($block->paragraphs_item->{$field_name}[LANGUAGE_NONE]);
+    }
+  }
   layout_paragraphs_reset_caches();
   tempstore_set('layout_paragraphs_block_tempstore_link', $block->uuid, $layout->name, time() + 60 * 60 * 24);
   layout_paragraphs_set_layout_tempstore($layout);
@@ -2058,7 +2076,9 @@ function layout_paragraphs_block_configure_ajax_update($form, &$form_state) {
     $html .= theme('status_messages');
     $html .= backdrop_render($form);
     $title = isset($form['#title']) ? $form['#title'] : backdrop_get_title();
-    $commands[] = ajax_command_open_modal_dialog($title, $html, array('dialogClass' => 'layout-paragraphs-dialog'));
+    $commands[] = ajax_command_open_modal_dialog($title, $html, array(
+      'classes' => array('ui-dialog' => 'layout-paragraphs-dialog'),
+    ));
   }
   // If a new block, add to the bottom of the region.
   elseif ($added_to_region) {
