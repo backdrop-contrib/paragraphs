@@ -1810,6 +1810,7 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
 function layout_paragraphs_block_configure_form($form, &$form_state, Layout $layout, Block $block, $renderer_name, $region_name = NULL) {
   form_load_include($form_state, 'inc', 'layout', 'layout.admin');
   form_load_include($form_state, 'inc', 'layout', 'layout_paragraphs.admin');
+  $paragraph_name = $block->getAdminTitle();
 
   $form_state['layout'] = $layout;
   $form_state['block'] = $block;
@@ -1821,10 +1822,10 @@ function layout_paragraphs_block_configure_form($form, &$form_state, Layout $lay
   }
 
   if (empty($block->uuid)) {
-    $form['#title'] = t('Add @title', array('@title' => $block->getAdminTitle()));
+    $form['#title'] = t('Add @title', array('@title' => $paragraph_name));
   }
   else {
-    $form['#title'] = t('Configure @title', array('@title' => $block->getAdminTitle()));
+    $form['#title'] = t('Configure @title', array('@title' => $paragraph_name));
   }
 
   $template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
@@ -1856,7 +1857,11 @@ function layout_paragraphs_block_configure_form($form, &$form_state, Layout $lay
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => empty($block->uuid) ? t('Add block') : t('Update block'),
+    '#value' => empty($block->uuid) ? t('Add @title', array(
+      '@title' => $paragraph_name,
+    )) : t('Update @title', array(
+      '@title' => $paragraph_name,
+    )),
   );
 
   $form['#tree'] = TRUE;
@@ -1910,7 +1915,10 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $block->formSubmit($form, $form_state);
 
   // Save the style settings.
-  $style->formSubmit($form['style']['style_settings'], $form_state);
+  if (empty($form_state['values']['style_settings'])) {
+    $form_state['values']['style_settings'] = array();
+  }
+  $style->formSubmit($form, $form_state);
   $block->style = $style;
 
   // Generate a UUID for the block.

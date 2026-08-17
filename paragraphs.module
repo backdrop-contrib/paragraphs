@@ -306,7 +306,8 @@ function paragraphs_paragraphs_item_access(ParagraphsItemEntity $entity, $op, $a
       }
     }
     else {
-      if (entity_access($check_parent_op, $entity->hostEntityType(), $host_entity)) {
+      $is_new = $host_entity->is_new ?? FALSE;
+      if (entity_access($check_parent_op, $entity->hostEntityType(), $is_new ? NULL : $host_entity)) {
         $permissions[$account->uid][$cid][$op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
         $parent_permissions[$account->uid][$parent_cid][$check_parent_op] = PARAGRAPHS_ITEM_ACCESS_ALLOW;
       }
@@ -1791,7 +1792,8 @@ function paragraphs_modal_admin_links($paragraphs_item) {
   $field_name = $paragraphs_item->field_name;
   $langcode = $paragraphs_item->langcode;
   $field = field_info_field($field_name);
-  $field_count = count($host_entity->{$field_info['field_name']}[$langcode] ?? []);
+  $field_items = $host_entity->{$field_name}[$langcode] ?? [];
+  $field_count = count($field_items);
   $instance = field_info_instance($host_entity_type, $field_name, $host_entity_bundle);
   $admin_links = array();
 
