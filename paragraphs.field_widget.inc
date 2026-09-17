@@ -341,6 +341,9 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
 function paragraphs_field_widget_form_build(array &$form, array &$form_state, array $field, array $instance, $langcode, array $items, $delta, array $element) {
   static $recursion = 0;
 
+  $settings = $instance['settings'];
+  $confirm_delete = isset($settings['confirm_delete']) ? $settings['confirm_delete'] : TRUE;
+
   if (!isset($instance['settings']['title'])) {
     $instance['settings']['title'] = PARAGRAPHS_DEFAULT_TITLE;
   }
@@ -700,7 +703,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         );
       }
     }
-    else {
+    elseif ($confirm_delete) {
       $remove_markup = '<p>' . t('This @title has been removed.', array('@title' => $instance_title)) . ' </p>';
       $remove_markup .= '<div class="messages warning">';
       if (config_get('system.core', 'messages_dismissible')) {
@@ -1083,7 +1086,12 @@ function paragraphs_remove_submit(array $form, array &$form_state) {
   $field_state = field_form_get_state($parents, $field_name, $langcode, $form_state);
 
   if (isset($field_state['entity'][$delta])) {
+    $settings = $parent_element['#instance']['settings'];
+    $confirm_delete = isset($settings['confirm_delete']) ? $settings['confirm_delete'] : TRUE;
     $field_state['entity'][$delta]->removed = 1;
+    if (!$confirm_delete) {
+      $field_state['entity'][$delta]->confirmed_removed = 1;
+    }
   }
 
   // Fix the weights. Field UI lets the weights be in a range of
