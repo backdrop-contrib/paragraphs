@@ -455,7 +455,8 @@ function layout_paragraphs_layout_load(string $layout_paragraphs_template_name, 
   }
   else {
     $field_instance = _layout_paragraphs_get_field_instance($layout_paragraphs_template_name);
-    foreach ($field_instance['widget']['settings']['available_layout_templates'] as $template_name => $enabled) {
+    $instances = $field_instance['widget']['settings']['available_layout_templates'] ?? [];
+    foreach ($instances as $template_name => $enabled) {
       if (!empty($enabled)) {
         break;
       }

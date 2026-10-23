@@ -1810,6 +1810,7 @@ function layout_paragraphs_block_add_page(Layout $layout, $renderer_name, $regio
 function layout_paragraphs_block_configure_form($form, &$form_state, Layout $layout, Block $block, $renderer_name, $region_name = NULL) {
   form_load_include($form_state, 'inc', 'layout', 'layout.admin');
   form_load_include($form_state, 'inc', 'layout', 'layout_paragraphs.admin');
+  $paragraph_name = $block->getAdminTitle();
 
   $form_state['layout'] = $layout;
   $form_state['block'] = $block;
@@ -1821,10 +1822,10 @@ function layout_paragraphs_block_configure_form($form, &$form_state, Layout $lay
   }
 
   if (empty($block->uuid)) {
-    $form['#title'] = t('Add @title', array('@title' => $block->getAdminTitle()));
+    $form['#title'] = t('Add @title', array('@title' => $paragraph_name));
   }
   else {
-    $form['#title'] = t('Configure @title', array('@title' => $block->getAdminTitle()));
+    $form['#title'] = t('Configure @title', array('@title' => $paragraph_name));
   }
 
   $template_info = layout_paragraphs_get_layout_template_info($layout->layout_template);
@@ -1856,7 +1857,11 @@ function layout_paragraphs_block_configure_form($form, &$form_state, Layout $lay
   $form['actions']['#type'] = 'actions';
   $form['actions']['submit'] = array(
     '#type' => 'submit',
-    '#value' => empty($block->uuid) ? t('Add block') : t('Update block'),
+    '#value' => empty($block->uuid) ? t('Add @title', array(
+      '@title' => $paragraph_name,
+    )) : t('Update @title', array(
+      '@title' => $paragraph_name,
+    )),
   );
 
   $form['#tree'] = TRUE;
@@ -1902,7 +1907,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     $layout = $form_state['layout'];
   }
   /** @var LayoutStyle $style */
-  $style = $form_state['style'];
+  $style = $form_state['style'] ?? [];
   /** @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
 
@@ -1910,13 +1915,27 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $block->formSubmit($form, $form_state);
 
   // Save the style settings.
-  $style->formSubmit($form['style']['style_settings'], $form_state);
+  if (empty($form_state['values']['style_settings'])) {
+    $form_state['values']['style_settings'] = array();
+  }
+  $style->formSubmit($form, $form_state);
   $block->style = $style;
 
   // Generate a UUID for the block.
   if (empty($block->uuid)) {
     $paragraphs_item_id = $block->paragraphs_item->id() ?? 0;
     $block->uuid = layout_paragraphs_get_block_uuid($paragraphs_item_id);
+  }
+
+  // Try to ensure a host entity on the Paragraphs item.
+  if (empty($block->paragraphs_item->hostEntity())) {
+    if (!empty($layout->name)) {
+      list($entity_type, $bundle, $fieldname, $entity_id) = explode('.', $layout->name);
+      $host_entity = entity_load($entity_type, $entity_id);
+      if ($host_entity) {
+        $block->paragraphs_item->setHostEntity($entity_type, $host_entity);
+      }
+    }
   }
 
   // Temporarily store any unfinished blocks (those that do not yet have a
@@ -1940,7 +1959,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
   $paragraph_type = $block->paragraphs_item->bundle;
   $paragraph_fields = field_info_instances('paragraphs_item', $paragraph_type);
   foreach ($paragraph_fields as $field_name => $field_instance) {
-    if (isset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid']) || $block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'] === null) {
+    if (isset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][0]['fid'])) {
       foreach ($block->paragraphs_item->{$field_name}[LANGUAGE_NONE] as $delta => $item) {
         if (empty($item['fid'])) {
           unset($block->paragraphs_item->{$field_name}[LANGUAGE_NONE][$delta]);
