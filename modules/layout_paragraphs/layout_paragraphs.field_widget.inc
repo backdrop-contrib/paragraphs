@@ -298,7 +298,7 @@ function _layout_paragraphs_layout_get_available_templates($layout_name) {
   $all_templates = layout_flexible_template_load_all('paragraphs');
   $instance = _layout_paragraphs_get_field_instance($layout_name);
   if (!empty($instance)) {
-    $templates = $instance['widget']['settings']['available_layout_templates'];
+    $templates = $instance['widget']['settings']['available_layout_templates'] ?? [];
   }
   $layout = layout_paragraphs_get_layout_tempstore($layout_name);
   $default_template = $layout->layout_template ?? 'default';

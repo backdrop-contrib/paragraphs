@@ -112,9 +112,8 @@ class BlockParagraphs extends Block {
     if (!empty($this->settings['admin_description'])) {
       return filter_xss($this->settings['admin_description']);
     }
-    $preview_markup = entity_view($this->paragraphs_item, $display_mode);
-
     if (!empty($this->paragraphs_item->hostEntity())) {
+      $preview_markup = entity_view($this->paragraphs_item, $display_mode);
       $output = render($preview_markup);
     }
     else {

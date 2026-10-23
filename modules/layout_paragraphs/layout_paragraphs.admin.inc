@@ -1907,7 +1907,7 @@ function layout_paragraphs_block_configure_form_submit($form, &$form_state) {
     $layout = $form_state['layout'];
   }
   /** @var LayoutStyle $style */
-  $style = $form_state['style'];
+  $style = $form_state['style'] ?? [];
   /** @var LayoutRendererStandard $renderer */
   $renderer = $form_state['renderer'];
 
