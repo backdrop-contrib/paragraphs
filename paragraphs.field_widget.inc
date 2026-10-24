@@ -548,6 +548,10 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
         }
       }
       else {
+        // Temporarily set the paragraph status to 1 to ensure it can be
+        // previewed, even if unpublished.
+        $paragraph_status = $paragraphs_item->status;
+        $paragraphs_item->status = 1;
         if ($default_edit_mode === 'preview' && entity_access('view', 'paragraphs_item', $paragraphs_item)) {
           $element['paragraph_bundle_preview'] = array(
             '#type' => 'container',
@@ -561,7 +565,8 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
           if ($preview_collapsed) {
             $rendered_preview = backdrop_render($preview);
             $summary_preview = trim(filter_xss(truncate_utf8(strip_tags($rendered_preview), 140, TRUE, TRUE, 150)));
-            $summary = t('Preview') . ($summary_preview ? '<span class="paragraphs--preview-description">: ' . $summary_preview . '</span>' : '');
+            $summary = $paragraph_status ? t('Preview') : t('Preview (unpublished)');
+            $summary .= ($summary_preview ? '<span class="paragraphs--preview-description">: ' . $summary_preview . '</span>' : '');
 
             $element['paragraph_bundle_preview']['preview'] = array(
               '#type' => 'details',
@@ -573,6 +578,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
             );
           }
         }
+        $paragraphs_item->status = $paragraph_status;
 
         foreach (element_children($element) as $key) {
           if ($key != 'paragraph_bundle_header' && $key != 'inner_actions' && $key != 'paragraph_bundle_preview' && $key != 'access_info') {
