@@ -30,6 +30,13 @@ class ParagraphsLibraryItem extends Entity {
   public $is_new;
 
   /**
+   * Whether the library item has revisioning currently turned on.
+   *
+   * @var boolean
+   */
+  public $revision = FALSE;
+
+  /**
    * The library item revision ID.
    *
    * @var integer

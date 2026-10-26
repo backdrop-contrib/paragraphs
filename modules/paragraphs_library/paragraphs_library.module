@@ -398,8 +398,7 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
     // Check the revision log checkbox when the log textarea is filled in.
     // This must not happen if "Create new revision" is enabled by default,
     // since the state would auto-disable the checkbox otherwise.
-    // @todo: Implement the "Create new revision" checkbox as a field.
-    if (!$library_item->is_new_revision) {
+    if (!$library_item->revision) {
       $form['revision_information']['revision']['#states'] = array(
         'checked' => array(
           'textarea[name="log"]' => array('empty' => FALSE),
@@ -410,7 +409,7 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
       '#type' => 'textarea',
       '#title' => t('Revision log message'),
       '#rows' => 4,
-      '#default_value' => $library_item->log ?? '',
+      '#default_value' => '',
       '#description' => t('Briefly describe the changes you have made.'),
     );
   }
