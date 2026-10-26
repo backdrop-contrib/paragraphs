@@ -101,7 +101,7 @@ html.dialog-open {
         rgba(231, 37, 27, .1) 40px);
   }
 
-  .unpublished {
+  .paragraph-item:has(> .unpublished) {
     padding-left: 1.5rem;
     color: #444;
     background: repeating-linear-gradient(45deg,
@@ -109,6 +109,14 @@ html.dialog-open {
         rgba(0, 0, 0, .05) 20px,
         rgba(0, 0, 0, .03) 20px,
         rgba(0, 0, 0, .03) 40px);
+
+    details {
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .unpublished {
+    background-color: transparent;
   }
 
   table {
