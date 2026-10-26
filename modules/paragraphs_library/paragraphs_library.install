@@ -176,6 +176,5 @@ function paragraphs_library_update_1001() {
       'size' => 'big',
       'default' => '',
     ));
-
   }
 }
