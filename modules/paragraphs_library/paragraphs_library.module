@@ -447,8 +447,8 @@ function paragraphs_library_item_form_submit($form, &$form_state) {
     // If the "Create new revision" checkbox is checked, set the revision
     // information.
     $library_item->is_new_revision = TRUE;
-    $library_item->log = $form_state['values']['log'] ?? '';
   }
+  $library_item->log = $form_state['values']['log'] ?? '';
 
   $library_item->save();
 
