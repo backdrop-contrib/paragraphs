@@ -6,4 +6,4 @@ class EntityReferenceSelectionHandlerGeneric_paragraphs_library_item extends Ent
 
   protected $label_key = 'title';
 
-  }
+}
