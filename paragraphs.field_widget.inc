@@ -451,7 +451,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
   }
   field_form_set_state($field_parents, $field_name, $language, $form_state, $field_state);
   if (!empty($paragraphs_item)) {
-    $unpublished_paragraph = (bool) $paragraphs_item->status;
+    $unpublished_paragraph = !((bool) $paragraphs_item->status);
     $bundle_info = paragraphs_bundle_load($paragraphs_item->bundle);
 
     if ($bundle_info) {
