@@ -16,6 +16,20 @@ class ParagraphsLibraryItem extends Entity {
   protected $wrapper; // Stores the entity_metadata_wrapper for this entity.
 
   /**
+   * Entity ID.
+   *
+   * @var int
+   */
+  public $item_id;
+
+  /**
+   * Indicates whether this is a new library item.
+   *
+   * @var boolean
+   */
+  public $is_new;
+
+  /**
    * The library item revision ID.
    *
    * @var integer
@@ -68,6 +82,7 @@ class ParagraphsLibraryItem extends Entity {
     $this->entityType = $entityType;
     $this->entityInfo = entity_get_info($this->entityType);
     $this->idKey = $this->entityInfo['entity keys']['id'];
+    $this->is_new = empty($this->{$this->idKey});
   }
 
   /**

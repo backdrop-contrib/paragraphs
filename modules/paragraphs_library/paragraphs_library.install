@@ -98,6 +98,7 @@ function paragraphs_library_schema() {
         'type' => 'text',
         'not null' => TRUE,
         'size' => 'big',
+        'default' => '',
       ),
       'timestamp' => array(
         'description' => 'A Unix timestamp indicating when this version was created.',
@@ -159,4 +160,22 @@ function paragraphs_library_uninstall() {
   }
 
   menu_rebuild();
+}
+
+/**
+ * Update existing revisions table to add the empty default for existing
+ * installations.
+ */
+function paragraphs_library_update_1001() {
+  if (db_table_exists('paragraphs_library_item_revision')) {
+    // @todo: Do this without dropping and re-adding so we don't lose any existing log data.
+    db_change_field('paragraphs_library_item_revision', 'log', 'log', array(
+      'description' => 'The log entry explaining the changes in this version.',
+      'type' => 'text',
+      'not null' => TRUE,
+      'size' => 'big',
+      'default' => '',
+    ));
+
+  }
 }

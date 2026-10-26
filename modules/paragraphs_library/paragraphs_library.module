@@ -101,6 +101,7 @@ function paragraphs_library_autoload_info() {
   return [
     'ParagraphsLibraryItem' => 'paragraphs_library.class.inc',
     'ParagraphsLibraryItemController' => 'paragraphs_library.controller.inc',
+    'EntityReferenceSelectionHandlerGeneric_paragraphs_library_item' => 'inc/EntityReferenceSelectionHandlerGeneric_paragraphs_library_item.inc',
     'views_handler_field_paragraphs_library_link_edit' => 'views/views_handler_field_paragraphs_library_link_edit.inc',
     'views_handler_field_paragraphs_library_link' => 'views/views_handler_field_paragraphs_library_link.inc',
     'views_handler_field_paragraphs_library_link_delete' => 'views/views_handler_field_paragraphs_library_link_delete.inc',
@@ -397,9 +398,8 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
     // Check the revision log checkbox when the log textarea is filled in.
     // This must not happen if "Create new revision" is enabled by default,
     // since the state would auto-disable the checkbox otherwise.
-    // @todo: Implement the "Create new revision" checkbox as a field. Disabling
-    // the logic below for now.
-    if (FALSE && !$library_item->revision) {
+    // @todo: Implement the "Create new revision" checkbox as a field.
+    if (!$library_item->is_new_revision) {
       $form['revision_information']['revision']['#states'] = array(
         'checked' => array(
           'textarea[name="log"]' => array('empty' => FALSE),
@@ -410,7 +410,7 @@ function paragraphs_library_item_form($form, &$form_state, ?ParagraphsLibraryIte
       '#type' => 'textarea',
       '#title' => t('Revision log message'),
       '#rows' => 4,
-      '#default_value' => '',
+      '#default_value' => $library_item->log ?? '',
       '#description' => t('Briefly describe the changes you have made.'),
     );
   }
