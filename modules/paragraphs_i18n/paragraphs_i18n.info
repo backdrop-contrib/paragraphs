@@ -4,6 +4,5 @@ backdrop = 1.x
 type = module
 package = Paragraphs
 
+dependencies[] = i18n_string
 dependencies[] = paragraphs
-dependencies[] = replicate
-dependencies[] = replicate_paragraphs
