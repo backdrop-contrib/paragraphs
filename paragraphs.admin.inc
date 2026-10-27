@@ -29,10 +29,10 @@ function paragraphs_admin_bundle_overview() {
 
     $type_url_str = strtr($bundle->bundle, array('_' => '-'));
     $row = array(theme('label_machine_name__paragraphs', array(
-      'label' => $bundle->label,
+      'label' => paragraphs_get_translated_bundle_key($bundle->bundle, 'label'),
       'machine_name' => $bundle->bundle,
     )));
-    $row['description'] = $bundle->description;
+    $row['description'] = paragraphs_get_translated_bundle_key($bundle->bundle, 'description');
 
     if ($field_ui) {
       // Manage fields.
@@ -342,7 +342,7 @@ function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $b
     '#value' => $bundle->name,
   );
 
-  $message = t('Are you sure you want to delete the Paragraph type %bundle?', array('%bundle' => $bundle->name));
+  $message = t('Are you sure you want to delete the Paragraph type %bundle?', array('%bundle' => paragraphs_get_translated_bundle_key($bundle->bundle, 'name')));
   $caption = '<p>' . t('This action cannot be undone. Content using this Paragraph type will be broken.') . '</p>';
 
   return confirm_form($form, filter_xss_admin($message), 'admin/structure/paragraphs', filter_xss_admin($caption), t('Delete'));
@@ -361,7 +361,7 @@ function paragraphs_admin_bundle_delete_form(array $form, array &$form_state, $b
 function paragraphs_admin_bundle_delete_form_submit(array $form, array &$form_state) {
   paragraphs_bundle_delete($form_state['values']['type']);
 
-  $t_args = array('%name' => $form_state['values']['name']);
+  $t_args = array('%name' => paragraphs_get_translated_bundle_key($form_state['values']['type'], 'name'));
   backdrop_set_message(t('The Paragraph type %name has been deleted.', $t_args));
   watchdog('paragraphs', 'Deleted Paragraph type %name.', $t_args, WATCHDOG_NOTICE);
 

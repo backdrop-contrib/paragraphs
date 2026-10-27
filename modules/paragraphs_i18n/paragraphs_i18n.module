@@ -6,12 +6,74 @@
  */
 
 /**
+ * Implements hook_menu().
+ */
+function paragraphs_i18n_menu() {
+  $items['admin/structure/paragraphs/%paragraphs_bundle/translate'] = array(
+    'title' => 'Translate',
+    'page callback' => 'paragraphs_i18n_page_translate',
+    'page arguments' => array(3),
+    'file' => 'paragraphs_i18n.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array('administer paragraphs bundles'),
+  );
+  $items['admin/structure/paragraphs/%paragraphs_bundle/translate/%i18n_language'] = array(
+    'title' => 'Paragraphs type',
+    'page callback' => 'paragraphs_i18n_page_translate',
+    'page arguments' => array(3, 5),
+    'file' => 'paragraphs_i18n.pages.inc',
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('administer paragraphs bundles'),
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function paragraphs_i18n_menu_alter(&$items) {
+  foreach (paragraphs_bundle_load() as $bundle_name => $paragraphs_bundle) {
+    $items['admin/structure/paragraphs/' . $bundle_name . '/configure']['title callback'] = 'paragraphs_i18n_title_callback';
+    $items['admin/structure/paragraphs/' . $bundle_name . '/configure']['title arguments'] = array($bundle_name);
+  }
+}
+
+/**
+ * Implements hook_paragraphs_bundle_insert().
+ */
+function paragraphs_i18n_paragraphs_bundle_insert($paragraphs_bundle) {
+  i18n_string_object_update('paragraphs_bundle', $paragraphs_bundle);
+}
+
+/**
+ * Implements hook_paragraphs_bundle_update().
+ */
+function paragraphs_i18n_paragraphs_bundle_update($paragraphs_bundle) {
+  // Account for machine name changes.
+  if ($paragraphs_bundle->original->bundle != $paragraphs_bundle->bundle) {
+    i18n_string_update_context("paragraphs_bundle:paragraphs_bundle:{$paragraphs_bundle->original->bundle}:*", "paragraphs_bundle:paragraphs_bundle:{$paragraphs_bundle->original->name->bundle}:*");
+  }
+  i18n_string_object_update('paragraphs_bundle', $paragraphs_bundle);
+}
+
+/**
+ * Implements hook_paragraphs_bundle_delete().
+ */
+function paragraphs_i18n_paragraphs_bundle_delete($paragraphs_bundle) {
+  i18n_string_object_remove('paragraphs_bundle', $paragraphs_bundle);
+}
+
+/**
  * Implements hook_field_prepare_translation().
  *
  * @see field_attach_prepare_translation()
  */
 function paragraphs_i18n_field_prepare_translation($entity_type, $entity, $field, $instance, $langcode, &$items, $source_entity, $source_langcode) {
   list($id, ,) = entity_extract_ids($entity_type, $entity);
+
+  if (!module_exists('replicate_paragraphs')) {
+    return array();
+  }
 
   if (empty($id)) {
     $news_items = array();

@@ -190,13 +190,13 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
     $explicitly_enabled = FALSE;
     foreach ($instance['settings']['allowed_bundles'] as $allowed_bundle_key => $allowed_bundle_value) {
       if ($allowed_bundle_key === $allowed_bundle_value && isset($available_bundles[$allowed_bundle_key])) {
-        $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
+        $select_bundles[$available_bundles[$allowed_bundle_key]->bundle] = paragraphs_get_translated_bundle_key($allowed_bundle_key, 'label');
 
         // If an item has been explicitly selected, raise our flag.
         $explicitly_enabled = TRUE;
       }
       elseif (isset($available_bundles[$allowed_bundle_key]->bundle)) {
-        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = $available_bundles[$allowed_bundle_key]->label;
+        $select_bundles_weighted[$available_bundles[$allowed_bundle_key]->bundle] = paragraphs_get_translated_bundle_key($allowed_bundle_key, 'label');
       }
     }
 
@@ -205,7 +205,7 @@ function _paragraphs_add_more_buttons($instance, $langcode, $form_state, $field_
       $select_bundles = $select_bundles_weighted;
       foreach ($available_bundles as $bundle) {
         if (!isset($select_bundles[$bundle->bundle])) {
-          $select_bundles[$bundle->bundle] = $bundle->label;
+          $select_bundles[$bundle->bundle] = paragraphs_get_translated_bundle_key($bundle->bundle, 'label');
         }
       }
     }
@@ -515,7 +515,7 @@ function paragraphs_field_widget_form_build(array &$form, array &$form_state, ar
       $element['paragraph_bundle_header']['paragraph_bundle_title']['info'] = array(
         '#markup' => t('@title type: %bundle', array(
           '@title' => $instance_title,
-          '%bundle' => $bundle_info->label,
+          '%bundle' => paragraphs_get_translated_bundle_key($paragraphs_item->bundle, 'label'),
         )) . $status_prefix,
       );
     }

@@ -246,3 +246,22 @@ function paragraphs_update_1004() {
   // dropped.
   db_drop_table('paragraphs_bundle');
 }
+
+/**
+ * Add bundle translatables.
+ */
+function paragraphs_update_1005() {
+  $paragraph_names = config_get_names_with_prefix('paragraphs.type.');
+  foreach ($paragraph_names as $name) {
+    $config = config($name);
+    if ($config->get('_config_translatables') === NULL) {
+      $config_translatables = array('name', 'label', 'description');
+      $config->set('_config_translatables', $config_translatables);
+      $config->save();
+
+      foreach ($config_translatables as $translatable) {
+        locale($config->get($translatable), 'paragraphs_bundle:' . $name . ':' . $translatable);
+      }
+    }
+  }
+}
